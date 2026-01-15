@@ -1,0 +1,40 @@
+<div class="min-h-screen bg-gray-50">
+  <nav class="bg-white shadow">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between h-16">
+        <div class="flex items-center">
+          <h1 class="text-xl font-bold text-gray-900">Candidata</h1>
+        </div>
+        <div class="flex items-center space-x-4">
+          <span class="text-gray-700"><%= @user_email %></span>
+          <%= button_to "Logout", logout_path, method: :delete, class: "inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700" %>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <main class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+    <% if flash[:notice] %>
+      <div class="mb-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative" role="alert">
+        <span class="block sm:inline"><%= flash[:notice] %></span>
+      </div>
+    <% end %>
+
+    <div class="px-4 py-6 sm:px-0">
+      <div class="border-4 border-dashed border-gray-200 rounded-lg p-8">
+        <h2 class="text-2xl font-bold text-gray-900 mb-4">Your Assigned Records</h2>
+        <p class="text-gray-600 mb-4">Records from Airtable will appear here once the API integration is complete.</p>
+        
+        <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4">
+          <div class="flex">
+            <div class="ml-3">
+              <p class="text-sm text-yellow-700">
+                <strong>Next Steps:</strong> Connect to Airtable API to fetch records assigned to <strong><%= @user_email %></strong>
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>

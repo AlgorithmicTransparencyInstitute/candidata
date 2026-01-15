@@ -1,0 +1,93 @@
+# Candidata
+
+A Ruby on Rails 8 application that integrates with Airtable for user authentication and dynamic form management.
+
+## Overview
+
+This application allows users to:
+- **Login** using email/password credentials stored in an Airtable base
+- **View assigned records** fetched from Airtable based on the logged-in user's email
+- **Submit form data** that gets pushed back to Airtable via API
+
+## Tech Stack
+
+- **Ruby on Rails 8**
+- **PostgreSQL** - Database
+- **Tailwind CSS** - Styling
+- **Airtable API** - External data source for authentication and records
+
+## Setup
+
+### Prerequisites
+- Ruby 3.1+
+- PostgreSQL
+- Airtable account with API access
+
+### Installation
+
+```bash
+# Install dependencies
+bundle install
+
+# Create database
+bin/rails db:create db:migrate
+
+# Start the development server
+bin/dev
+```
+
+### Environment Variables
+
+You'll need to configure the following environment variables for Airtable integration:
+
+```
+AIRTABLE_API_KEY=your_api_key
+AIRTABLE_BASE_ID=your_base_id
+AIRTABLE_USERS_TABLE=Users
+AIRTABLE_RECORDS_TABLE=Records
+```
+
+## Development
+
+```bash
+# Run the server with Tailwind CSS watching
+bin/dev
+```
+
+## Project Structure
+
+- `app/controllers/home_controller.rb` - Handles login and main page
+- `app/controllers/sessions_controller.rb` - Session management (to be added)
+- `app/services/airtable_service.rb` - Airtable API integration (to be added)
+
+## Deployment
+
+### Heroku
+
+```bash
+# Create Heroku app
+heroku create candidata
+
+# Add PostgreSQL
+heroku addons:create heroku-postgresql:essential-0
+
+# Set environment variables
+heroku config:set AIRTABLE_API_KEY=your_api_key
+heroku config:set AIRTABLE_BASE_ID=your_base_id
+
+# Deploy
+git push heroku main
+
+# Run migrations
+heroku run rails db:migrate
+```
+
+### Custom Domain
+
+```bash
+# Add domain to Heroku
+heroku domains:add your-domain.com
+
+# Configure DNS with your registrar:
+# CNAME record pointing to your-app.herokuapp.com
+```
