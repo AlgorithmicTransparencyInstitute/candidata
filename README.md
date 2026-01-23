@@ -47,6 +47,33 @@ AIRTABLE_USERS_TABLE=Users
 AIRTABLE_RECORDS_TABLE=Records
 ```
 
+### Airtable Data Import
+
+To import existing candidate data from Airtable:
+
+```bash
+# Set environment variables
+export AIRTABLE_API_KEY='your_api_key'
+export AIRTABLE_BASE_ID='your_base_id'
+
+# Test connection
+bin/rails import:test_airtable
+
+# List available tables
+bin/rails import:list_tables
+
+# Import all data
+bin/rails import:airtable
+```
+
+The import service will:
+1. Import political parties
+2. Import people/candidates
+3. Import districts and offices
+4. Import ballots and contests
+5. Import candidate relationships
+6. Import officeholder records
+
 ## Development
 
 ```bash

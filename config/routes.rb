@@ -14,6 +14,19 @@ Rails.application.routes.draw do
   post "login", to: "home#authenticate", as: :authenticate
   delete "logout", to: "home#logout", as: :logout
 
+  # Admin namespace
+  namespace :admin do
+    root "dashboard#index"
+    resources :parties
+    resources :people
+    resources :districts
+    resources :offices
+    resources :ballots
+    resources :contests
+    resources :candidates
+    resources :officeholders
+  end
+
   # Defines the root path route ("/")
   root "home#index"
 end
