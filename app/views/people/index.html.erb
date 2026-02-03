@@ -1,0 +1,182 @@
+<div class="min-h-screen bg-gray-50">
+  <%= render "shared/public_navbar" %>
+
+  <main class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+    <div class="mb-6">
+      <h1 class="text-3xl font-bold text-gray-900">Politicians</h1>
+      <p class="mt-1 text-sm text-gray-500">Browse <%= number_with_delimiter(Person.count) %> politicians in our database</p>
+    </div>
+
+    <!-- Search and Filters -->
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
+      <%= form_with url: people_path, method: :get, local: true, class: "space-y-4" do |f| %>
+        <!-- Search -->
+        <div class="flex gap-4">
+          <div class="flex-1">
+            <label for="q" class="sr-only">Search</label>
+            <div class="relative">
+              <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                </svg>
+              </div>
+              <input type="text" name="q" id="q" value="<%= params[:q] %>" 
+                     class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" 
+                     placeholder="Search by name...">
+            </div>
+          </div>
+          <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+            Search
+          </button>
+          <% if request.query_parameters.any? %>
+            <%= link_to "Clear", people_path, class: "inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50" %>
+          <% end %>
+        </div>
+
+        <!-- Filters -->
+        <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
+          <div>
+            <label for="state" class="block text-xs font-medium text-gray-700 mb-1">State</label>
+            <select name="state" id="state" class="block w-full pl-3 pr-10 py-2 text-sm border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 rounded-md">
+              <option value="">All States</option>
+              <% @states.each do |state| %>
+                <option value="<%= state %>" <%= 'selected' if params[:state] == state %>><%= state %></option>
+              <% end %>
+            </select>
+          </div>
+
+          <div>
+            <label for="party_id" class="block text-xs font-medium text-gray-700 mb-1">Party</label>
+            <select name="party_id" id="party_id" class="block w-full pl-3 pr-10 py-2 text-sm border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 rounded-md">
+              <option value="">All Parties</option>
+              <% @parties.each do |party| %>
+                <option value="<%= party.id %>" <%= 'selected' if params[:party_id] == party.id.to_s %>><%= party.name %></option>
+              <% end %>
+            </select>
+          </div>
+
+          <div>
+            <label for="level" class="block text-xs font-medium text-gray-700 mb-1">Level</label>
+            <select name="level" id="level" class="block w-full pl-3 pr-10 py-2 text-sm border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 rounded-md">
+              <option value="">All Levels</option>
+              <% @levels.each do |level| %>
+                <option value="<%= level %>" <%= 'selected' if params[:level] == level %>><%= level.titleize %></option>
+              <% end %>
+            </select>
+          </div>
+
+          <div>
+            <label for="branch" class="block text-xs font-medium text-gray-700 mb-1">Branch</label>
+            <select name="branch" id="branch" class="block w-full pl-3 pr-10 py-2 text-sm border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 rounded-md">
+              <option value="">All Branches</option>
+              <% @branches.each do |branch| %>
+                <option value="<%= branch %>" <%= 'selected' if params[:branch] == branch %>><%= branch.titleize %></option>
+              <% end %>
+            </select>
+          </div>
+
+          <div class="flex items-end">
+            <label class="inline-flex items-center">
+              <input type="checkbox" name="current" value="1" <%= 'checked' if params[:current] == '1' %> 
+                     class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
+              <span class="ml-2 text-sm text-gray-700">Current only</span>
+            </label>
+          </div>
+        </div>
+      <% end %>
+    </div>
+
+    <!-- Results count and sort -->
+    <div class="flex justify-between items-center mb-4">
+      <p class="text-sm text-gray-700">
+        Showing <span class="font-medium"><%= @people.offset_value + 1 %></span> to 
+        <span class="font-medium"><%= [@people.offset_value + @people.length, @people.total_count].min %></span> of 
+        <span class="font-medium"><%= number_with_delimiter(@people.total_count) %></span> results
+      </p>
+      <div class="flex items-center gap-2">
+        <span class="text-sm text-gray-500">Sort:</span>
+        <%= link_to "A-Z", people_path(request.query_parameters.merge(sort: 'name')), 
+            class: "text-sm #{params[:sort].blank? || params[:sort] == 'name' ? 'text-indigo-600 font-medium' : 'text-gray-500 hover:text-gray-700'}" %>
+        <%= link_to "Z-A", people_path(request.query_parameters.merge(sort: 'name_desc')), 
+            class: "text-sm #{params[:sort] == 'name_desc' ? 'text-indigo-600 font-medium' : 'text-gray-500 hover:text-gray-700'}" %>
+        <%= link_to "State", people_path(request.query_parameters.merge(sort: 'state')), 
+            class: "text-sm #{params[:sort] == 'state' ? 'text-indigo-600 font-medium' : 'text-gray-500 hover:text-gray-700'}" %>
+      </div>
+    </div>
+
+    <!-- Results -->
+    <div class="bg-white shadow-sm rounded-lg border border-gray-200 overflow-hidden">
+      <table class="min-w-full divide-y divide-gray-200">
+        <thead class="bg-gray-50">
+          <tr>
+            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Party</th>
+            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">State</th>
+            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Current Office</th>
+            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+          </tr>
+        </thead>
+        <tbody class="bg-white divide-y divide-gray-200">
+          <% @people.each do |person| %>
+            <tr class="hover:bg-gray-50">
+              <td class="px-6 py-4 whitespace-nowrap">
+                <%= link_to person_path(person), class: "flex items-center" do %>
+                  <% if person.photo_url.present? %>
+                    <img src="<%= person.photo_url %>" alt="" class="w-10 h-10 rounded-full object-cover mr-3">
+                  <% else %>
+                    <div class="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center mr-3">
+                      <span class="text-gray-500 font-medium text-sm"><%= person.first_name.first %><%= person.last_name.first %></span>
+                    </div>
+                  <% end %>
+                  <div>
+                    <div class="text-sm font-medium text-gray-900"><%= person.full_name %></div>
+                  </div>
+                <% end %>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <% if person.primary_party %>
+                  <%= link_to person.primary_party.name, party_path(person.primary_party), class: "text-sm text-indigo-600 hover:text-indigo-900" %>
+                <% else %>
+                  <span class="text-sm text-gray-400">—</span>
+                <% end %>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <% if person.state_of_residence.present? %>
+                  <%= link_to person.state_of_residence, state_path(person.state_of_residence), class: "text-sm text-gray-900 hover:text-indigo-600" %>
+                <% else %>
+                  <span class="text-sm text-gray-400">—</span>
+                <% end %>
+              </td>
+              <td class="px-6 py-4">
+                <% current_office = person.officeholders.find(&:current?)&.office %>
+                <% if current_office %>
+                  <%= link_to truncate(current_office.title, length: 40), office_path(current_office), class: "text-sm text-gray-900 hover:text-indigo-600" %>
+                <% else %>
+                  <span class="text-sm text-gray-400">—</span>
+                <% end %>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <% if person.current_officeholder? %>
+                  <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                    Current
+                  </span>
+                <% else %>
+                  <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                    Former
+                  </span>
+                <% end %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination -->
+    <% if @people.total_pages > 1 %>
+      <div class="mt-6 flex justify-center">
+        <%= paginate @people %>
+      </div>
+    <% end %>
+  </main>
+</div>

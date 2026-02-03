@@ -1,7 +1,10 @@
 class HomeController < ApplicationController
-  before_action :authenticate_user!
-
   def index
-    @user = current_user
+    @people_count = Person.count
+    @offices_count = Office.count
+    @parties_count = Party.count
+    @states_count = State.count
+    @districts_count = District.count
+    @current_officeholders_count = Person.current_officeholders.count
   end
 end

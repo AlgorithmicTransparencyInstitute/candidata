@@ -1,0 +1,86 @@
+<div class="min-h-screen bg-gray-50">
+  <%= render "shared/public_navbar" %>
+
+  <main class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+    <div class="mb-6">
+      <h1 class="text-3xl font-bold text-gray-900">Political Parties</h1>
+      <p class="mt-1 text-sm text-gray-500">Browse <%= Party.count %> political parties in our database</p>
+    </div>
+
+    <!-- Search and Filters -->
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
+      <%= form_with url: parties_path, method: :get, local: true, class: "flex gap-4" do |f| %>
+        <div class="flex-1">
+          <div class="relative">
+            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+              </svg>
+            </div>
+            <input type="text" name="q" value="<%= params[:q] %>" 
+                   class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" 
+                   placeholder="Search parties...">
+          </div>
+        </div>
+        
+        <div>
+          <select name="ideology" class="block w-full pl-3 pr-10 py-2 text-sm border-gray-300 rounded-md">
+            <option value="">All Ideologies</option>
+            <% @ideologies.each do |ideology| %>
+              <option value="<%= ideology %>" <%= 'selected' if params[:ideology] == ideology %>><%= ideology %></option>
+            <% end %>
+          </select>
+        </div>
+
+        <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700">
+          Search
+        </button>
+        <% if request.query_parameters.any? %>
+          <%= link_to "Clear", parties_path, class: "inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50" %>
+        <% end %>
+      <% end %>
+    </div>
+
+    <!-- Sort -->
+    <div class="flex justify-between items-center mb-4">
+      <p class="text-sm text-gray-700">
+        <span class="font-medium"><%= @parties.total_count %></span> parties
+      </p>
+      <div class="flex items-center gap-2">
+        <span class="text-sm text-gray-500">Sort:</span>
+        <%= link_to "Name", parties_path(request.query_parameters.merge(sort: 'name')), 
+            class: "text-sm #{params[:sort].blank? || params[:sort] == 'name' ? 'text-indigo-600 font-medium' : 'text-gray-500 hover:text-gray-700'}" %>
+        <%= link_to "Members ↓", parties_path(request.query_parameters.merge(sort: 'members')), 
+            class: "text-sm #{params[:sort] == 'members' ? 'text-indigo-600 font-medium' : 'text-gray-500 hover:text-gray-700'}" %>
+      </div>
+    </div>
+
+    <!-- Results -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <% @parties.each do |party| %>
+        <%= link_to party_path(party), class: "bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow" do %>
+          <div class="flex justify-between items-start">
+            <div>
+              <h3 class="text-lg font-semibold text-gray-900"><%= party.name %></h3>
+              <% if party.abbreviation.present? %>
+                <span class="text-sm text-gray-500">(<%= party.abbreviation %>)</span>
+              <% end %>
+            </div>
+            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
+              <%= party.people_count %> members
+            </span>
+          </div>
+          <% if party.ideology.present? %>
+            <p class="mt-2 text-sm text-gray-600"><%= party.ideology %></p>
+          <% end %>
+        <% end %>
+      <% end %>
+    </div>
+
+    <% if @parties.total_pages > 1 %>
+      <div class="mt-6 flex justify-center">
+        <%= paginate @parties %>
+      </div>
+    <% end %>
+  </main>
+</div>

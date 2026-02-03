@@ -1,0 +1,54 @@
+<div class="min-h-screen bg-gray-50">
+  <%= render "shared/public_navbar" %>
+
+  <main class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+    <div class="mb-6">
+      <h1 class="text-3xl font-bold text-gray-900">States & Territories</h1>
+      <p class="mt-1 text-sm text-gray-500">Browse politicians and offices by state</p>
+    </div>
+
+    <!-- Search and Filters -->
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
+      <%= form_with url: states_path, method: :get, local: true, class: "flex gap-4" do |f| %>
+        <div class="flex-1">
+          <div class="relative">
+            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+              </svg>
+            </div>
+            <input type="text" name="q" value="<%= params[:q] %>" 
+                   class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" 
+                   placeholder="Search states...">
+          </div>
+        </div>
+        
+        <div>
+          <select name="type" class="block w-full pl-3 pr-10 py-2 text-sm border-gray-300 rounded-md">
+            <option value="">All Types</option>
+            <% @state_types.each do |type| %>
+              <option value="<%= type %>" <%= 'selected' if params[:type] == type %>><%= type.titleize %></option>
+            <% end %>
+          </select>
+        </div>
+
+        <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700">
+          Search
+        </button>
+      <% end %>
+    </div>
+
+    <!-- Results Grid -->
+    <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+      <% @states.each do |state| %>
+        <%= link_to state_path(state.abbreviation), class: "bg-white rounded-lg shadow-sm border border-gray-200 p-4 hover:shadow-md transition-shadow text-center" do %>
+          <div class="text-2xl font-bold text-indigo-600"><%= state.abbreviation %></div>
+          <div class="mt-1 text-sm text-gray-900"><%= state.name %></div>
+          <% if state.state_type != 'state' %>
+            <div class="mt-1 text-xs text-gray-500 capitalize"><%= state.state_type.gsub('_', ' ') %></div>
+          <% end %>
+        <% end %>
+      <% end %>
+    </div>
+  </main>
+</div>

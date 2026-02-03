@@ -1,0 +1,157 @@
+<div class="min-h-screen bg-gray-50">
+  <%= render "shared/public_navbar" %>
+
+  <main class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+    <div class="mb-6">
+      <h1 class="text-3xl font-bold text-gray-900">Offices</h1>
+      <p class="mt-1 text-sm text-gray-500">Browse <%= number_with_delimiter(Office.count) %> political offices</p>
+    </div>
+
+    <!-- Search and Filters -->
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
+      <%= form_with url: offices_path, method: :get, local: true, class: "space-y-4" do |f| %>
+        <div class="flex gap-4">
+          <div class="flex-1">
+            <div class="relative">
+              <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                </svg>
+              </div>
+              <input type="text" name="q" value="<%= params[:q] %>" 
+                     class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" 
+                     placeholder="Search offices...">
+            </div>
+          </div>
+          <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700">
+            Search
+          </button>
+          <% if request.query_parameters.any? %>
+            <%= link_to "Clear", offices_path, class: "inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50" %>
+          <% end %>
+        </div>
+
+        <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
+          <div>
+            <label for="state" class="block text-xs font-medium text-gray-700 mb-1">State</label>
+            <select name="state" id="state" class="block w-full pl-3 pr-10 py-2 text-sm border-gray-300 rounded-md">
+              <option value="">All States</option>
+              <% @states.each do |state| %>
+                <option value="<%= state %>" <%= 'selected' if params[:state] == state %>><%= state %></option>
+              <% end %>
+            </select>
+          </div>
+
+          <div>
+            <label for="level" class="block text-xs font-medium text-gray-700 mb-1">Level</label>
+            <select name="level" id="level" class="block w-full pl-3 pr-10 py-2 text-sm border-gray-300 rounded-md">
+              <option value="">All Levels</option>
+              <% @levels.each do |level| %>
+                <option value="<%= level %>" <%= 'selected' if params[:level] == level %>><%= level.titleize %></option>
+              <% end %>
+            </select>
+          </div>
+
+          <div>
+            <label for="branch" class="block text-xs font-medium text-gray-700 mb-1">Branch</label>
+            <select name="branch" id="branch" class="block w-full pl-3 pr-10 py-2 text-sm border-gray-300 rounded-md">
+              <option value="">All Branches</option>
+              <% @branches.each do |branch| %>
+                <option value="<%= branch %>" <%= 'selected' if params[:branch] == branch %>><%= branch.titleize %></option>
+              <% end %>
+            </select>
+          </div>
+
+          <div>
+            <label for="category" class="block text-xs font-medium text-gray-700 mb-1">Category</label>
+            <select name="category" id="category" class="block w-full pl-3 pr-10 py-2 text-sm border-gray-300 rounded-md">
+              <option value="">All Categories</option>
+              <% @categories.each do |cat| %>
+                <option value="<%= cat %>" <%= 'selected' if params[:category] == cat %>><%= cat %></option>
+              <% end %>
+            </select>
+          </div>
+
+          <div>
+            <label for="body" class="block text-xs font-medium text-gray-700 mb-1">Body</label>
+            <select name="body" id="body" class="block w-full pl-3 pr-10 py-2 text-sm border-gray-300 rounded-md">
+              <option value="">All Bodies</option>
+              <% @bodies.first(20).each do |body| %>
+                <option value="<%= body %>" <%= 'selected' if params[:body] == body %>><%= truncate(body, length: 30) %></option>
+              <% end %>
+            </select>
+          </div>
+        </div>
+      <% end %>
+    </div>
+
+    <!-- Results -->
+    <div class="flex justify-between items-center mb-4">
+      <p class="text-sm text-gray-700">
+        Showing <span class="font-medium"><%= @offices.offset_value + 1 %></span> to 
+        <span class="font-medium"><%= [@offices.offset_value + @offices.length, @offices.total_count].min %></span> of 
+        <span class="font-medium"><%= number_with_delimiter(@offices.total_count) %></span> results
+      </p>
+    </div>
+
+    <div class="bg-white shadow-sm rounded-lg border border-gray-200 overflow-hidden">
+      <table class="min-w-full divide-y divide-gray-200">
+        <thead class="bg-gray-50">
+          <tr>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Office</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Level</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Branch</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">State</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Current Holder</th>
+          </tr>
+        </thead>
+        <tbody class="bg-white divide-y divide-gray-200">
+          <% @offices.each do |office| %>
+            <tr class="hover:bg-gray-50">
+              <td class="px-6 py-4">
+                <%= link_to office_path(office), class: "block" do %>
+                  <div class="text-sm font-medium text-indigo-600 hover:text-indigo-900"><%= office.title %></div>
+                  <% if office.body_name.present? %>
+                    <div class="text-xs text-gray-500"><%= office.body_name %></div>
+                  <% end %>
+                <% end %>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium 
+                  <%= case office.level
+                      when 'federal' then 'bg-purple-100 text-purple-800'
+                      when 'state' then 'bg-blue-100 text-blue-800'
+                      when 'local' then 'bg-green-100 text-green-800'
+                      end %>">
+                  <%= office.level.titleize %>
+                </span>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 capitalize"><%= office.branch %></td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <% if office.state.present? %>
+                  <%= link_to office.state, state_path(office.state), class: "text-sm text-gray-900 hover:text-indigo-600" %>
+                <% else %>
+                  <span class="text-sm text-gray-400">—</span>
+                <% end %>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <% holder = office.officeholders.find(&:current?) %>
+                <% if holder %>
+                  <%= link_to holder.person.full_name, person_path(holder.person), class: "text-sm text-gray-900 hover:text-indigo-600" %>
+                <% else %>
+                  <span class="text-sm text-gray-400">Vacant</span>
+                <% end %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+
+    <% if @offices.total_pages > 1 %>
+      <div class="mt-6 flex justify-center">
+        <%= paginate @offices %>
+      </div>
+    <% end %>
+  </main>
+</div>

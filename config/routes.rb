@@ -24,6 +24,13 @@ Rails.application.routes.draw do
     resources :officeholders
   end
 
+  # Public browsing
+  resources :people, only: [:index, :show]
+  resources :offices, only: [:index, :show]
+  resources :parties, only: [:index, :show]
+  resources :states, only: [:index, :show], param: :id
+  resources :districts, only: [:index, :show]
+
   # Public help section
   get "help", to: "help#index", as: :help
   get "help/data-sources", to: "help#data_sources", as: :help_data_sources

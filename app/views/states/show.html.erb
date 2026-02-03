@@ -1,0 +1,124 @@
+<div class="min-h-screen bg-gray-50">
+  <%= render "shared/public_navbar" %>
+
+  <main class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+    <div class="mb-4">
+      <%= link_to "← Back to States", states_path, class: "text-sm text-indigo-600 hover:text-indigo-900" %>
+    </div>
+
+    <!-- Header -->
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
+      <div class="flex justify-between items-start">
+        <div>
+          <h1 class="text-3xl font-bold text-gray-900"><%= @state.name %></h1>
+          <p class="mt-1 text-lg text-gray-500"><%= @state.abbreviation %></p>
+        </div>
+        <% if @state.state_type != 'state' %>
+          <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-800 capitalize">
+            <%= @state.state_type.gsub('_', ' ') %>
+          </span>
+        <% end %>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+      <!-- Stats Sidebar -->
+      <div class="space-y-6">
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <h3 class="text-lg font-semibold text-gray-900 mb-4">Overview</h3>
+          <dl class="space-y-4">
+            <div>
+              <dt class="text-sm text-gray-500">Politicians</dt>
+              <dd class="text-2xl font-bold text-gray-900"><%= number_with_delimiter(@people_count) %></dd>
+            </div>
+            <div>
+              <dt class="text-sm text-gray-500">Current Officeholders</dt>
+              <dd class="text-2xl font-bold text-green-600"><%= number_with_delimiter(@current_officeholders_count) %></dd>
+            </div>
+            <div>
+              <dt class="text-sm text-gray-500">Offices</dt>
+              <dd class="text-2xl font-bold text-gray-900"><%= number_with_delimiter(@offices_count) %></dd>
+            </div>
+            <div>
+              <dt class="text-sm text-gray-500">Districts</dt>
+              <dd class="text-2xl font-bold text-gray-900"><%= number_with_delimiter(@districts_count) %></dd>
+            </div>
+          </dl>
+        </div>
+
+        <% if @offices_by_level.any? %>
+          <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Offices by Level</h3>
+            <ul class="space-y-2">
+              <% @offices_by_level.each do |level, count| %>
+                <li class="flex justify-between text-sm">
+                  <span class="text-gray-600 capitalize"><%= level %></span>
+                  <span class="font-medium text-gray-900"><%= count %></span>
+                </li>
+              <% end %>
+            </ul>
+          </div>
+        <% end %>
+
+        <% if @party_breakdown.any? %>
+          <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Party Breakdown</h3>
+            <ul class="space-y-2 max-h-48 overflow-y-auto">
+              <% @party_breakdown.first(10).each do |party_name, count| %>
+                <li class="flex justify-between text-sm">
+                  <span class="text-gray-600"><%= party_name %></span>
+                  <span class="font-medium text-gray-900"><%= count %></span>
+                </li>
+              <% end %>
+            </ul>
+          </div>
+        <% end %>
+      </div>
+
+      <!-- Politicians List -->
+      <div class="lg:col-span-3">
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+          <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+            <h2 class="text-lg font-semibold text-gray-900">Politicians from <%= @state.name %></h2>
+            <%= link_to "View all →", people_path(state: @state.abbreviation), class: "text-sm text-indigo-600 hover:text-indigo-900" %>
+          </div>
+          
+          <div class="divide-y divide-gray-200">
+            <% @people.each do |person| %>
+              <div class="px-6 py-4 hover:bg-gray-50">
+                <%= link_to person_path(person), class: "flex items-center justify-between" do %>
+                  <div class="flex items-center gap-3">
+                    <% if person.photo_url.present? %>
+                      <img src="<%= person.photo_url %>" alt="" class="w-10 h-10 rounded-full object-cover">
+                    <% else %>
+                      <div class="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">
+                        <span class="text-gray-500 font-medium text-sm"><%= person.first_name.first %><%= person.last_name.first %></span>
+                      </div>
+                    <% end %>
+                    <div>
+                      <div class="text-sm font-medium text-gray-900"><%= person.full_name %></div>
+                      <% if person.primary_party %>
+                        <div class="text-xs text-gray-500"><%= person.primary_party.name %></div>
+                      <% end %>
+                    </div>
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <% if person.current_officeholder? %>
+                      <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">Current</span>
+                    <% end %>
+                  </div>
+                <% end %>
+              </div>
+            <% end %>
+          </div>
+
+          <% if @people.total_pages > 1 %>
+            <div class="px-6 py-4 border-t border-gray-200">
+              <%= paginate @people %>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>

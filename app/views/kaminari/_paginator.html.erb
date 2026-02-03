@@ -1,0 +1,21 @@
+<%= paginator.render do -%>
+  <nav class="flex items-center justify-between border-t border-gray-200 px-4 sm:px-0">
+    <div class="-mt-px flex w-0 flex-1">
+      <%= first_page_tag unless current_page.first? %>
+    </div>
+    <div class="hidden md:-mt-px md:flex">
+      <%= prev_page_tag unless current_page.first? %>
+      <% each_page do |page| -%>
+        <% if page.left_outer? || page.right_outer? || page.inside_window? -%>
+          <%= page_tag page %>
+        <% elsif !page.was_truncated? -%>
+          <%= gap_tag %>
+        <% end -%>
+      <% end -%>
+      <%= next_page_tag unless current_page.last? %>
+    </div>
+    <div class="-mt-px flex w-0 flex-1 justify-end">
+      <%= last_page_tag unless current_page.last? %>
+    </div>
+  </nav>
+<% end -%>
