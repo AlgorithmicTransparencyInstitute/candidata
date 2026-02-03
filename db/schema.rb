@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_02_03_004252) do
+ActiveRecord::Schema[7.2].define(version: 2026_02_03_031237) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -48,8 +48,12 @@ ActiveRecord::Schema[7.2].define(version: 2026_02_03_004252) do
     t.string "election_type", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.integer "year"
+    t.string "name"
     t.index ["date"], name: "index_ballots_on_date"
     t.index ["state", "date", "election_type"], name: "index_ballots_unique", unique: true
+    t.index ["state", "year", "election_type"], name: "index_ballots_on_state_and_year_and_election_type", unique: true
+    t.index ["year"], name: "index_ballots_on_year"
   end
 
   create_table "candidates", force: :cascade do |t|
@@ -59,7 +63,12 @@ ActiveRecord::Schema[7.2].define(version: 2026_02_03_004252) do
     t.integer "tally", default: 0
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "party_at_time"
+    t.boolean "incumbent", default: false
+    t.string "airtable_id"
+    t.index ["airtable_id"], name: "index_candidates_on_airtable_id", unique: true
     t.index ["contest_id"], name: "index_candidates_on_contest_id"
+    t.index ["incumbent"], name: "index_candidates_on_incumbent"
     t.index ["outcome"], name: "index_candidates_on_outcome"
     t.index ["person_id", "contest_id"], name: "index_candidates_unique", unique: true
     t.index ["person_id"], name: "index_candidates_on_person_id"
@@ -98,6 +107,11 @@ ActiveRecord::Schema[7.2].define(version: 2026_02_03_004252) do
     t.date "end_date"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.integer "elected_year"
+    t.boolean "appointed", default: false
+    t.string "airtable_id"
+    t.index ["airtable_id"], name: "index_officeholders_on_airtable_id", unique: true
+    t.index ["elected_year"], name: "index_officeholders_on_elected_year"
     t.index ["end_date"], name: "index_officeholders_on_end_date"
     t.index ["office_id"], name: "index_officeholders_on_office_id"
     t.index ["person_id", "office_id", "start_date"], name: "index_officeholders_unique", unique: true
@@ -113,9 +127,22 @@ ActiveRecord::Schema[7.2].define(version: 2026_02_03_004252) do
     t.bigint "district_id"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "office_category"
+    t.string "body_name"
+    t.string "seat"
+    t.string "role"
+    t.string "jurisdiction"
+    t.string "jurisdiction_ocdid"
+    t.string "ocdid"
+    t.string "airtable_id"
+    t.index ["airtable_id"], name: "index_offices_on_airtable_id", unique: true
+    t.index ["body_name"], name: "index_offices_on_body_name"
     t.index ["branch"], name: "index_offices_on_branch"
     t.index ["district_id"], name: "index_offices_on_district_id"
     t.index ["level"], name: "index_offices_on_level"
+    t.index ["ocdid"], name: "index_offices_on_ocdid"
+    t.index ["office_category"], name: "index_offices_on_office_category"
+    t.index ["role"], name: "index_offices_on_role"
     t.index ["title", "level", "state", "district_id"], name: "index_offices_unique", unique: true
   end
 
@@ -138,9 +165,127 @@ ActiveRecord::Schema[7.2].define(version: 2026_02_03_004252) do
     t.string "state_of_residence"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "person_uuid"
+    t.string "middle_name"
+    t.string "suffix"
+    t.string "gender"
+    t.string "race"
+    t.string "photo_url"
+    t.string "website_official"
+    t.string "website_campaign"
+    t.string "website_personal"
+    t.string "airtable_id"
+    t.index ["airtable_id"], name: "index_people_on_airtable_id", unique: true
     t.index ["first_name", "last_name"], name: "index_people_on_first_name_and_last_name"
     t.index ["party_affiliation_id"], name: "index_people_on_party_affiliation_id"
+    t.index ["person_uuid"], name: "index_people_on_person_uuid", unique: true
     t.index ["state_of_residence"], name: "index_people_on_state_of_residence"
+  end
+
+  create_table "person_parties", force: :cascade do |t|
+    t.bigint "person_id", null: false
+    t.bigint "party_id", null: false
+    t.boolean "is_primary", default: false, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["party_id"], name: "index_person_parties_on_party_id"
+    t.index ["person_id", "is_primary"], name: "index_person_parties_one_primary", unique: true, where: "(is_primary = true)"
+    t.index ["person_id", "party_id"], name: "index_person_parties_on_person_id_and_party_id", unique: true
+    t.index ["person_id"], name: "index_person_parties_on_person_id"
+  end
+
+  create_table "social_media_accounts", force: :cascade do |t|
+    t.bigint "person_id", null: false
+    t.string "platform", null: false
+    t.string "channel_type"
+    t.string "url"
+    t.string "handle"
+    t.string "status"
+    t.boolean "verified", default: false
+    t.boolean "account_inactive", default: false
+    t.string "airtable_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["airtable_id"], name: "index_social_media_accounts_on_airtable_id", unique: true
+    t.index ["channel_type"], name: "index_social_media_accounts_on_channel_type"
+    t.index ["person_id", "platform", "handle"], name: "idx_social_accounts_unique", unique: true
+    t.index ["person_id"], name: "index_social_media_accounts_on_person_id"
+    t.index ["platform"], name: "index_social_media_accounts_on_platform"
+  end
+
+  create_table "states", force: :cascade do |t|
+    t.string "name", null: false
+    t.string "abbreviation", null: false
+    t.string "fips_code"
+    t.string "state_type", default: "state"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["abbreviation"], name: "index_states_on_abbreviation", unique: true
+    t.index ["fips_code"], name: "index_states_on_fips_code", unique: true
+    t.index ["name"], name: "index_states_on_name", unique: true
+  end
+
+  create_table "temp_accounts", force: :cascade do |t|
+    t.string "source_type"
+    t.string "url"
+    t.string "platform"
+    t.string "channel_type"
+    t.string "status"
+    t.string "state"
+    t.string "office_name"
+    t.string "level"
+    t.string "office_category"
+    t.string "people_name"
+    t.string "party_roll_up"
+    t.boolean "account_inactive"
+    t.boolean "verified"
+    t.text "raw_data"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["channel_type"], name: "index_temp_accounts_on_channel_type"
+    t.index ["platform"], name: "index_temp_accounts_on_platform"
+    t.index ["source_type"], name: "index_temp_accounts_on_source_type"
+    t.index ["state"], name: "index_temp_accounts_on_state"
+  end
+
+  create_table "temp_people", force: :cascade do |t|
+    t.string "source_type"
+    t.string "official_name"
+    t.string "state"
+    t.string "level"
+    t.string "role"
+    t.string "jurisdiction"
+    t.string "jurisdiction_ocdid"
+    t.string "electoral_district"
+    t.string "electoral_district_ocdid"
+    t.string "office_uuid"
+    t.string "office_name"
+    t.string "seat"
+    t.string "office_category"
+    t.string "body_name"
+    t.string "person_uuid"
+    t.string "registered_political_party"
+    t.string "race"
+    t.string "gender"
+    t.string "photo_url"
+    t.string "website_official"
+    t.string "website_campaign"
+    t.string "website_personal"
+    t.string "candidate_uuid"
+    t.boolean "incumbent"
+    t.boolean "is_2024_candidate"
+    t.boolean "is_2024_office_holder"
+    t.string "general_election_winner"
+    t.string "party_roll_up"
+    t.text "raw_data"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["level"], name: "index_temp_people_on_level"
+    t.index ["office_category"], name: "index_temp_people_on_office_category"
+    t.index ["person_uuid"], name: "index_temp_people_on_person_uuid"
+    t.index ["registered_political_party"], name: "index_temp_people_on_registered_political_party"
+    t.index ["source_type"], name: "index_temp_people_on_source_type"
+    t.index ["state"], name: "index_temp_people_on_state"
   end
 
   create_table "users", force: :cascade do |t|
@@ -176,4 +321,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_02_03_004252) do
   add_foreign_key "officeholders", "people"
   add_foreign_key "offices", "districts"
   add_foreign_key "people", "parties", column: "party_affiliation_id"
+  add_foreign_key "person_parties", "parties"
+  add_foreign_key "person_parties", "people"
+  add_foreign_key "social_media_accounts", "people"
 end

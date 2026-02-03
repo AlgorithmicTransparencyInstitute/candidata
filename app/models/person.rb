@@ -1,14 +1,106 @@
 class Person < ApplicationRecord
+  # Legacy direct party link (kept for backwards compatibility during migration)
   belongs_to :party_affiliation, class_name: 'Party', optional: true
+  
+  # New many-to-many party relationship
+  has_many :person_parties, dependent: :destroy
+  has_many :parties, through: :person_parties
+  
   has_many :candidates
   has_many :contests, through: :candidates
   has_many :officeholders
   has_many :offices, through: :officeholders
+  has_many :social_media_accounts, dependent: :destroy
+
+  GENDERS = %w[Male Female Other].freeze
+  SUFFIXES = %w[Jr. Sr. II III IV V].freeze
   
   validates :first_name, presence: true
   validates :last_name, presence: true
+  validates :person_uuid, uniqueness: true, allow_nil: true
+  validates :airtable_id, uniqueness: true, allow_nil: true
+  validates :gender, inclusion: { in: GENDERS, allow_blank: true }
+
+  # Scopes for filtering by political status
+  scope :current_officeholders, -> { 
+    joins(:officeholders).merge(Officeholder.current).distinct 
+  }
+  scope :former_officeholders, -> { 
+    where(id: Officeholder.former.select(:person_id))
+      .where.not(id: Officeholder.current.select(:person_id))
+  }
+  scope :officeholders_as_of, ->(date) { 
+    joins(:officeholders).merge(Officeholder.as_of(date)).distinct 
+  }
+  scope :candidates_in_year, ->(year) { 
+    joins(:candidates).merge(Candidate.for_year(year)).distinct 
+  }
+  scope :election_winners_in_year, ->(year) { 
+    joins(:candidates).merge(Candidate.for_year(year).winners).distinct 
+  }
+  scope :election_losers_in_year, ->(year) { 
+    joins(:candidates).merge(Candidate.for_year(year).losers).distinct 
+  }
+  scope :by_state, ->(state) { where(state_of_residence: state) }
+  scope :by_party, ->(party) { joins(:parties).where(parties: { id: party }) }
   
   def full_name
-    "#{first_name} #{last_name}"
+    parts = [first_name, middle_name, last_name, suffix].compact_blank
+    parts.join(' ')
+  end
+
+  def formal_name
+    "#{first_name} #{last_name}#{suffix.present? ? ", #{suffix}" : ''}"
+  end
+
+  def primary_party
+    person_parties.find_by(is_primary: true)&.party || party_affiliation
+  end
+
+  def primary_party=(party)
+    # Clear existing primary
+    person_parties.where(is_primary: true).update_all(is_primary: false)
+    
+    # Set new primary
+    if party
+      pp = person_parties.find_or_initialize_by(party: party)
+      pp.is_primary = true
+      pp.save!
+    end
+  end
+
+  def add_party(party, is_primary: false)
+    pp = person_parties.find_or_initialize_by(party: party)
+    if is_primary
+      person_parties.where(is_primary: true).where.not(party: party).update_all(is_primary: false)
+      pp.is_primary = true
+    end
+    pp.save!
+    pp
+  end
+
+  # Status check methods
+  def current_officeholder?
+    officeholders.current.exists?
+  end
+
+  def officeholder_on?(date)
+    officeholders.as_of(date).exists?
+  end
+
+  def candidate_in_year?(year)
+    candidates.for_year(year).exists?
+  end
+
+  def won_election_in_year?(year)
+    candidates.for_year(year).winners.exists?
+  end
+
+  def current_offices
+    offices.joins(:officeholders).merge(Officeholder.current).distinct
+  end
+
+  def offices_held_on(date)
+    offices.joins(:officeholders).merge(Officeholder.as_of(date)).distinct
   end
 end

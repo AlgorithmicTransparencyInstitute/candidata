@@ -1,19 +1,5 @@
 <div class="min-h-screen bg-gray-50">
-  <nav class="bg-white shadow">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="flex justify-between h-16">
-        <div class="flex items-center">
-          <%= link_to "Dashboard", admin_root_path, class: "text-gray-700 hover:text-gray-900 mr-6" %>
-          <%= link_to "Parties", admin_parties_path, class: "text-gray-700 hover:text-gray-900 mr-6" %>
-          <h1 class="text-xl font-bold text-gray-900">New Party</h1>
-        </div>
-        <div class="flex items-center space-x-4">
-          <span class="text-gray-700"><%= session[:user_email] %></span>
-          <%= link_to "Logout", logout_path, method: :delete, class: "inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700" %>
-        </div>
-      </div>
-    </div>
-  </nav>
+  <%= render "shared/navbar" %>
 
   <main class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
     <div class="px-4 py-6 sm:px-0">

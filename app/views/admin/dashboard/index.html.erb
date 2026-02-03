@@ -1,20 +1,5 @@
 <div class="min-h-screen bg-gray-50">
-  <nav class="bg-white shadow">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="flex justify-between h-16">
-        <div class="flex items-center">
-          <h1 class="text-xl font-bold text-gray-900">Candidata Admin</h1>
-        </div>
-        <div class="flex items-center space-x-4">
-          <% if current_user.avatar.attached? %>
-            <%= image_tag current_user.avatar, alt: "Avatar", class: "w-8 h-8 rounded-full object-cover" %>
-          <% end %>
-          <span class="text-gray-700"><%= current_user.name || current_user.email %></span>
-          <%= button_to "Logout", destroy_user_session_path, method: :delete, class: "inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700" %>
-        </div>
-      </div>
-    </div>
-  </nav>
+  <%= render "shared/navbar" %>
 
   <main class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
     <div class="px-4 py-6 sm:px-0">
