@@ -16,30 +16,73 @@ parties = [
   { name: "Libertarian Party", abbreviation: "LIB", ideology: "Libertarian" },
   { name: "Green Party", abbreviation: "GRN", ideology: "Left-wing" },
   { name: "Constitution Party", abbreviation: "CST", ideology: "Right-wing" },
-  
+
   # Non-partisan / Independent
   { name: "Nonpartisan", abbreviation: "NPT", ideology: "Various" },
   { name: "Independent", abbreviation: "IND", ideology: "Various" },
   { name: "Independent Party", abbreviation: "IPT", ideology: "Various" },
+  { name: "Independent Party of Delaware", abbreviation: "IPD", ideology: "Various" },
   { name: "Unaffiliated", abbreviation: "UNA", ideology: "Various" },
   { name: "Unknown", abbreviation: "UNK", ideology: "Various" },
-  
-  # Minor US parties
+
+  # Progressive / Left-wing parties
   { name: "Working Families Party", abbreviation: "WFP", ideology: "Progressive" },
   { name: "Progressive Party", abbreviation: "PRO", ideology: "Progressive" },
-  { name: "Conservative Party USA", abbreviation: "CPU", ideology: "Right-wing" },
   { name: "Peace and Freedom Party", abbreviation: "PFP", ideology: "Left-wing" },
+  { name: "Green Mountain Peace and Justice Party", abbreviation: "GMP", ideology: "Left-wing" },
+  { name: "Liberty Union Party", abbreviation: "LUP", ideology: "Left-wing" },
+  { name: "DC Statehood Green Party", abbreviation: "DCS", ideology: "Left-wing" },
+  { name: "Pacific Green Party", abbreviation: "PGP", ideology: "Left-wing" },
+  { name: "Wisconsin Green Party", abbreviation: "WGP", ideology: "Left-wing" },
+  { name: "Workers Party", abbreviation: "WRK", ideology: "Left-wing" },
+  { name: "Working Class Party", abbreviation: "WCP", ideology: "Left-wing" },
+  { name: "Legal Marijuana Now", abbreviation: "LMN", ideology: "Progressive" },
+
+  # Conservative / Right-wing parties
+  { name: "Conservative Party", abbreviation: "CON", ideology: "Right-wing" },
   { name: "U.S. Taxpayers Party", abbreviation: "UST", ideology: "Right-wing" },
+  { name: "American Constitution Party", abbreviation: "ACP", ideology: "Right-wing" },
+  { name: "American Independent Party", abbreviation: "AIP", ideology: "Right-wing" },
+  { name: "Independent American Party", abbreviation: "IAP", ideology: "Right-wing" },
+  { name: "Independent American Party of Nevada", abbreviation: "IAN", ideology: "Right-wing" },
+
+  # Centrist / Reform parties
   { name: "Reform Party", abbreviation: "REF", ideology: "Centrist" },
   { name: "Forward Party", abbreviation: "FWD", ideology: "Centrist" },
   { name: "No Labels", abbreviation: "NLB", ideology: "Centrist" },
-  
-  # Puerto Rico parties
+  { name: "Unity Party", abbreviation: "UNI", ideology: "Centrist" },
+  { name: "Common Sense Party", abbreviation: "CSP", ideology: "Centrist" },
+  { name: "Alliance Party", abbreviation: "ALL", ideology: "Centrist" },
+  { name: "Better Party", abbreviation: "BET", ideology: "Centrist" },
+  { name: "Approval Voting Party", abbreviation: "AVP", ideology: "Centrist" },
+  { name: "Natural Law Party", abbreviation: "NLP", ideology: "Centrist" },
+
+  # State-specific parties
+  { name: "Alaskan Independence Party", abbreviation: "AKI", ideology: "Right-wing" },
+  { name: "Colorado Center Party", abbreviation: "CCP", ideology: "Centrist" },
+  { name: "Colorado Forward Party", abbreviation: "CFP", ideology: "Centrist" },
+  { name: "Democratic-Farmer-Labor Party", abbreviation: "DFL", ideology: "Center-left" },
+  { name: "Democratic-NPL Party", abbreviation: "DNP", ideology: "Center-left" },
+  { name: "Independence Party", abbreviation: "INP", ideology: "Centrist" },
+  { name: "Independence-Alliance", abbreviation: "INA", ideology: "Centrist" },
+  { name: "Independence-Alliance Party", abbreviation: "IAL", ideology: "Centrist" },
+  { name: "Mountain Party", abbreviation: "MTP", ideology: "Progressive" },
+  { name: "United Citizens Party", abbreviation: "UCP", ideology: "Various" },
+  { name: "United Kansas Party", abbreviation: "UKP", ideology: "Centrist" },
+  { name: "United Utah Party", abbreviation: "UUP", ideology: "Centrist" },
+  { name: "Epic Party", abbreviation: "EPC", ideology: "Various" },
+  { name: "We The People", abbreviation: "WTP", ideology: "Populist" },
+  { name: "We The People Party", abbreviation: "WPP", ideology: "Populist" },
+
+  # Territory parties - Puerto Rico
   { name: "Partido Nuevo Progresista", abbreviation: "PNP", ideology: "Center-right" },
   { name: "Partido Popular Democrático", abbreviation: "PPD", ideology: "Center-left" },
   { name: "Partido Independentista Puertorriqueño", abbreviation: "PIP", ideology: "Left-wing" },
   { name: "Movimiento Victoria Ciudadana", abbreviation: "MVC", ideology: "Progressive" },
-  { name: "Proyecto Dignidad", abbreviation: "PD", ideology: "Conservative" }
+  { name: "Proyecto Dignidad", abbreviation: "PD", ideology: "Conservative" },
+
+  # Territory parties - US Virgin Islands
+  { name: "Independent Citizens Movement of the Virgin Islands", abbreviation: "ICM", ideology: "Various" }
 ]
 
 parties.each do |party_data|
