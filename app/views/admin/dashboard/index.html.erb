@@ -6,8 +6,11 @@
           <h1 class="text-xl font-bold text-gray-900">Candidata Admin</h1>
         </div>
         <div class="flex items-center space-x-4">
-          <span class="text-gray-700"><%= session[:user_email] %></span>
-          <%= link_to "Logout", logout_path, method: :delete, class: "inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700" %>
+          <% if current_user.avatar.attached? %>
+            <%= image_tag current_user.avatar, alt: "Avatar", class: "w-8 h-8 rounded-full object-cover" %>
+          <% end %>
+          <span class="text-gray-700"><%= current_user.name || current_user.email %></span>
+          <%= button_to "Logout", destroy_user_session_path, method: :delete, class: "inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700" %>
         </div>
       </div>
     </div>

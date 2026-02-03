@@ -1,5 +1,5 @@
 class Admin::DashboardController < ApplicationController
-  before_action :require_admin
+  before_action :authenticate_user!
   
   def index
     @party_count = Party.count
@@ -13,11 +13,5 @@ class Admin::DashboardController < ApplicationController
     
     @recent_contests = Contest.order(date: :desc).limit(5)
     @current_officeholders = Officeholder.current.includes(:person, :office).limit(10)
-  end
-  
-  private
-  
-  def require_admin
-    redirect_to login_path unless session[:user_email]
   end
 end

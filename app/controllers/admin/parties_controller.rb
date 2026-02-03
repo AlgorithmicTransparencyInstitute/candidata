@@ -1,5 +1,5 @@
 class Admin::PartiesController < ApplicationController
-  before_action :require_admin
+  before_action :authenticate_user!
   before_action :set_party, only: [:show, :edit, :update, :destroy]
 
   def index
@@ -46,7 +46,4 @@ class Admin::PartiesController < ApplicationController
     params.require(:party).permit(:name, :abbreviation, :ideology)
   end
 
-  def require_admin
-    redirect_to login_path unless session[:user_email]
-  end
 end

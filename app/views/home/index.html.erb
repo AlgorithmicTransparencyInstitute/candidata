@@ -6,8 +6,12 @@
           <h1 class="text-xl font-bold text-gray-900">Candidata</h1>
         </div>
         <div class="flex items-center space-x-4">
-          <span class="text-gray-700"><%= @user_email %></span>
-          <%= button_to "Logout", logout_path, method: :delete, class: "inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700" %>
+          <% if @user.avatar.attached? %>
+            <%= image_tag @user.avatar, alt: "Avatar", class: "w-8 h-8 rounded-full object-cover" %>
+          <% end %>
+          <span class="text-gray-700"><%= @user.name || @user.email %></span>
+          <span class="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded"><%= @user.role.titleize %></span>
+          <%= button_to "Logout", destroy_user_session_path, method: :delete, class: "inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700" %>
         </div>
       </div>
     </div>
@@ -19,21 +23,16 @@
         <span class="block sm:inline"><%= flash[:notice] %></span>
       </div>
     <% end %>
+    <% if flash[:alert] %>
+      <div class="mb-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
+        <span class="block sm:inline"><%= flash[:alert] %></span>
+      </div>
+    <% end %>
 
     <div class="px-4 py-6 sm:px-0">
       <div class="border-4 border-dashed border-gray-200 rounded-lg p-8">
-        <h2 class="text-2xl font-bold text-gray-900 mb-4">Your Assigned Records</h2>
-        <p class="text-gray-600 mb-4">Records from Airtable will appear here once the API integration is complete.</p>
-        
-        <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4">
-          <div class="flex">
-            <div class="ml-3">
-              <p class="text-sm text-yellow-700">
-                <strong>Next Steps:</strong> Connect to Airtable API to fetch records assigned to <strong><%= @user_email %></strong>
-              </p>
-            </div>
-          </div>
-        </div>
+        <h2 class="text-2xl font-bold text-gray-900 mb-4">Welcome, <%= @user.name || @user.email %>!</h2>
+        <p class="text-gray-600 mb-4">Your assigned tasks and records will appear here.</p>
         
         <div class="mt-6 bg-blue-50 border-l-4 border-blue-400 p-4">
           <div class="flex">
