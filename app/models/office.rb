@@ -6,7 +6,7 @@ class Office < ApplicationRecord
 
   LEVELS = %w[federal state local].freeze
   BRANCHES = %w[legislative executive judicial].freeze
-  ROLES = %w[headOfGovernment headOfState legislatorUpperBody legislatorLowerBody highestCourtJudge judge executiveCouncil governmentOfficer].freeze
+  ROLES = %w[headOfGovernment headOfState deputyHeadOfGovernment legislatorUpperBody legislatorLowerBody highestCourtJudge judge executiveCouncil governmentOfficer schoolBoard].freeze
   
   validates :title, presence: true
   validates :level, presence: true, inclusion: { in: LEVELS }

@@ -1,0 +1,153 @@
+<div class="max-w-4xl mx-auto px-4 py-8">
+  <nav class="mb-6">
+    <%= link_to "← Back to Help", help_path, class: "text-blue-600 hover:text-blue-800" %>
+  </nav>
+
+  <h1 class="text-3xl font-bold text-gray-900 mb-6">Coverage Statistics</h1>
+
+  <p class="text-lg text-gray-600 mb-8">
+    Current database statistics showing the extent of our political data coverage.
+  </p>
+
+  <section class="mb-10">
+    <h2 class="text-2xl font-semibold text-gray-900 mb-4">Database Totals</h2>
+
+    <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+      <div class="bg-white rounded-lg border border-gray-200 p-6 text-center">
+        <div class="text-3xl font-bold text-blue-600"><%= number_with_delimiter(@stats[:people]) %></div>
+        <div class="text-sm text-gray-600 mt-1">People</div>
+      </div>
+      <div class="bg-white rounded-lg border border-gray-200 p-6 text-center">
+        <div class="text-3xl font-bold text-green-600"><%= number_with_delimiter(@stats[:offices]) %></div>
+        <div class="text-sm text-gray-600 mt-1">Offices</div>
+      </div>
+      <div class="bg-white rounded-lg border border-gray-200 p-6 text-center">
+        <div class="text-3xl font-bold text-purple-600"><%= number_with_delimiter(@stats[:officeholders]) %></div>
+        <div class="text-sm text-gray-600 mt-1">Officeholder Records</div>
+      </div>
+      <div class="bg-white rounded-lg border border-gray-200 p-6 text-center">
+        <div class="text-3xl font-bold text-red-600"><%= number_with_delimiter(@stats[:parties]) %></div>
+        <div class="text-sm text-gray-600 mt-1">Political Parties</div>
+      </div>
+      <div class="bg-white rounded-lg border border-gray-200 p-6 text-center">
+        <div class="text-3xl font-bold text-orange-600"><%= number_with_delimiter(@stats[:districts]) %></div>
+        <div class="text-sm text-gray-600 mt-1">Districts</div>
+      </div>
+      <div class="bg-white rounded-lg border border-gray-200 p-6 text-center">
+        <div class="text-3xl font-bold text-teal-600"><%= @stats[:states] %></div>
+        <div class="text-sm text-gray-600 mt-1">States & Territories</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="mb-10">
+    <h2 class="text-2xl font-semibold text-gray-900 mb-4">Expected Coverage</h2>
+
+    <p class="text-gray-600 mb-4">
+      Based on our data sources, here is the expected coverage when fully imported:
+    </p>
+
+    <table class="min-w-full divide-y divide-gray-200">
+      <thead class="bg-gray-50">
+        <tr>
+          <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Category</th>
+          <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Expected</th>
+          <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Description</th>
+        </tr>
+      </thead>
+      <tbody class="bg-white divide-y divide-gray-200">
+        <tr>
+          <td class="px-4 py-3 text-sm font-medium text-gray-900">Current Officeholders</td>
+          <td class="px-4 py-3 text-sm text-gray-600">~42,700</td>
+          <td class="px-4 py-3 text-sm text-gray-600">From GovProj data (federal, state, local)</td>
+        </tr>
+        <tr>
+          <td class="px-4 py-3 text-sm font-medium text-gray-900">Candidates (2024)</td>
+          <td class="px-4 py-3 text-sm text-gray-600">~9,000</td>
+          <td class="px-4 py-3 text-sm text-gray-600">People who ran but are not current officeholders</td>
+        </tr>
+        <tr>
+          <td class="px-4 py-3 text-sm font-medium text-gray-900">Total Unique People</td>
+          <td class="px-4 py-3 text-sm text-gray-600">~51,700</td>
+          <td class="px-4 py-3 text-sm text-gray-600">Combined officeholders and candidates</td>
+        </tr>
+        <tr>
+          <td class="px-4 py-3 text-sm font-medium text-gray-900">Social Media Accounts</td>
+          <td class="px-4 py-3 text-sm text-gray-600">~64,800</td>
+          <td class="px-4 py-3 text-sm text-gray-600">Across 10 platforms</td>
+        </tr>
+        <tr>
+          <td class="px-4 py-3 text-sm font-medium text-gray-900">Political Parties</td>
+          <td class="px-4 py-3 text-sm text-gray-600">23+</td>
+          <td class="px-4 py-3 text-sm text-gray-600">Including territory-specific parties</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="mb-10">
+    <h2 class="text-2xl font-semibold text-gray-900 mb-4">Federal Coverage</h2>
+
+    <div class="grid md:grid-cols-2 gap-6">
+      <div class="bg-blue-50 rounded-lg p-6">
+        <h3 class="font-semibold text-blue-900 mb-3">U.S. Congress</h3>
+        <ul class="text-blue-800 space-y-2">
+          <li><strong>100</strong> U.S. Senators (2 per state)</li>
+          <li><strong>435</strong> U.S. Representatives</li>
+          <li><strong>6</strong> Non-voting delegates (DC, PR, GU, VI, AS, MP)</li>
+        </ul>
+      </div>
+      <div class="bg-green-50 rounded-lg p-6">
+        <h3 class="font-semibold text-green-900 mb-3">Executive Branch</h3>
+        <ul class="text-green-800 space-y-2">
+          <li><strong>1</strong> President</li>
+          <li><strong>1</strong> Vice President</li>
+          <li>Cabinet members (when tracked)</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="mb-10">
+    <h2 class="text-2xl font-semibold text-gray-900 mb-4">State Coverage</h2>
+
+    <div class="grid md:grid-cols-2 gap-6">
+      <div class="bg-purple-50 rounded-lg p-6">
+        <h3 class="font-semibold text-purple-900 mb-3">State Executives</h3>
+        <ul class="text-purple-800 space-y-2">
+          <li><strong>50</strong> Governors</li>
+          <li><strong>45</strong> Lieutenant Governors</li>
+          <li><strong>50</strong> Attorneys General</li>
+          <li><strong>47</strong> Secretaries of State</li>
+          <li>+ State Treasurers, Auditors, etc.</li>
+        </ul>
+      </div>
+      <div class="bg-orange-50 rounded-lg p-6">
+        <h3 class="font-semibold text-orange-900 mb-3">State Legislatures</h3>
+        <ul class="text-orange-800 space-y-2">
+          <li><strong>~1,970</strong> State Senators</li>
+          <li><strong>~4,700</strong> State Representatives</li>
+          <li>Across 49 bicameral + 1 unicameral (NE) legislatures</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2 class="text-2xl font-semibold text-gray-900 mb-4">Local Coverage</h2>
+
+    <div class="bg-gray-50 rounded-lg p-6">
+      <p class="text-gray-700 mb-4">
+        Local government coverage includes county and municipal officials. Coverage varies 
+        by state and locality, with strongest coverage in:
+      </p>
+      <ul class="list-disc list-inside text-gray-600 space-y-1">
+        <li>County commissioners and supervisors</li>
+        <li>Mayors and city council members</li>
+        <li>Sheriffs and county attorneys</li>
+        <li>County clerks, treasurers, and auditors</li>
+        <li>School board members (where elected)</li>
+      </ul>
+    </div>
+  </section>
+</div>

@@ -1,0 +1,112 @@
+<div class="max-w-4xl mx-auto px-4 py-8">
+  <nav class="mb-6">
+    <%= link_to "← Back to Help", help_path, class: "text-blue-600 hover:text-blue-800" %>
+  </nav>
+
+  <h1 class="text-3xl font-bold text-gray-900 mb-6">Data Sources</h1>
+
+  <div class="prose prose-lg max-w-none">
+    <p class="text-gray-600 mb-8">
+      Candidata aggregates political data from multiple authoritative sources to provide 
+      comprehensive coverage of elected officials and candidates across the United States.
+    </p>
+
+    <section class="mb-10">
+      <h2 class="text-2xl font-semibold text-gray-900 mb-4">Primary Data Sources</h2>
+
+      <div class="bg-white rounded-lg border border-gray-200 p-6 mb-6">
+        <h3 class="text-xl font-semibold text-gray-900 mb-2">GovProj (Current Officeholders)</h3>
+        <p class="text-gray-600 mb-4">
+          GovProj from ballotinfo.org provides comprehensive data on current elected officials 
+          across all 50 states, DC, and US territories.
+        </p>
+        <ul class="list-disc list-inside text-gray-600 space-y-1">
+          <li><strong>Coverage:</strong> 42,780+ current officeholders</li>
+          <li><strong>Levels:</strong> Federal, State, County, City, and Special Districts</li>
+          <li><strong>Data includes:</strong> Names, offices, party affiliation, contact information, term dates</li>
+          <li><strong>Update frequency:</strong> Periodic updates as officials change</li>
+        </ul>
+      </div>
+
+      <div class="bg-white rounded-lg border border-gray-200 p-6 mb-6">
+        <h3 class="text-xl font-semibold text-gray-900 mb-2">Election Data (Candidates)</h3>
+        <p class="text-gray-600 mb-4">
+          Historical and current election data including candidates who ran for office, 
+          election outcomes, and campaign information.
+        </p>
+        <ul class="list-disc list-inside text-gray-600 space-y-1">
+          <li><strong>Coverage:</strong> 17,900+ candidate records</li>
+          <li><strong>Focus:</strong> Federal and state-level races</li>
+          <li><strong>Data includes:</strong> Candidate names, parties, incumbency status, election outcomes</li>
+        </ul>
+      </div>
+
+      <div class="bg-white rounded-lg border border-gray-200 p-6">
+        <h3 class="text-xl font-semibold text-gray-900 mb-2">Social Media Accounts</h3>
+        <p class="text-gray-600 mb-4">
+          Verified social media presence for elected officials and candidates across 
+          multiple platforms.
+        </p>
+        <ul class="list-disc list-inside text-gray-600 space-y-1">
+          <li><strong>Coverage:</strong> 64,800+ social media accounts</li>
+          <li><strong>Platforms:</strong> Facebook, Twitter/X, Instagram, YouTube, TikTok, and more</li>
+          <li><strong>Account types:</strong> Official government, campaign, and personal accounts</li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="mb-10">
+      <h2 class="text-2xl font-semibold text-gray-900 mb-4">Geographic Coverage</h2>
+      
+      <div class="grid md:grid-cols-2 gap-6">
+        <div class="bg-gray-50 rounded-lg p-6">
+          <h3 class="font-semibold text-gray-900 mb-3">States (50)</h3>
+          <p class="text-gray-600 text-sm">
+            All 50 US states with federal, state, and local officials
+          </p>
+        </div>
+        <div class="bg-gray-50 rounded-lg p-6">
+          <h3 class="font-semibold text-gray-900 mb-3">District of Columbia</h3>
+          <p class="text-gray-600 text-sm">
+            DC Council, Mayor, and federal delegate
+          </p>
+        </div>
+        <div class="bg-gray-50 rounded-lg p-6">
+          <h3 class="font-semibold text-gray-900 mb-3">Territories (5)</h3>
+          <p class="text-gray-600 text-sm">
+            Puerto Rico, Guam, US Virgin Islands, American Samoa, Northern Mariana Islands
+          </p>
+        </div>
+        <div class="bg-gray-50 rounded-lg p-6">
+          <h3 class="font-semibold text-gray-900 mb-3">Congressional Districts</h3>
+          <p class="text-gray-600 text-sm">
+            All 435 congressional districts plus 6 at-large states and territory delegates
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <section class="mb-10">
+      <h2 class="text-2xl font-semibold text-gray-900 mb-4">Data Quality</h2>
+      
+      <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-6">
+        <h3 class="font-semibold text-yellow-900 mb-2">Known Limitations</h3>
+        <ul class="list-disc list-inside text-yellow-800 space-y-1">
+          <li>Vacant offices may not appear in current officeholder data</li>
+          <li>Local-level coverage varies by state and municipality</li>
+          <li>Social media accounts require periodic verification</li>
+          <li>Some historical election data may be incomplete</li>
+        </ul>
+      </div>
+    </section>
+
+    <section>
+      <h2 class="text-2xl font-semibold text-gray-900 mb-4">Data Updates</h2>
+      <p class="text-gray-600">
+        Data is updated regularly as elections occur and officials take office. For the most 
+        current information, please check the coverage statistics page or contact us if you 
+        notice any inaccuracies.
+      </p>
+    </section>
+  </div>
+</div>

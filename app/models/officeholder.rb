@@ -12,6 +12,8 @@ class Officeholder < ApplicationRecord
   scope :elected_in, ->(year) { where(elected_year: year) }
   scope :appointed, -> { where(appointed: true) }
   scope :elected, -> { where(appointed: [false, nil]) }
+  scope :term_ending_before, ->(date) { where('term_end_date <= ?', date) }
+  scope :up_for_election_before, ->(date) { where('next_election_date <= ?', date) }
   
   def current?
     end_date.nil? || end_date >= Date.current

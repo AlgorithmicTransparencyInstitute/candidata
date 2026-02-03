@@ -28,6 +28,14 @@ Guidelines and preferences for working on the Candidata project. Read these befo
 
 - (User preferences will be added here as they come up in conversation)
 
+## Documentation
+
+- **Help Section Maintenance**: When adding new features, always check and update the public-facing help section (`/help` routes and views) to document the feature for end users. This includes:
+  - Data sources and their coverage
+  - How data is structured and related
+  - Any limitations or known gaps in the data
+  - New functionality and how to use it
+
 ---
 
-*Last updated: 2026-02-01*
+*Last updated: 2026-02-03*

@@ -24,6 +24,12 @@ Rails.application.routes.draw do
     resources :officeholders
   end
 
+  # Public help section
+  get "help", to: "help#index", as: :help
+  get "help/data-sources", to: "help#data_sources", as: :help_data_sources
+  get "help/data-model", to: "help#data_model", as: :help_data_model
+  get "help/coverage", to: "help#coverage", as: :help_coverage
+
   # Defines the root path route ("/")
   root "home#index"
 end

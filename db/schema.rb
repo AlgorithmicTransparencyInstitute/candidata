@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_02_03_031237) do
+ActiveRecord::Schema[7.2].define(version: 2026_02_03_130444) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -110,6 +110,12 @@ ActiveRecord::Schema[7.2].define(version: 2026_02_03_031237) do
     t.integer "elected_year"
     t.boolean "appointed", default: false
     t.string "airtable_id"
+    t.string "official_email"
+    t.string "official_phone"
+    t.text "official_address"
+    t.string "contact_form_url"
+    t.date "next_election_date"
+    t.date "term_end_date"
     t.index ["airtable_id"], name: "index_officeholders_on_airtable_id", unique: true
     t.index ["elected_year"], name: "index_officeholders_on_elected_year"
     t.index ["end_date"], name: "index_officeholders_on_end_date"
@@ -135,6 +141,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_02_03_031237) do
     t.string "jurisdiction_ocdid"
     t.string "ocdid"
     t.string "airtable_id"
+    t.string "county"
     t.index ["airtable_id"], name: "index_offices_on_airtable_id", unique: true
     t.index ["body_name"], name: "index_offices_on_body_name"
     t.index ["branch"], name: "index_offices_on_branch"
@@ -175,6 +182,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_02_03_031237) do
     t.string "website_campaign"
     t.string "website_personal"
     t.string "airtable_id"
+    t.string "wikipedia_id"
     t.index ["airtable_id"], name: "index_people_on_airtable_id", unique: true
     t.index ["first_name", "last_name"], name: "index_people_on_first_name_and_last_name"
     t.index ["party_affiliation_id"], name: "index_people_on_party_affiliation_id"
@@ -246,6 +254,52 @@ ActiveRecord::Schema[7.2].define(version: 2026_02_03_031237) do
     t.index ["platform"], name: "index_temp_accounts_on_platform"
     t.index ["source_type"], name: "index_temp_accounts_on_source_type"
     t.index ["state"], name: "index_temp_accounts_on_state"
+  end
+
+  create_table "temp_govproj", force: :cascade do |t|
+    t.string "state"
+    t.string "level"
+    t.string "jurisdiction"
+    t.string "jurisdiction_ocdid"
+    t.string "electoral_district"
+    t.string "electoral_district_ocdid"
+    t.string "county"
+    t.string "office_uuid"
+    t.string "seat"
+    t.string "office_name"
+    t.string "office_category"
+    t.string "body_name"
+    t.string "role"
+    t.string "term_end"
+    t.string "expires"
+    t.string "officeholder_start"
+    t.string "next_election_date"
+    t.string "regular_election_date"
+    t.string "person_uuid"
+    t.string "official_name"
+    t.string "dob"
+    t.string "wiki_word"
+    t.string "photo_url"
+    t.string "registered_political_party"
+    t.string "party_roll_up"
+    t.string "gov_email"
+    t.string "gov_email_form"
+    t.string "gov_phone"
+    t.text "gov_mailing_address"
+    t.string "website_official"
+    t.string "youtube_gov"
+    t.string "instagram_url_gov"
+    t.string "twitter_name_gov"
+    t.string "facebook_url_gov"
+    t.string "tiktok_gov"
+    t.string "threads_gov"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["level"], name: "index_temp_govproj_on_level"
+    t.index ["office_uuid"], name: "index_temp_govproj_on_office_uuid"
+    t.index ["party_roll_up"], name: "index_temp_govproj_on_party_roll_up"
+    t.index ["person_uuid"], name: "index_temp_govproj_on_person_uuid"
+    t.index ["state"], name: "index_temp_govproj_on_state"
   end
 
   create_table "temp_people", force: :cascade do |t|

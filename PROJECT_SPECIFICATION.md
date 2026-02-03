@@ -145,6 +145,14 @@ Candidata is a Ruby on Rails application that serves as:
 | Historical database schema analysis | ⬜ Not started |
 | Import pipeline for historical data | ⬜ Not started |
 | Reference metadata import | ⬜ Not started |
+| Download govproj CSV data | ✅ Complete |
+| Create temp_govproj staging table | ✅ Complete |
+| Load govproj data into temp table | ✅ Complete |
+| Cross-reference analysis (all temp tables) | ✅ Complete |
+| Create comprehensive party seed data | ⬜ In progress |
+| Create state legislative district seed data | ⬜ Not started |
+| Import govproj officeholders | ⬜ Not started |
+| Merge temp_people candidates | ⬜ Not started |
 
 ### Phase 6: Complete Admin CRUD
 | Task | Status |
@@ -156,6 +164,15 @@ Candidata is a Ruby on Rails application that serves as:
 | Contests controller/views | ⬜ Not started |
 | Candidates controller/views | ⬜ Not started |
 | Officeholders controller/views | ⬜ Not started |
+| SocialMediaAccounts CRUD | ⬜ Not started |
+
+### Phase 7: Documentation & Help
+| Task | Status |
+|------|--------|
+| Create public-facing help section | ⬜ In progress |
+| Document data sources and coverage | ⬜ In progress |
+| Document data model for end users | ⬜ Not started |
+| Add help section maintenance to dev rules | ✅ Complete |
 
 ---
 
@@ -338,6 +355,136 @@ person.offices_held_on(date)           # Offices held on specific date
 
 ---
 
+## GovProj Data Analysis (2026-02-03)
+
+### Data Source
+
+GovProj is a comprehensive dataset of current elected officials from ballotinfo.org, organized by state:
+- **URL**: `https://ballotinfo.org/govproj/`
+- **Format**: 56 TSV files (one per state/territory)
+- **Records**: 42,780 current officeholders
+
+### Data Staging
+
+Created `temp_govproj` table to stage all CSV data for analysis before import:
+
+```ruby
+# Rake tasks created:
+rails govproj:download      # Download all CSVs
+rails govproj:load_temp     # Load CSVs into temp_govproj table
+rails govproj:analyze_temp  # Analyze distinct values
+```
+
+### Comprehensive Reference Data Analysis
+
+**Cross-referencing temp_govproj, temp_people, and temp_accounts:**
+
+| Metric | Value | Notes |
+|--------|-------|-------|
+| **Total People** | 51,735 | 8,619 in both sources, rest unique to each |
+| **Current Officeholders** | 42,725 | From govproj |
+| **Candidates (non-officeholders)** | 9,010 | From temp_people only |
+| **Unique Offices** | 42,780 | Each govproj record is unique office |
+
+### Congressional Districts (Complete)
+
+| Type | Count | Notes |
+|------|-------|-------|
+| Numbered Districts | 429 | States with 2+ representatives |
+| At-Large Districts | 6 | AK, DE, ND, SD, VT, WY (use state-level OCDID) |
+| **Total** | **435** | ✓ Matches expected |
+
+### Territory Delegates
+
+| Territory | Federal Reps | Notes |
+|-----------|--------------|-------|
+| DC | 1 | Shadow delegates not in data |
+| PR | 1 | Resident Commissioner |
+| GU | 1 | Delegate |
+| VI | 1 | Delegate |
+| AS | 1 | Delegate |
+| MP | 1 | Delegate |
+
+### State Legislative Districts
+
+| Chamber | Count | Notes |
+|---------|-------|-------|
+| State Senate (sldu) | 1,967 | From OCDID pattern |
+| State House (sldl) | 4,676-4,730 | Slight variance between sources |
+
+### Comprehensive Party List (All Sources)
+
+| Party | Count | Source |
+|-------|-------|--------|
+| Republican Party | 31,654 | All |
+| Democratic Party | 15,120 | All |
+| Nonpartisan | 8,168 | All |
+| Unaffiliated | 1,789 | All |
+| Unknown | 412 | All |
+| Partido Nuevo Progresista | 127 | PR |
+| Independent Party | 71 | All |
+| Progressive Party | 21 | All |
+| Partido Popular Democrático | 38* | PR (*encoding variants) |
+| Partido Independentista Puertorriqueño | 10* | PR (*encoding variants) |
+| Conservative Party USA | 4 | All |
+| Proyecto Dignidad | 4 | PR |
+| Working Families Party | 4 | All |
+| Movimiento Victoria Ciudadana | 2 | PR |
+| Libertarian Party | 1 | All |
+
+### Government Levels
+
+| OCDID Level | Mapped Level | Count |
+|-------------|--------------|-------|
+| country | federal | 541 |
+| administrativeArea1 | state | 8,405 |
+| administrativeArea2 | local (county) | 30,089 |
+| locality | local (city) | 3,122 |
+| regional | local (special) | 623 |
+
+### Government Roles (All 8 Roles)
+
+| Role | Count | Branch |
+|------|-------|--------|
+| legislatorUpperBody | 23,081 | legislative |
+| governmentOfficer | 11,956 | executive |
+| legislatorLowerBody | 5,953 | legislative |
+| headOfGovernment | 987 | executive |
+| executiveCouncil | 302 | executive |
+| highestCourtJudge | 278 | judicial |
+| schoolBoard | 175 | executive |
+| deputyHeadOfGovernment | 48 | executive |
+
+### OCDID Patterns for Electoral Districts
+
+| Pattern | Count | Description |
+|---------|-------|-------------|
+| council_district | 14,189 | County/city council seats |
+| sldl | 4,676 | State lower (house) |
+| county | 2,991 | County-wide offices |
+| sldu | 1,967 | State upper (senate) |
+| place | 1,034 | City/town offices |
+| ward | 558 | Ward-based offices |
+| cd | 429 | Congressional districts |
+| + 19 more patterns | ~800 | Various special districts |
+
+### Data Quality Notes
+
+1. **Encoding issues**: Some Puerto Rico party names have UTF-8 artifacts (Ã¡ instead of á)
+2. **At-large districts**: 6 states use state-level OCDID instead of `/cd:` pattern
+3. **Multi-office holders**: 50 people hold multiple offices (e.g., county board chair + treasurer)
+4. **Counties**: 984 distinct counties in govproj data
+
+### Recommended Schema Enhancements
+
+Based on analysis, consider adding:
+
+1. **Jurisdiction table** - Hierarchical reference with OCDID as key
+2. **LegislativeBody table** - Reference for ~200 distinct legislative bodies
+3. **Enhanced District model** - Add state legislative district support with `chamber` enum
+
+---
+
 ## Open Questions
 
 1. ~~What social media platforms need to be tracked?~~ **ANSWERED**: Facebook, Twitter, Instagram, YouTube, TikTok, TruthSocial, Gettr, Rumble, Telegram, Threads
@@ -394,7 +541,12 @@ person.offices_held_on(date)           # Offices held on specific date
 - `lib/tasks/extract_parties.rake` - Extract and create Party records
 - `lib/tasks/extract_states.rake` - Seed State records
 - `lib/tasks/extract_offices.rake` - Analyze office data
+- `lib/tasks/import_govproj.rake` - Download, load, and import govproj data
+
+### New Files (2026-02-03)
+- `db/migrate/20260203130444_create_temp_govproj.rb` - Staging table for govproj data
+- `app/models/temp_govproj.rb` - Model for govproj staging table
 
 ---
 
-*Last updated: 2026-02-02*
+*Last updated: 2026-02-03*

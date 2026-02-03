@@ -10,19 +10,36 @@ puts "Seeding database..."
 puts "\n=== Seeding Political Parties ==="
 
 parties = [
+  # Major US parties
   { name: "Democratic Party", abbreviation: "DEM", ideology: "Center-left" },
   { name: "Republican Party", abbreviation: "GOP", ideology: "Center-right" },
   { name: "Libertarian Party", abbreviation: "LIB", ideology: "Libertarian" },
   { name: "Green Party", abbreviation: "GRN", ideology: "Left-wing" },
   { name: "Constitution Party", abbreviation: "CST", ideology: "Right-wing" },
+  
+  # Non-partisan / Independent
+  { name: "Nonpartisan", abbreviation: "NPT", ideology: "Various" },
   { name: "Independent", abbreviation: "IND", ideology: "Various" },
+  { name: "Independent Party", abbreviation: "IPT", ideology: "Various" },
   { name: "Unaffiliated", abbreviation: "UNA", ideology: "Various" },
+  { name: "Unknown", abbreviation: "UNK", ideology: "Various" },
+  
+  # Minor US parties
+  { name: "Working Families Party", abbreviation: "WFP", ideology: "Progressive" },
+  { name: "Progressive Party", abbreviation: "PRO", ideology: "Progressive" },
+  { name: "Conservative Party USA", abbreviation: "CPU", ideology: "Right-wing" },
   { name: "Peace and Freedom Party", abbreviation: "PFP", ideology: "Left-wing" },
   { name: "U.S. Taxpayers Party", abbreviation: "UST", ideology: "Right-wing" },
-  { name: "Working Families Party", abbreviation: "WFP", ideology: "Progressive" },
   { name: "Reform Party", abbreviation: "REF", ideology: "Centrist" },
   { name: "Forward Party", abbreviation: "FWD", ideology: "Centrist" },
-  { name: "No Labels", abbreviation: "NLB", ideology: "Centrist" }
+  { name: "No Labels", abbreviation: "NLB", ideology: "Centrist" },
+  
+  # Puerto Rico parties
+  { name: "Partido Nuevo Progresista", abbreviation: "PNP", ideology: "Center-right" },
+  { name: "Partido Popular Democrático", abbreviation: "PPD", ideology: "Center-left" },
+  { name: "Partido Independentista Puertorriqueño", abbreviation: "PIP", ideology: "Left-wing" },
+  { name: "Movimiento Victoria Ciudadana", abbreviation: "MVC", ideology: "Progressive" },
+  { name: "Proyecto Dignidad", abbreviation: "PD", ideology: "Conservative" }
 ]
 
 parties.each do |party_data|
