@@ -156,6 +156,64 @@ end
 puts "  ✓ Created #{district_count} congressional districts"
 
 # =============================================================================
+# STATE LEGISLATIVE DISTRICTS (from temp_govproj analysis)
+# =============================================================================
+puts "\n=== Seeding State Legislative Districts ==="
+
+# State Senate districts per state (sldu)
+STATE_SENATE_DISTRICTS = {
+  "AK" => 20, "AL" => 35, "AR" => 35, "AZ" => 30, "CA" => 40, "CO" => 35, "CT" => 36,
+  "DE" => 21, "FL" => 40, "GA" => 56, "HI" => 25, "IA" => 50, "ID" => 35, "IL" => 59,
+  "IN" => 50, "KS" => 40, "KY" => 38, "LA" => 39, "MA" => 40, "MD" => 47, "ME" => 35,
+  "MI" => 38, "MN" => 67, "MO" => 34, "MS" => 52, "MT" => 50, "NC" => 50, "ND" => 47,
+  "NE" => 49, "NH" => 24, "NJ" => 40, "NM" => 42, "NV" => 21, "NY" => 63, "OH" => 33,
+  "OK" => 48, "OR" => 30, "PA" => 50, "RI" => 38, "SC" => 46, "SD" => 35, "TN" => 33,
+  "TX" => 31, "UT" => 29, "VA" => 40, "VT" => 16, "WA" => 49, "WI" => 33, "WV" => 17,
+  "WY" => 31
+}.freeze
+
+# State House districts per state (sldl) - Nebraska is unicameral so excluded
+STATE_HOUSE_DISTRICTS = {
+  "AK" => 40, "AL" => 105, "AR" => 100, "AZ" => 30, "CA" => 80, "CO" => 65, "CT" => 151,
+  "DE" => 41, "FL" => 120, "GA" => 180, "HI" => 51, "IA" => 100, "ID" => 35, "IL" => 118,
+  "IN" => 100, "KS" => 125, "KY" => 100, "LA" => 105, "MA" => 160, "MD" => 141, "ME" => 151,
+  "MI" => 110, "MN" => 134, "MO" => 163, "MS" => 122, "MT" => 100, "NC" => 120, "ND" => 94,
+  "NH" => 400, "NJ" => 40, "NM" => 70, "NV" => 42, "NY" => 150, "OH" => 99, "OK" => 101,
+  "OR" => 60, "PA" => 203, "RI" => 75, "SC" => 124, "SD" => 35, "TN" => 99, "TX" => 150,
+  "UT" => 75, "VA" => 100, "VT" => 150, "WA" => 98, "WI" => 99, "WV" => 100, "WY" => 62
+}.freeze
+
+sldu_count = 0
+STATE_SENATE_DISTRICTS.each do |state, num_districts|
+  (1..num_districts).each do |district_num|
+    ocdid = "ocd-division/country:us/state:#{state.downcase}/sldu:#{district_num}"
+    District.find_or_create_by!(ocdid: ocdid) do |d|
+      d.state = state
+      d.district_number = district_num
+      d.level = "state"
+      d.chamber = "upper"
+    end
+    sldu_count += 1
+  end
+end
+puts "  ✓ Created #{sldu_count} state senate districts"
+
+sldl_count = 0
+STATE_HOUSE_DISTRICTS.each do |state, num_districts|
+  (1..num_districts).each do |district_num|
+    ocdid = "ocd-division/country:us/state:#{state.downcase}/sldl:#{district_num}"
+    District.find_or_create_by!(ocdid: ocdid) do |d|
+      d.state = state
+      d.district_number = district_num
+      d.level = "state"
+      d.chamber = "lower"
+    end
+    sldl_count += 1
+  end
+end
+puts "  ✓ Created #{sldl_count} state house districts"
+
+# =============================================================================
 # FEDERAL OFFICES
 # =============================================================================
 puts "\n=== Seeding Federal Offices ==="

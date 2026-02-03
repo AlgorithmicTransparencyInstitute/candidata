@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_02_03_130444) do
+ActiveRecord::Schema[7.2].define(version: 2026_02_03_162445) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -96,7 +96,11 @@ ActiveRecord::Schema[7.2].define(version: 2026_02_03_130444) do
     t.text "boundaries"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.index ["state", "district_number", "level"], name: "index_districts_unique", unique: true
+    t.string "chamber"
+    t.string "ocdid"
+    t.index ["chamber"], name: "index_districts_on_chamber"
+    t.index ["ocdid"], name: "index_districts_on_ocdid", unique: true
+    t.index ["state", "district_number", "level", "chamber"], name: "index_districts_unique", unique: true
     t.index ["state"], name: "index_districts_on_state"
   end
 
