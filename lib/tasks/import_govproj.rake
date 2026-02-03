@@ -458,4 +458,399 @@ namespace :govproj do
 
   desc "Full import: offices first, then people/officeholders"
   task import: [:import_offices, :import_people]
+
+  desc "Import a single state for testing (e.g., rake govproj:import_state[DC])"
+  task :import_state, [:state] => :environment do |t, args|
+    state = args[:state]&.upcase
+    abort "Usage: rake govproj:import_state[STATE] (e.g., DC, TX, CA)" unless state
+
+    puts "=" * 70
+    puts "IMPORTING SINGLE STATE: #{state}"
+    puts "=" * 70
+
+    file = Rails.root.join('data', 'govproj', "#{state.downcase}_office_holders.csv")
+    abort "File not found: #{file}" unless File.exist?(file)
+
+    stats = {
+      offices_created: 0, offices_skipped: 0,
+      people_created: 0, people_found: 0,
+      officeholders_created: 0, officeholders_skipped: 0,
+      social_accounts: 0, party_links: 0,
+      errors: []
+    }
+
+    map_level = ->(level) {
+      case level
+      when 'country' then 'federal'
+      when 'administrativeArea1' then 'state'
+      when 'administrativeArea2', 'locality', 'regional' then 'local'
+      else 'local'
+      end
+    }
+
+    map_branch = ->(role) {
+      case role
+      when 'legislatorLowerBody', 'legislatorUpperBody' then 'legislative'
+      when 'headOfGovernment', 'deputyHeadOfGovernment', 'governmentOfficer', 'executiveCouncil', 'schoolBoard' then 'executive'
+      when 'highestCourtJudge', 'judge' then 'judicial'
+      else 'executive'
+      end
+    }
+
+    parse_name = ->(full_name) {
+      return { first_name: 'Unknown', last_name: 'Unknown' } if full_name.blank?
+      name = full_name.dup
+      suffixes = ['Jr.', 'Jr', 'Sr.', 'Sr', 'II', 'III', 'IV', 'V']
+      suffix = nil
+      suffixes.each do |s|
+        pattern = Regexp.new('[,\s]\s*' + Regexp.escape(s) + '\.?\s*$', Regexp::IGNORECASE)
+        if name.match?(pattern)
+          suffix = s.sub(/\.$/, '')
+          suffix = suffix + '.' if ['Jr', 'Sr'].include?(suffix)
+          name = name.sub(pattern, '').strip
+          break
+        end
+      end
+      parts = name.split(/\s+/)
+      if parts.length == 1
+        { first_name: parts[0], last_name: 'Unknown', suffix: suffix }
+      elsif parts.length == 2
+        { first_name: parts[0], last_name: parts[1], suffix: suffix }
+      else
+        { first_name: parts[0], middle_name: parts[1..-2].join(' '), last_name: parts[-1], suffix: suffix }
+      end
+    }
+
+    parse_date = ->(str) {
+      return nil if str.blank?
+      Date.parse(str) rescue nil
+    }
+
+    CSV.foreach(file, col_sep: "\t", headers: true, liberal_parsing: true) do |row|
+      begin
+        office_uuid = row['Office UUID']&.strip
+        person_uuid = row['Person UUID']&.strip
+        next if office_uuid.blank? || person_uuid.blank?
+
+        # 1. Find or create Office
+        office = Office.find_by(airtable_id: office_uuid)
+        unless office
+          office = Office.create!(
+            airtable_id: office_uuid,
+            title: row['Office Name']&.strip || 'Unknown Office',
+            level: map_level.call(row['Level']&.strip),
+            branch: map_branch.call(row['Role']&.strip),
+            role: row['Role']&.strip,
+            state: row['State']&.strip,
+            office_category: row['Office Category']&.strip,
+            body_name: row['Body Name']&.strip,
+            seat: row['Seat']&.strip.presence,
+            jurisdiction: row['Jurisdiction']&.strip,
+            jurisdiction_ocdid: row['Jurisdiction OCDID']&.strip,
+            ocdid: row['Electoral District OCDID']&.strip,
+            county: row['County']&.strip.presence
+          )
+          stats[:offices_created] += 1
+        else
+          stats[:offices_skipped] += 1
+        end
+
+        # 2. Find or create Person
+        person = Person.find_by(person_uuid: person_uuid)
+        unless person
+          np = parse_name.call(row['Official Name']&.strip)
+          person = Person.create!(
+            person_uuid: person_uuid,
+            first_name: np[:first_name],
+            last_name: np[:last_name],
+            middle_name: np[:middle_name],
+            suffix: np[:suffix],
+            birth_date: parse_date.call(row['DOB']),
+            photo_url: row['Photo URL']&.strip.presence,
+            website_official: row['Website (Official)']&.strip.presence,
+            wikipedia_id: row['Wiki Word']&.strip.presence,
+            state_of_residence: row['State']&.strip
+          )
+          stats[:people_created] += 1
+        else
+          stats[:people_found] += 1
+        end
+
+        # 3. Create Officeholder
+        start_date = parse_date.call(row['Officeholder Start']) || Date.current
+        existing_oh = Officeholder.find_by(person: person, office: office)
+        if existing_oh
+          stats[:officeholders_skipped] += 1
+        else
+          Officeholder.create!(
+            person: person,
+            office: office,
+            start_date: start_date,
+            term_end_date: parse_date.call(row['Term End']),
+            next_election_date: parse_date.call(row['Next Election Date']),
+            official_email: row['Gov Email']&.strip.presence,
+            official_phone: row['Gov Phone']&.strip.presence,
+            official_address: row['Gov Mailing Address']&.strip.presence,
+            contact_form_url: row['Gov Email Form']&.strip.presence
+          )
+          stats[:officeholders_created] += 1
+        end
+
+        # 4. Link Party
+        party_name = row['Party Roll Up']&.strip
+        if party_name.present?
+          party = Party.find_by(name: party_name)
+          if party && !person.parties.include?(party)
+            person.add_party(party, is_primary: person.parties.empty?)
+            stats[:party_links] += 1
+          end
+        end
+
+        # 5. Create Social Media Accounts
+        social_mappings = {
+          'Twitter Name (Gov)' => 'Twitter',
+          'Facebook URL (Gov)' => 'Facebook',
+          'Instagram URL (Gov)' => 'Instagram',
+          'YouTube (Gov)' => 'YouTube',
+          'TikTok (Gov)' => 'TikTok',
+          'Threads (Gov)' => 'Threads'
+        }
+        social_mappings.each do |col, platform|
+          handle_or_url = row[col]&.strip
+          next if handle_or_url.blank?
+          
+          existing = SocialMediaAccount.find_by(person: person, platform: platform, handle: handle_or_url)
+          unless existing
+            SocialMediaAccount.create!(
+              person: person,
+              platform: platform,
+              handle: handle_or_url,
+              url: handle_or_url.start_with?('http') ? handle_or_url : nil,
+              channel_type: 'Official Office',
+              verified: true
+            )
+            stats[:social_accounts] += 1
+          end
+        end
+
+      rescue => e
+        stats[:errors] << "#{row['Official Name']}: #{e.message}"
+      end
+    end
+
+    puts "\n" + "=" * 70
+    puts "IMPORT COMPLETE FOR #{state}"
+    puts "=" * 70
+    puts "  Offices: #{stats[:offices_created]} created, #{stats[:offices_skipped]} existed"
+    puts "  People: #{stats[:people_created]} created, #{stats[:people_found]} existed"
+    puts "  Officeholders: #{stats[:officeholders_created]} created, #{stats[:officeholders_skipped]} skipped"
+    puts "  Party links: #{stats[:party_links]}"
+    puts "  Social accounts: #{stats[:social_accounts]}"
+    puts "  Errors: #{stats[:errors].length}"
+    if stats[:errors].any?
+      puts "\nErrors:"
+      stats[:errors].first(10).each { |e| puts "  - #{e}" }
+    end
+    puts "\nDB Totals: People=#{Person.count}, Offices=#{Office.count}, Officeholders=#{Officeholder.count}"
+    puts "=" * 70
+  end
+
+  desc "Import all states from temp_govproj (uses staging table data)"
+  task import_from_temp: :environment do
+    puts "=" * 70
+    puts "IMPORTING ALL DATA FROM TEMP_GOVPROJ"
+    puts "=" * 70
+    puts "Records to process: #{TempGovproj.count}"
+
+    stats = {
+      offices_created: 0, offices_skipped: 0,
+      people_created: 0, people_found: 0,
+      officeholders_created: 0, officeholders_skipped: 0,
+      social_accounts: 0, party_links: 0,
+      errors: []
+    }
+
+    map_level = ->(level) {
+      case level
+      when 'country' then 'federal'
+      when 'administrativeArea1' then 'state'
+      when 'administrativeArea2', 'locality', 'regional' then 'local'
+      else 'local'
+      end
+    }
+
+    map_branch = ->(role) {
+      case role
+      when 'legislatorLowerBody', 'legislatorUpperBody' then 'legislative'
+      when 'headOfGovernment', 'deputyHeadOfGovernment', 'governmentOfficer', 'executiveCouncil', 'schoolBoard' then 'executive'
+      when 'highestCourtJudge', 'judge' then 'judicial'
+      else 'executive'
+      end
+    }
+
+    parse_name = ->(full_name) {
+      return { first_name: 'Unknown', last_name: 'Unknown' } if full_name.blank?
+      name = full_name.dup
+      suffixes = ['Jr.', 'Jr', 'Sr.', 'Sr', 'II', 'III', 'IV', 'V']
+      suffix = nil
+      suffixes.each do |s|
+        pattern = Regexp.new('[,\s]\s*' + Regexp.escape(s) + '\.?\s*$', Regexp::IGNORECASE)
+        if name.match?(pattern)
+          suffix = s.sub(/\.$/, '')
+          suffix = suffix + '.' if ['Jr', 'Sr'].include?(suffix)
+          name = name.sub(pattern, '').strip
+          break
+        end
+      end
+      parts = name.split(/\s+/)
+      if parts.length == 1
+        { first_name: parts[0], last_name: 'Unknown', suffix: suffix }
+      elsif parts.length == 2
+        { first_name: parts[0], last_name: parts[1], suffix: suffix }
+      else
+        { first_name: parts[0], middle_name: parts[1..-2].join(' '), last_name: parts[-1], suffix: suffix }
+      end
+    }
+
+    parse_date = ->(str) {
+      return nil if str.blank?
+      Date.parse(str) rescue nil
+    }
+
+    processed = 0
+    TempGovproj.find_each do |row|
+      begin
+        office_uuid = row.office_uuid
+        person_uuid = row.person_uuid
+        next if office_uuid.blank? || person_uuid.blank?
+
+        # 1. Find or create Office
+        office = Office.find_by(airtable_id: office_uuid)
+        unless office
+          office = Office.create!(
+            airtable_id: office_uuid,
+            title: row.office_name || 'Unknown Office',
+            level: map_level.call(row.level),
+            branch: map_branch.call(row.role),
+            role: row.role,
+            state: row.state,
+            office_category: row.office_category,
+            body_name: row.body_name,
+            seat: row.seat.presence,
+            jurisdiction: row.jurisdiction,
+            jurisdiction_ocdid: row.jurisdiction_ocdid,
+            ocdid: row.electoral_district_ocdid,
+            county: row.county.presence
+          )
+          stats[:offices_created] += 1
+        else
+          stats[:offices_skipped] += 1
+        end
+
+        # 2. Find or create Person
+        person = Person.find_by(person_uuid: person_uuid)
+        unless person
+          np = parse_name.call(row.official_name)
+          person = Person.create!(
+            person_uuid: person_uuid,
+            first_name: np[:first_name],
+            last_name: np[:last_name],
+            middle_name: np[:middle_name],
+            suffix: np[:suffix],
+            birth_date: parse_date.call(row.dob),
+            photo_url: row.photo_url.presence,
+            website_official: row.website_official.presence,
+            wikipedia_id: row.wiki_word.presence,
+            state_of_residence: row.state
+          )
+          stats[:people_created] += 1
+        else
+          stats[:people_found] += 1
+        end
+
+        # 3. Create Officeholder
+        start_date = parse_date.call(row.officeholder_start) || Date.current
+        existing_oh = Officeholder.find_by(person: person, office: office)
+        if existing_oh
+          stats[:officeholders_skipped] += 1
+        else
+          Officeholder.create!(
+            person: person,
+            office: office,
+            start_date: start_date,
+            term_end_date: parse_date.call(row.term_end),
+            next_election_date: parse_date.call(row.next_election_date),
+            official_email: row.gov_email.presence,
+            official_phone: row.gov_phone.presence,
+            official_address: row.gov_mailing_address.presence,
+            contact_form_url: row.gov_email_form.presence
+          )
+          stats[:officeholders_created] += 1
+        end
+
+        # 4. Link Party
+        party_name = row.party_roll_up
+        if party_name.present?
+          party = Party.find_by(name: party_name)
+          if party && !person.parties.include?(party)
+            person.add_party(party, is_primary: person.parties.empty?)
+            stats[:party_links] += 1
+          end
+        end
+
+        # 5. Create Social Media Accounts
+        social_data = {
+          'Twitter' => row.twitter_name_gov,
+          'Facebook' => row.facebook_url_gov,
+          'Instagram' => row.instagram_url_gov,
+          'YouTube' => row.youtube_gov,
+          'TikTok' => row.tiktok_gov,
+          'Threads' => row.threads_gov
+        }
+        social_data.each do |platform, handle_or_url|
+          next if handle_or_url.blank?
+          
+          existing = SocialMediaAccount.find_by(person: person, platform: platform, handle: handle_or_url)
+          unless existing
+            SocialMediaAccount.create!(
+              person: person,
+              platform: platform,
+              handle: handle_or_url,
+              url: handle_or_url.start_with?('http') ? handle_or_url : nil,
+              channel_type: 'Official Office',
+              verified: true
+            )
+            stats[:social_accounts] += 1
+          end
+        end
+
+        processed += 1
+        print "." if processed % 1000 == 0
+
+      rescue => e
+        stats[:errors] << "#{row.official_name}: #{e.message}"
+      end
+    end
+
+    puts "\n\n" + "=" * 70
+    puts "IMPORT COMPLETE"
+    puts "=" * 70
+    puts "  Processed: #{processed}"
+    puts "  Offices: #{stats[:offices_created]} created, #{stats[:offices_skipped]} existed"
+    puts "  People: #{stats[:people_created]} created, #{stats[:people_found]} existed"
+    puts "  Officeholders: #{stats[:officeholders_created]} created, #{stats[:officeholders_skipped]} skipped"
+    puts "  Party links: #{stats[:party_links]}"
+    puts "  Social accounts: #{stats[:social_accounts]}"
+    puts "  Errors: #{stats[:errors].length}"
+    if stats[:errors].any?
+      puts "\nFirst 20 errors:"
+      stats[:errors].first(20).each { |e| puts "  - #{e}" }
+    end
+    puts "\nDB Totals:"
+    puts "  People: #{Person.count}"
+    puts "  Offices: #{Office.count}"
+    puts "  Officeholders: #{Officeholder.count}"
+    puts "  SocialMediaAccounts: #{SocialMediaAccount.count}"
+    puts "=" * 70
+  end
 end
