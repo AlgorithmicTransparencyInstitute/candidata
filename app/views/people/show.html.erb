@@ -100,7 +100,12 @@
                 <div class="px-6 py-4">
                   <div class="flex justify-between items-start">
                     <div>
-                      <%= link_to officeholder.office.title, office_path(officeholder.office), class: "text-base font-medium text-indigo-600 hover:text-indigo-900" %>
+                      <%= link_to office_path(officeholder.office), class: "text-base font-medium text-indigo-600 hover:text-indigo-900" do %>
+                        <%= officeholder.office.title %>
+                        <% if officeholder.office.seat.present? %>
+                          <span class="text-gray-500 font-normal">(<%= officeholder.office.seat %>)</span>
+                        <% end %>
+                      <% end %>
                       <div class="mt-1 text-sm text-gray-500">
                         <span class="capitalize"><%= officeholder.office.level %></span> · 
                         <span class="capitalize"><%= officeholder.office.branch %></span>
@@ -133,7 +138,12 @@
                 <div class="px-6 py-4">
                   <div class="flex justify-between items-start">
                     <div>
-                      <%= link_to officeholder.office.title, office_path(officeholder.office), class: "text-base font-medium text-gray-700 hover:text-indigo-600" %>
+                      <%= link_to office_path(officeholder.office), class: "text-base font-medium text-gray-700 hover:text-indigo-600" do %>
+                        <%= officeholder.office.title %>
+                        <% if officeholder.office.seat.present? %>
+                          <span class="text-gray-500 font-normal">(<%= officeholder.office.seat %>)</span>
+                        <% end %>
+                      <% end %>
                       <div class="mt-1 text-sm text-gray-500">
                         <span class="capitalize"><%= officeholder.office.level %></span> · 
                         <span class="capitalize"><%= officeholder.office.branch %></span>

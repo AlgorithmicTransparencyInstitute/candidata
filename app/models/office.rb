@@ -25,9 +25,17 @@ class Office < ApplicationRecord
   
   def full_title
     parts = [title]
-    parts << "District #{district.district_number}" if district&.district_number
-    parts << state if state
+    parts << seat if seat.present?
+    parts << state if state.present? && !title.to_s.include?(state.to_s)
     parts.join(' - ')
+  end
+
+  def display_name
+    if seat.present?
+      "#{title} (#{seat})"
+    else
+      title
+    end
   end
 
   def legislative?

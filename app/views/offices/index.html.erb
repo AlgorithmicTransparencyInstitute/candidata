@@ -110,7 +110,12 @@
             <tr class="hover:bg-gray-50">
               <td class="px-6 py-4">
                 <%= link_to office_path(office), class: "block" do %>
-                  <div class="text-sm font-medium text-indigo-600 hover:text-indigo-900"><%= office.title %></div>
+                  <div class="text-sm font-medium text-indigo-600 hover:text-indigo-900">
+                    <%= office.title %>
+                    <% if office.seat.present? %>
+                      <span class="text-gray-500">(<%= office.seat %>)</span>
+                    <% end %>
+                  </div>
                   <% if office.body_name.present? %>
                     <div class="text-xs text-gray-500"><%= office.body_name %></div>
                   <% end %>

@@ -8,7 +8,12 @@
 
     <!-- Header -->
     <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
-      <h1 class="text-3xl font-bold text-gray-900"><%= @office.title %></h1>
+      <h1 class="text-3xl font-bold text-gray-900">
+        <%= @office.title %>
+        <% if @office.seat.present? %>
+          <span class="text-gray-500 font-normal">(<%= @office.seat %>)</span>
+        <% end %>
+      </h1>
       
       <div class="mt-3 flex flex-wrap gap-3">
         <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium 
