@@ -27,6 +27,7 @@ Rails.application.routes.draw do
   # Public browsing
   resources :people, only: [:index, :show]
   resources :offices, only: [:index, :show]
+  resources :bodies, only: [:index, :show], param: :id
   resources :parties, only: [:index, :show]
   resources :states, only: [:index, :show], param: :id
   resources :districts, only: [:index, :show]

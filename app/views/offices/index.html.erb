@@ -109,16 +109,16 @@
           <% @offices.each do |office| %>
             <tr class="hover:bg-gray-50">
               <td class="px-6 py-4">
-                <%= link_to office_path(office), class: "block" do %>
-                  <div class="text-sm font-medium text-indigo-600 hover:text-indigo-900">
-                    <%= office.title %>
-                    <% if office.seat.present? %>
-                      <span class="text-gray-500">(<%= office.seat %>)</span>
-                    <% end %>
-                  </div>
-                  <% if office.body_name.present? %>
-                    <div class="text-xs text-gray-500"><%= office.body_name %></div>
+                <%= link_to office_path(office), class: "text-sm font-medium text-indigo-600 hover:text-indigo-900" do %>
+                  <%= office.title %>
+                  <% if office.seat.present? %>
+                    <span class="text-gray-500">(<%= office.seat %>)</span>
                   <% end %>
+                <% end %>
+                <% if office.body_name.present? %>
+                  <div class="text-xs text-gray-500">
+                    <%= link_to office.body_name, body_path(office.body_name), class: "hover:text-indigo-600" %>
+                  </div>
                 <% end %>
               </td>
               <td class="px-6 py-4 whitespace-nowrap">

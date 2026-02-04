@@ -37,7 +37,8 @@
       <% if @office.body_name.present? || @office.office_category.present? %>
         <div class="mt-4 text-sm text-gray-600">
           <% if @office.body_name.present? %>
-            <span class="font-medium">Body:</span> <%= @office.body_name %>
+            <span class="font-medium">Body:</span> 
+            <%= link_to @office.body_name, body_path(@office.body_name), class: "text-indigo-600 hover:text-indigo-900" %>
           <% end %>
           <% if @office.office_category.present? %>
             <span class="ml-4 font-medium">Category:</span> <%= @office.office_category %>

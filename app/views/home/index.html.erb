@@ -76,6 +76,21 @@
         </div>
       <% end %>
 
+      <!-- Bodies -->
+      <%= link_to bodies_path, class: "group bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md hover:border-indigo-300 transition-all" do %>
+        <div class="flex items-center gap-4">
+          <div class="flex-shrink-0 w-12 h-12 bg-amber-100 rounded-lg flex items-center justify-center group-hover:bg-amber-200 transition-colors">
+            <svg class="w-6 h-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z"/>
+            </svg>
+          </div>
+          <div>
+            <h3 class="text-lg font-semibold text-gray-900 group-hover:text-indigo-600">Bodies</h3>
+            <p class="text-sm text-gray-500">Browse <%= number_with_delimiter(@bodies_count) %> legislative bodies & councils</p>
+          </div>
+        </div>
+      <% end %>
+
       <!-- Parties -->
       <%= link_to parties_path, class: "group bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md hover:border-indigo-300 transition-all" do %>
         <div class="flex items-center gap-4">
