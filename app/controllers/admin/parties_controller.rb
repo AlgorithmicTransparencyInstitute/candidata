@@ -1,9 +1,11 @@
-class Admin::PartiesController < ApplicationController
-  before_action :authenticate_user!
+class Admin::PartiesController < Admin::BaseController
   before_action :set_party, only: [:show, :edit, :update, :destroy]
 
   def index
-    @parties = Party.order(:name)
+    @parties = Party.order(:name).page(params[:page]).per(50)
+  end
+
+  def show
   end
 
   def new

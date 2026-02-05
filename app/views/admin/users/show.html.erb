@@ -1,0 +1,60 @@
+<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+  <div class="mb-6">
+    <%= link_to "← Back to Users", admin_users_path, class: "text-blue-600 hover:text-blue-800" %>
+  </div>
+
+  <div class="bg-white rounded-lg shadow mb-6">
+    <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+      <div>
+        <h1 class="text-2xl font-bold text-gray-900"><%= @user.name || @user.email %></h1>
+        <p class="text-gray-600"><%= @user.email %></p>
+      </div>
+      <div class="flex items-center gap-2">
+        <span class="px-3 py-1 text-sm rounded-full <%= @user.admin? ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800' %>">
+          <%= @user.role.titleize %>
+        </span>
+        <%= link_to "Edit", edit_admin_user_path(@user), class: "px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300" %>
+      </div>
+    </div>
+
+    <div class="p-6 grid grid-cols-2 gap-6">
+      <div>
+        <div class="text-sm text-gray-500">Created</div>
+        <div class="font-medium"><%= @user.created_at.strftime("%B %d, %Y") %></div>
+      </div>
+      <div>
+        <div class="text-sm text-gray-500">Last Sign In</div>
+        <div class="font-medium"><%= @user.last_sign_in_at&.strftime("%B %d, %Y at %I:%M %p") || "Never" %></div>
+      </div>
+      <div>
+        <div class="text-sm text-gray-500">Active Assignments</div>
+        <div class="font-medium"><%= @user.assignments.active.count %></div>
+      </div>
+      <div>
+        <div class="text-sm text-gray-500">Completed Assignments</div>
+        <div class="font-medium"><%= @user.assignments.completed.count %></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="bg-white rounded-lg shadow">
+    <div class="px-6 py-4 border-b border-gray-200">
+      <h2 class="text-xl font-semibold text-gray-900">Recent Assignments</h2>
+    </div>
+    <div class="divide-y divide-gray-200">
+      <% if @assignments.any? %>
+        <% @assignments.each do |assignment| %>
+          <div class="px-6 py-4 flex justify-between items-center">
+            <div>
+              <div class="font-medium"><%= assignment.person.full_name %></div>
+              <div class="text-sm text-gray-600"><%= assignment.task_type.humanize %></div>
+            </div>
+            <%= assignment_status_badge(assignment.status) %>
+          </div>
+        <% end %>
+      <% else %>
+        <div class="px-6 py-8 text-center text-gray-500">No assignments yet</div>
+      <% end %>
+    </div>
+  </div>
+</div>

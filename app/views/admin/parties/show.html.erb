@@ -1,0 +1,28 @@
+<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+  <div class="mb-6">
+    <%= link_to "← Back to Parties", admin_parties_path, class: "text-blue-600 hover:text-blue-800" %>
+  </div>
+
+  <div class="bg-white rounded-lg shadow">
+    <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+      <h1 class="text-2xl font-bold text-gray-900"><%= @party.name %></h1>
+      <div class="flex items-center gap-2">
+        <span class="px-3 py-1 text-sm rounded-full bg-gray-100 text-gray-800"><%= @party.abbreviation %></span>
+        <%= link_to "Edit", edit_admin_party_path(@party), class: "px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300" %>
+      </div>
+    </div>
+
+    <div class="p-6">
+      <div class="grid grid-cols-2 gap-6">
+        <div>
+          <div class="text-sm text-gray-500">Abbreviation</div>
+          <div class="font-medium"><%= @party.abbreviation || 'N/A' %></div>
+        </div>
+        <div>
+          <div class="text-sm text-gray-500">Ideology</div>
+          <div class="font-medium"><%= @party.ideology || 'N/A' %></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

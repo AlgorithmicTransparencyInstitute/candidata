@@ -1,0 +1,32 @@
+<%= form_with model: [:admin, party], class: "bg-white rounded-lg shadow p-6" do |f| %>
+  <% if party.errors.any? %>
+    <div class="mb-4 p-4 bg-red-50 border border-red-200 rounded">
+      <ul class="list-disc list-inside text-red-700 text-sm">
+        <% party.errors.full_messages.each do |msg| %>
+          <li><%= msg %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div class="mb-4">
+    <label class="block text-sm font-medium text-gray-700 mb-1">Name</label>
+    <%= f.text_field :name, class: "w-full px-3 py-2 border border-gray-300 rounded-md", required: true %>
+  </div>
+
+  <div class="grid grid-cols-2 gap-4 mb-4">
+    <div>
+      <label class="block text-sm font-medium text-gray-700 mb-1">Abbreviation</label>
+      <%= f.text_field :abbreviation, class: "w-full px-3 py-2 border border-gray-300 rounded-md", required: true, maxlength: 10 %>
+    </div>
+    <div>
+      <label class="block text-sm font-medium text-gray-700 mb-1">Ideology</label>
+      <%= f.text_field :ideology, class: "w-full px-3 py-2 border border-gray-300 rounded-md" %>
+    </div>
+  </div>
+
+  <div class="flex justify-end gap-3">
+    <%= link_to "Cancel", admin_parties_path, class: "px-4 py-2 text-gray-700 hover:text-gray-900" %>
+    <%= f.submit party.persisted? ? "Save Changes" : "Create Party", class: "px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 cursor-pointer" %>
+  </div>
+<% end %>

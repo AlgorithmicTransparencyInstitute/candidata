@@ -1,13 +1,23 @@
 class User < ApplicationRecord
-  ROLES = %w[admin researcher researcher_assistant].freeze
+  has_paper_trail
+
+  ROLES = %w[admin researcher].freeze
 
   devise :database_authenticatable, :registerable,
          :recoverable, :rememberable, :validatable,
          :trackable, :omniauthable, omniauth_providers: [:google_oauth2]
 
   has_one_attached :avatar
+  has_many :assignments, dependent: :destroy
+  has_many :assigned_people, through: :assignments, source: :person
+  has_many :assignments_given, class_name: 'Assignment', foreign_key: 'assigned_by_id', dependent: :nullify
+  has_many :entered_accounts, class_name: 'SocialMediaAccount', foreign_key: 'entered_by_id'
+  has_many :verified_accounts, class_name: 'SocialMediaAccount', foreign_key: 'verified_by_id'
 
   validates :role, inclusion: { in: ROLES }
+
+  scope :admins, -> { where(role: 'admin') }
+  scope :researchers, -> { where(role: 'researcher') }
 
   def self.from_omniauth(auth)
     user = where(provider: auth.provider, uid: auth.uid).first_or_create do |u|
@@ -16,7 +26,6 @@ class User < ApplicationRecord
       u.name = auth.info.name
     end
 
-    # Download and attach avatar if provided and not already attached
     if auth.info.image.present? && !user.avatar.attached?
       user.attach_avatar_from_url(auth.info.image)
     end
@@ -48,15 +57,23 @@ class User < ApplicationRecord
     role == 'researcher'
   end
 
-  def researcher_assistant?
-    role == 'researcher_assistant'
-  end
-
   def can_manage_users?
     admin?
   end
 
   def can_assign_tasks?
-    admin? || researcher?
+    admin?
+  end
+
+  def pending_assignments
+    assignments.active
+  end
+
+  def research_assignments
+    assignments.research.active
+  end
+
+  def verification_assignments
+    assignments.verification.active
   end
 end

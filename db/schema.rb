@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_02_05_015614) do
+ActiveRecord::Schema[7.2].define(version: 2026_02_05_033157) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -40,6 +40,24 @@ ActiveRecord::Schema[7.2].define(version: 2026_02_05_015614) do
     t.bigint "blob_id", null: false
     t.string "variation_digest", null: false
     t.index ["blob_id", "variation_digest"], name: "index_active_storage_variant_records_uniqueness", unique: true
+  end
+
+  create_table "assignments", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.bigint "assigned_by_id", null: false
+    t.bigint "person_id", null: false
+    t.string "task_type", null: false
+    t.string "status", default: "pending", null: false
+    t.datetime "completed_at"
+    t.text "notes"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["assigned_by_id"], name: "index_assignments_on_assigned_by_id"
+    t.index ["person_id"], name: "index_assignments_on_person_id"
+    t.index ["status"], name: "index_assignments_on_status"
+    t.index ["task_type"], name: "index_assignments_on_task_type"
+    t.index ["user_id", "person_id", "task_type"], name: "index_assignments_on_user_id_and_person_id_and_task_type", unique: true
+    t.index ["user_id"], name: "index_assignments_on_user_id"
   end
 
   create_table "ballots", force: :cascade do |t|
@@ -243,11 +261,22 @@ ActiveRecord::Schema[7.2].define(version: 2026_02_05_015614) do
     t.string "airtable_id"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.bigint "entered_by_id"
+    t.bigint "verified_by_id"
+    t.datetime "entered_at"
+    t.datetime "verified_at"
+    t.string "research_status", default: "not_started"
+    t.text "verification_notes"
+    t.boolean "pre_populated", default: false
     t.index ["airtable_id"], name: "index_social_media_accounts_on_airtable_id", unique: true
     t.index ["channel_type"], name: "index_social_media_accounts_on_channel_type"
+    t.index ["entered_by_id"], name: "index_social_media_accounts_on_entered_by_id"
     t.index ["person_id", "platform", "handle"], name: "idx_social_accounts_unique", unique: true
     t.index ["person_id"], name: "index_social_media_accounts_on_person_id"
     t.index ["platform"], name: "index_social_media_accounts_on_platform"
+    t.index ["pre_populated"], name: "index_social_media_accounts_on_pre_populated"
+    t.index ["research_status"], name: "index_social_media_accounts_on_research_status"
+    t.index ["verified_by_id"], name: "index_social_media_accounts_on_verified_by_id"
   end
 
   create_table "states", force: :cascade do |t|
@@ -394,8 +423,21 @@ ActiveRecord::Schema[7.2].define(version: 2026_02_05_015614) do
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
   end
 
+  create_table "versions", force: :cascade do |t|
+    t.string "whodunnit"
+    t.datetime "created_at"
+    t.bigint "item_id", null: false
+    t.string "item_type", null: false
+    t.string "event", null: false
+    t.text "object"
+    t.index ["item_type", "item_id"], name: "index_versions_on_item_type_and_item_id"
+  end
+
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
+  add_foreign_key "assignments", "people"
+  add_foreign_key "assignments", "users"
+  add_foreign_key "assignments", "users", column: "assigned_by_id"
   add_foreign_key "candidates", "contests"
   add_foreign_key "candidates", "people"
   add_foreign_key "contests", "ballots"
@@ -408,4 +450,6 @@ ActiveRecord::Schema[7.2].define(version: 2026_02_05_015614) do
   add_foreign_key "person_parties", "parties"
   add_foreign_key "person_parties", "people"
   add_foreign_key "social_media_accounts", "people"
+  add_foreign_key "social_media_accounts", "users", column: "entered_by_id"
+  add_foreign_key "social_media_accounts", "users", column: "verified_by_id"
 end

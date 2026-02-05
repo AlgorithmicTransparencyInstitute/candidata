@@ -1,0 +1,132 @@
+<div class="max-w-4xl mx-auto px-4 py-8">
+  <div class="mb-6">
+    <%= link_to "← Back to Verification", verification_root_path, class: "text-purple-600 hover:text-purple-800" %>
+  </div>
+
+  <!-- Person Header -->
+  <div class="bg-white rounded-lg shadow mb-6">
+    <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+      <div>
+        <h1 class="text-2xl font-bold text-gray-900"><%= @person.full_name %></h1>
+        <p class="text-gray-600">
+          <%= @person.primary_party&.name || "No party" %> · 
+          <%= @person.state_of_residence || "Unknown state" %>
+        </p>
+      </div>
+      <div class="flex items-center gap-2">
+        <%= assignment_status_badge(@assignment.status) %>
+        <% if @assignment.pending? %>
+          <%= button_to "Start Verification", start_verification_assignment_path(@assignment), method: :patch, class: "px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700" %>
+        <% elsif @assignment.in_progress? && @accounts.empty? %>
+          <%= button_to "Mark Complete", complete_verification_assignment_path(@assignment), method: :patch, class: "px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700" %>
+        <% end %>
+      </div>
+    </div>
+  </div>
+
+  <!-- Accounts Needing Verification -->
+  <% if @accounts.any? %>
+    <div class="bg-white rounded-lg shadow mb-6">
+      <div class="px-6 py-4 border-b border-gray-200">
+        <h2 class="text-xl font-semibold text-gray-900">Accounts to Verify</h2>
+        <p class="text-sm text-gray-600">Review each account and verify or reject</p>
+      </div>
+      <div class="divide-y divide-gray-200">
+        <% @accounts.each do |account| %>
+          <div class="px-6 py-4">
+            <div class="flex justify-between items-start">
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center">
+                  <span class="text-lg"><%= platform_icon(account.platform) %></span>
+                </div>
+                <div>
+                  <div class="font-medium text-gray-900"><%= account.platform %></div>
+                  <% if account.url.present? %>
+                    <a href="<%= account.url %>" target="_blank" class="text-sm text-blue-600 hover:text-blue-800">
+                      <%= account.url %>
+                    </a>
+                  <% end %>
+                  <% if account.handle.present? %>
+                    <div class="text-sm text-gray-600">@<%= account.handle %></div>
+                  <% end %>
+                  <% if account.entered_by %>
+                    <div class="text-xs text-gray-500 mt-1">
+                      Entered by <%= account.entered_by.name %> · <%= time_ago_in_words(account.entered_at) %> ago
+                    </div>
+                  <% end %>
+                </div>
+              </div>
+              <% if @assignment.in_progress? %>
+                <div class="flex items-center gap-2">
+                  <%= button_to "✓ Verify", verify_verification_account_path(account), method: :patch, class: "px-3 py-1 bg-green-600 text-white text-sm rounded hover:bg-green-700" %>
+                  <button type="button" onclick="openRejectModal(<%= account.id %>, '<%= account.platform %>')" class="px-3 py-1 bg-red-600 text-white text-sm rounded hover:bg-red-700">
+                    ✗ Reject
+                  </button>
+                </div>
+              <% else %>
+                <span class="text-sm text-gray-500">Start verification to review</span>
+              <% end %>
+            </div>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  <% end %>
+
+  <!-- Already Verified -->
+  <% if @verified_accounts.any? %>
+    <div class="bg-white rounded-lg shadow">
+      <div class="px-6 py-4 border-b border-gray-200">
+        <h2 class="text-xl font-semibold text-gray-900">Verified Accounts</h2>
+      </div>
+      <div class="divide-y divide-gray-200">
+        <% @verified_accounts.each do |account| %>
+          <div class="px-6 py-3 flex items-center gap-3">
+            <span class="text-lg"><%= platform_icon(account.platform) %></span>
+            <div class="flex-1">
+              <span class="font-medium"><%= account.platform %></span>
+              <span class="text-gray-600">- <%= account.url.presence || "@#{account.handle}" %></span>
+            </div>
+            <span class="text-green-600 text-sm">✓ Verified by <%= account.verified_by&.name %></span>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  <% end %>
+</div>
+
+<!-- Reject Modal -->
+<div id="rejectModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+  <div class="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
+    <div class="px-6 py-4 border-b border-gray-200">
+      <h3 class="text-lg font-semibold text-red-600" id="rejectModalTitle">Reject Account</h3>
+    </div>
+    <%= form_with url: "#", method: :patch, id: "rejectForm", class: "p-6" do |f| %>
+      <div class="mb-4">
+        <label class="block text-sm font-medium text-gray-700 mb-1">Reason for rejection (required)</label>
+        <textarea name="notes" id="rejectNotes" rows="3" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-red-500 focus:border-red-500" placeholder="Explain why this account is being rejected..."></textarea>
+      </div>
+      <div class="flex justify-end gap-3">
+        <button type="button" onclick="closeRejectModal()" class="px-4 py-2 text-gray-700 hover:text-gray-900">Cancel</button>
+        <button type="submit" class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700">Reject Account</button>
+      </div>
+    <% end %>
+  </div>
+</div>
+
+<script>
+  function openRejectModal(accountId, platform) {
+    document.getElementById('rejectModalTitle').textContent = 'Reject ' + platform + ' Account';
+    document.getElementById('rejectForm').action = '/verification/accounts/' + accountId + '/reject';
+    document.getElementById('rejectNotes').value = '';
+    document.getElementById('rejectModal').classList.remove('hidden');
+  }
+
+  function closeRejectModal() {
+    document.getElementById('rejectModal').classList.add('hidden');
+  }
+
+  document.getElementById('rejectModal').addEventListener('click', function(e) {
+    if (e.target === this) closeRejectModal();
+  });
+</script>

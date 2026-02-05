@@ -1,0 +1,9 @@
+<div class="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
+  <div class="mb-6">
+    <%= link_to "← Back to Offices", admin_offices_path, class: "text-blue-600 hover:text-blue-800" %>
+  </div>
+
+  <h1 class="text-3xl font-bold text-gray-900 mb-6">New Office</h1>
+
+  <%= render 'form', office: @office %>
+</div>

@@ -76,6 +76,7 @@ The import service will:
 
 ## Documentation
 
+- [2026 Candidate Management Plan](docs/2026_CANDIDATE_MANAGEMENT_PLAN.md) - Implementation plan for admin/researcher workflow
 - [Temp Data Analysis Report](docs/TEMP_DATA_ANALYSIS.md) - Analysis of staging tables with 2024 election data
 
 ## Development

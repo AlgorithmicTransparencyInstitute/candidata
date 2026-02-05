@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html class="h-full bg-gray-100">
+  <head>
+    <title>Researcher - Candidata</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <%= csrf_meta_tags %>
+    <%= csp_meta_tag %>
+    <%= stylesheet_link_tag "tailwind", "data-turbo-track": "reload" %>
+    <%= stylesheet_link_tag "application", "data-turbo-track": "reload" %>
+    <%= javascript_importmap_tags %>
+  </head>
+
+  <body class="h-full">
+    <div class="min-h-full">
+      <!-- Top Nav -->
+      <nav class="bg-white shadow-sm border-b border-gray-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div class="flex justify-between h-16">
+            <div class="flex items-center">
+              <%= link_to root_path, class: "flex items-center gap-2" do %>
+                <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
+                  <span class="text-white font-bold">C</span>
+                </div>
+                <span class="text-xl font-semibold text-gray-900">Candidata</span>
+              <% end %>
+
+              <div class="hidden sm:ml-8 sm:flex sm:space-x-4">
+                <%= link_to "Research", researcher_root_path, class: "px-3 py-2 text-sm font-medium rounded-md #{request.path.start_with?('/researcher') ? 'bg-blue-100 text-blue-700' : 'text-gray-600 hover:text-gray-900'}" %>
+                <%= link_to "Verification", verification_root_path, class: "px-3 py-2 text-sm font-medium rounded-md #{request.path.start_with?('/verification') ? 'bg-purple-100 text-purple-700' : 'text-gray-600 hover:text-gray-900'}" %>
+                <% if current_user&.admin? %>
+                  <%= link_to "Admin", admin_root_path, class: "px-3 py-2 text-sm font-medium text-gray-600 hover:text-gray-900" %>
+                <% end %>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-4">
+              <div class="flex items-center gap-2">
+                <% if current_user&.avatar&.attached? %>
+                  <%= image_tag current_user.avatar, class: "w-8 h-8 rounded-full" %>
+                <% else %>
+                  <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
+                    <span class="text-blue-600 text-sm font-medium"><%= current_user&.name&.first&.upcase || 'U' %></span>
+                  </div>
+                <% end %>
+                <span class="text-sm font-medium text-gray-700"><%= current_user&.name || current_user&.email %></span>
+              </div>
+              <%= button_to destroy_user_session_path, method: :delete, class: "text-gray-400 hover:text-gray-600" do %>
+                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75" />
+                </svg>
+              <% end %>
+            </div>
+          </div>
+        </div>
+      </nav>
+
+      <main>
+        <% if notice %>
+          <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">
+            <div class="bg-green-50 border border-green-200 rounded-md p-4">
+              <p class="text-sm text-green-700"><%= notice %></p>
+            </div>
+          </div>
+        <% end %>
+        <% if alert %>
+          <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">
+            <div class="bg-red-50 border border-red-200 rounded-md p-4">
+              <p class="text-sm text-red-700"><%= alert %></p>
+            </div>
+          </div>
+        <% end %>
+        <%= yield %>
+      </main>
+    </div>
+  </body>
+</html>

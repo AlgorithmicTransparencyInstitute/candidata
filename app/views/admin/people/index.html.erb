@@ -1,4 +1,84 @@
-<div>
-  <h1 class="font-bold text-4xl">Admin::People#index</h1>
-  <p>Find me in app/views/admin/people/index.html.erb</p>
+<div class="max-w-7xl mx-auto px-4 py-8">
+  <div class="flex justify-between items-center mb-6">
+    <h1 class="text-3xl font-bold text-gray-900">People</h1>
+    <div class="flex gap-2">
+      <%= link_to "Bulk Assign", bulk_assign_admin_people_path, class: "px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700" %>
+      <%= link_to "New Person", new_admin_person_path, class: "px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700" %>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="bg-white rounded-lg shadow mb-6 p-4">
+    <%= form_with url: admin_people_path, method: :get, class: "flex flex-wrap gap-4 items-end" do |f| %>
+      <div class="flex-1 min-w-[200px]">
+        <label class="block text-sm font-medium text-gray-700 mb-1">Search</label>
+        <%= text_field_tag :q, params[:q], placeholder: "Name...", class: "w-full px-3 py-2 border border-gray-300 rounded-md" %>
+      </div>
+      <div>
+        <label class="flex items-center gap-2">
+          <%= check_box_tag :needs_research, "1", params[:needs_research].present?, class: "rounded border-gray-300" %>
+          <span class="text-sm text-gray-700">Needs research assignment</span>
+        </label>
+      </div>
+      <div>
+        <%= submit_tag "Filter", class: "px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 cursor-pointer" %>
+        <%= link_to "Clear", admin_people_path, class: "px-4 py-2 text-gray-600 hover:text-gray-900" %>
+      </div>
+    <% end %>
+  </div>
+
+  <!-- People Table -->
+  <div class="bg-white rounded-lg shadow overflow-hidden">
+    <table class="min-w-full divide-y divide-gray-200">
+      <thead class="bg-gray-50">
+        <tr>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Party</th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">State</th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Accounts</th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Assigned</th>
+          <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
+        </tr>
+      </thead>
+      <tbody class="bg-white divide-y divide-gray-200">
+        <% @people.each do |person| %>
+          <tr class="hover:bg-gray-50">
+            <td class="px-6 py-4">
+              <%= link_to person.full_name, admin_person_path(person), class: "text-blue-600 hover:text-blue-800 font-medium" %>
+            </td>
+            <td class="px-6 py-4 text-gray-600">
+              <%= person.primary_party&.abbreviation || "—" %>
+            </td>
+            <td class="px-6 py-4 text-gray-600">
+              <%= person.state_of_residence || "—" %>
+            </td>
+            <td class="px-6 py-4 text-sm">
+              <% account_count = person.social_media_accounts.count %>
+              <% if account_count > 0 %>
+                <span class="text-gray-600"><%= account_count %> accounts</span>
+              <% else %>
+                <span class="text-gray-400">None</span>
+              <% end %>
+            </td>
+            <td class="px-6 py-4">
+              <% active_assignment = person.assignments.active.first %>
+              <% if active_assignment %>
+                <span class="text-xs text-green-600"><%= active_assignment.user.name %></span>
+              <% else %>
+                <span class="text-gray-400">—</span>
+              <% end %>
+            </td>
+            <td class="px-6 py-4 text-right">
+              <%= link_to "View", admin_person_path(person), class: "text-blue-600 hover:text-blue-800 mr-2" %>
+              <%= link_to "Edit", edit_admin_person_path(person), class: "text-gray-600 hover:text-gray-800" %>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="mt-4">
+    <%= paginate @people %>
+  </div>
 </div>

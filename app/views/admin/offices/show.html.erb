@@ -1,0 +1,85 @@
+<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+  <div class="mb-6">
+    <%= link_to "← Back to Offices", admin_offices_path, class: "text-blue-600 hover:text-blue-800" %>
+  </div>
+
+  <div class="bg-white rounded-lg shadow mb-6">
+    <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+      <div>
+        <h1 class="text-2xl font-bold text-gray-900"><%= @office.title %></h1>
+        <% if @office.seat.present? %>
+          <p class="text-gray-600">Seat: <%= @office.seat %></p>
+        <% end %>
+      </div>
+      <div class="flex items-center gap-2">
+        <span class="px-3 py-1 text-sm rounded-full bg-gray-100 text-gray-800"><%= @office.level&.titleize %></span>
+        <%= link_to "Edit", edit_admin_office_path(@office), class: "px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300" %>
+      </div>
+    </div>
+
+    <div class="p-6 grid grid-cols-2 gap-6">
+      <div>
+        <div class="text-sm text-gray-500">State</div>
+        <div class="font-medium"><%= @office.state || 'N/A' %></div>
+      </div>
+      <div>
+        <div class="text-sm text-gray-500">District</div>
+        <div class="font-medium"><%= @office.district&.name || 'N/A' %></div>
+      </div>
+      <div>
+        <div class="text-sm text-gray-500">Body</div>
+        <div class="font-medium"><%= @office.body_name || 'N/A' %></div>
+      </div>
+      <div>
+        <div class="text-sm text-gray-500">Term Length</div>
+        <div class="font-medium"><%= @office.term_length ? "#{@office.term_length} years" : 'N/A' %></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div class="bg-white rounded-lg shadow">
+      <div class="px-6 py-4 border-b border-gray-200">
+        <h2 class="text-xl font-semibold text-gray-900">Officeholders</h2>
+      </div>
+      <div class="divide-y divide-gray-200">
+        <% if @officeholders.any? %>
+          <% @officeholders.each do |holder| %>
+            <div class="px-6 py-4 flex justify-between items-center">
+              <div>
+                <div class="font-medium"><%= holder.person.full_name %></div>
+                <div class="text-sm text-gray-600">
+                  <%= holder.start_date&.strftime('%b %Y') %> - <%= holder.end_date&.strftime('%b %Y') || 'Present' %>
+                </div>
+              </div>
+              <%= link_to "View", admin_person_path(holder.person), class: "text-blue-600 hover:text-blue-800 text-sm" %>
+            </div>
+          <% end %>
+        <% else %>
+          <div class="px-6 py-8 text-center text-gray-500">No officeholders</div>
+        <% end %>
+      </div>
+    </div>
+
+    <div class="bg-white rounded-lg shadow">
+      <div class="px-6 py-4 border-b border-gray-200">
+        <h2 class="text-xl font-semibold text-gray-900">Recent Contests</h2>
+      </div>
+      <div class="divide-y divide-gray-200">
+        <% if @contests.any? %>
+          <% @contests.each do |contest| %>
+            <div class="px-6 py-4 flex justify-between items-center">
+              <div>
+                <div class="font-medium"><%= contest.date.strftime('%B %d, %Y') %></div>
+                <div class="text-sm text-gray-600"><%= contest.contest_type&.titleize %></div>
+              </div>
+              <%= link_to "View", admin_contest_path(contest), class: "text-blue-600 hover:text-blue-800 text-sm" %>
+            </div>
+          <% end %>
+        <% else %>
+          <div class="px-6 py-8 text-center text-gray-500">No contests</div>
+        <% end %>
+      </div>
+    </div>
+  </div>
+</div>

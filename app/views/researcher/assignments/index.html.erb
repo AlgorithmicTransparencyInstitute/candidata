@@ -1,0 +1,62 @@
+<div class="max-w-7xl mx-auto px-4 py-8">
+  <div class="flex justify-between items-center mb-6">
+    <h1 class="text-3xl font-bold text-gray-900">My Assignments</h1>
+    <%= link_to "Dashboard", researcher_root_path, class: "text-blue-600 hover:text-blue-800" %>
+  </div>
+
+  <!-- Filters -->
+  <div class="bg-white rounded-lg shadow mb-6 p-4">
+    <div class="flex flex-wrap gap-2">
+      <%= link_to "All", researcher_assignments_path, class: "px-4 py-2 rounded #{@filter == 'all' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}" %>
+      <%= link_to "Research", researcher_assignments_path(filter: 'research'), class: "px-4 py-2 rounded #{@filter == 'research' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}" %>
+      <%= link_to "Verification", researcher_assignments_path(filter: 'verification'), class: "px-4 py-2 rounded #{@filter == 'verification' ? 'bg-purple-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}" %>
+      <%= link_to "Pending", researcher_assignments_path(filter: 'pending'), class: "px-4 py-2 rounded #{@filter == 'pending' ? 'bg-yellow-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}" %>
+      <%= link_to "In Progress", researcher_assignments_path(filter: 'in_progress'), class: "px-4 py-2 rounded #{@filter == 'in_progress' ? 'bg-green-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}" %>
+    </div>
+  </div>
+
+  <!-- Assignments List -->
+  <div class="bg-white rounded-lg shadow">
+    <% if @assignments.any? %>
+      <div class="divide-y divide-gray-200">
+        <% @assignments.each do |assignment| %>
+          <div class="px-6 py-4 hover:bg-gray-50">
+            <div class="flex justify-between items-center">
+              <div>
+                <div class="font-medium text-lg text-gray-900"><%= assignment.person.full_name %></div>
+                <div class="text-sm text-gray-600">
+                  <%= assignment.person.primary_party&.name || "No party" %> · 
+                  <%= assignment.person.state_of_residence || "Unknown state" %>
+                </div>
+                <div class="text-sm text-gray-500 mt-1">
+                  <% needs_work = assignment.person.social_media_accounts.campaign.core_platforms.needs_research.count %>
+                  <% if needs_work > 0 %>
+                    <span class="text-orange-600"><%= needs_work %> platforms need research</span>
+                  <% else %>
+                    <span class="text-green-600">All platforms complete</span>
+                  <% end %>
+                </div>
+              </div>
+              <div class="flex items-center gap-3">
+                <div class="text-right">
+                  <span class="px-2 py-1 text-xs rounded-full <%= assignment.task_type == 'research' ? 'bg-blue-100 text-blue-800' : 'bg-purple-100 text-purple-800' %>">
+                    <%= assignment.task_type.humanize %>
+                  </span>
+                  <div class="mt-1">
+                    <%= assignment_status_badge(assignment.status) %>
+                  </div>
+                </div>
+                <%= link_to "Work", researcher_assignment_path(assignment), class: "px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700" %>
+              </div>
+            </div>
+          </div>
+        <% end %>
+      </div>
+    <% else %>
+      <div class="px-6 py-12 text-center text-gray-500">
+        <p class="text-lg">No assignments found.</p>
+        <p class="text-sm mt-2">Check back later or contact an admin.</p>
+      </div>
+    <% end %>
+  </div>
+</div>

@@ -1,4 +1,6 @@
 class Person < ApplicationRecord
+  has_paper_trail
+
   # Legacy direct party link (kept for backwards compatibility during migration)
   belongs_to :party_affiliation, class_name: 'Party', optional: true
   
@@ -11,6 +13,8 @@ class Person < ApplicationRecord
   has_many :officeholders
   has_many :offices, through: :officeholders
   has_many :social_media_accounts, dependent: :destroy
+  has_many :assignments, dependent: :destroy
+  has_many :assigned_researchers, through: :assignments, source: :user
 
   GENDERS = %w[Male Female Other].freeze
   SUFFIXES = %w[Jr. Sr. II III IV V].freeze

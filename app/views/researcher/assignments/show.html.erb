@@ -1,0 +1,142 @@
+<div class="max-w-4xl mx-auto px-4 py-8">
+  <div class="mb-6">
+    <%= link_to "← Back to Dashboard", researcher_root_path, class: "text-blue-600 hover:text-blue-800" %>
+  </div>
+
+  <!-- Person Header -->
+  <div class="bg-white rounded-lg shadow mb-6">
+    <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+      <div>
+        <h1 class="text-2xl font-bold text-gray-900"><%= @person.full_name %></h1>
+        <p class="text-gray-600">
+          <%= @person.primary_party&.name || "No party" %> · 
+          <%= @person.state_of_residence || "Unknown state" %>
+        </p>
+      </div>
+      <div class="flex items-center gap-2">
+        <span class="px-3 py-1 text-sm rounded-full <%= @assignment.pending? ? 'bg-blue-100 text-blue-800' : 'bg-yellow-100 text-yellow-800' %>">
+          <%= @assignment.status.humanize %>
+        </span>
+        <% if @assignment.pending? %>
+          <%= button_to "Start Working", start_researcher_assignment_path(@assignment), method: :patch, class: "px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700" %>
+        <% elsif @assignment.in_progress? %>
+          <%= button_to "Mark Complete", complete_researcher_assignment_path(@assignment), method: :patch, class: "px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700", data: { confirm: "Are you sure all accounts have been researched?" } %>
+        <% end %>
+      </div>
+    </div>
+  </div>
+
+  <!-- Campaign Accounts to Research -->
+  <div class="bg-white rounded-lg shadow mb-6">
+    <div class="px-6 py-4 border-b border-gray-200">
+      <h2 class="text-xl font-semibold text-gray-900">Campaign Accounts</h2>
+      <p class="text-sm text-gray-600">Find and enter social media accounts for each platform</p>
+    </div>
+    <div class="divide-y divide-gray-200">
+      <% @accounts.each do |account| %>
+        <div class="px-6 py-4">
+          <div class="flex justify-between items-start">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center">
+                <span class="text-lg"><%= platform_icon(account.platform) %></span>
+              </div>
+              <div>
+                <div class="font-medium text-gray-900"><%= account.platform %></div>
+                <% if account.research_status == 'entered' %>
+                  <div class="text-sm text-green-600">
+                    <%= account.url.presence || "@#{account.handle}" %>
+                  </div>
+                <% elsif account.research_status == 'not_found' %>
+                  <div class="text-sm text-gray-500 italic">No account found</div>
+                <% else %>
+                  <div class="text-sm text-gray-500">Not yet researched</div>
+                <% end %>
+              </div>
+            </div>
+            <div class="flex items-center gap-2">
+              <% case account.research_status %>
+              <% when 'entered' %>
+                <span class="px-2 py-1 text-xs rounded-full bg-green-100 text-green-800">Entered</span>
+              <% when 'not_found' %>
+                <span class="px-2 py-1 text-xs rounded-full bg-gray-100 text-gray-800">Not Found</span>
+              <% else %>
+                <% if @assignment.in_progress? %>
+                  <button type="button" 
+                          onclick="openEntryModal(<%= account.id %>, '<%= account.platform %>')"
+                          class="px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700">
+                    Enter Account
+                  </button>
+                  <%= button_to "Not Found", mark_not_found_researcher_account_path(account), method: :patch, class: "px-3 py-1 bg-gray-200 text-gray-700 text-sm rounded hover:bg-gray-300" %>
+                <% else %>
+                  <span class="text-sm text-gray-500">Start assignment to edit</span>
+                <% end %>
+              <% end %>
+            </div>
+          </div>
+        </div>
+      <% end %>
+    </div>
+  </div>
+
+  <!-- Existing Official Accounts (read-only) -->
+  <% if @official_accounts.any? %>
+    <div class="bg-white rounded-lg shadow">
+      <div class="px-6 py-4 border-b border-gray-200">
+        <h2 class="text-xl font-semibold text-gray-900">Official Office Accounts</h2>
+        <p class="text-sm text-gray-600">Existing accounts (for reference only)</p>
+      </div>
+      <div class="divide-y divide-gray-200">
+        <% @official_accounts.each do |account| %>
+          <div class="px-6 py-3 flex items-center gap-3">
+            <span class="text-lg"><%= platform_icon(account.platform) %></span>
+            <div>
+              <span class="font-medium"><%= account.platform %></span>
+              <span class="text-gray-600">- <%= account.url.presence || "@#{account.handle}" %></span>
+            </div>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  <% end %>
+</div>
+
+<!-- Entry Modal -->
+<div id="entryModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+  <div class="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
+    <div class="px-6 py-4 border-b border-gray-200">
+      <h3 class="text-lg font-semibold" id="modalTitle">Enter Account</h3>
+    </div>
+    <%= form_with url: "#", method: :patch, id: "entryForm", class: "p-6" do |f| %>
+      <div class="mb-4">
+        <label class="block text-sm font-medium text-gray-700 mb-1">URL</label>
+        <input type="url" name="url" id="accountUrl" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500" placeholder="https://...">
+      </div>
+      <div class="mb-6">
+        <label class="block text-sm font-medium text-gray-700 mb-1">Handle (optional)</label>
+        <input type="text" name="handle" id="accountHandle" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500" placeholder="@username">
+      </div>
+      <div class="flex justify-end gap-3">
+        <button type="button" onclick="closeEntryModal()" class="px-4 py-2 text-gray-700 hover:text-gray-900">Cancel</button>
+        <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Save Account</button>
+      </div>
+    <% end %>
+  </div>
+</div>
+
+<script>
+  function openEntryModal(accountId, platform) {
+    document.getElementById('modalTitle').textContent = 'Enter ' + platform + ' Account';
+    document.getElementById('entryForm').action = '/researcher/accounts/' + accountId + '/mark_entered';
+    document.getElementById('accountUrl').value = '';
+    document.getElementById('accountHandle').value = '';
+    document.getElementById('entryModal').classList.remove('hidden');
+  }
+
+  function closeEntryModal() {
+    document.getElementById('entryModal').classList.add('hidden');
+  }
+
+  document.getElementById('entryModal').addEventListener('click', function(e) {
+    if (e.target === this) closeEntryModal();
+  });
+</script>

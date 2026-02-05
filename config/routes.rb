@@ -15,13 +15,62 @@ Rails.application.routes.draw do
   namespace :admin do
     root "dashboard#index"
     resources :parties
-    resources :people
+    resources :people do
+      member do
+        post :assign_researcher
+        post :prepopulate_accounts
+      end
+      collection do
+        get :bulk_assign
+        post :create_bulk_assignments
+      end
+    end
     resources :districts
     resources :offices
     resources :ballots
     resources :contests
     resources :candidates
     resources :officeholders
+    resources :assignments do
+      member do
+        patch :complete
+      end
+    end
+    resources :users
+  end
+
+  # Researcher workspace
+  namespace :researcher do
+    root "dashboard#index"
+    resources :assignments, only: [:index, :show] do
+      member do
+        patch :start
+        patch :complete
+      end
+    end
+    resources :accounts, only: [:show, :update] do
+      member do
+        patch :mark_entered
+        patch :mark_not_found
+      end
+    end
+  end
+
+  # Verification workspace
+  namespace :verification do
+    root "dashboard#index"
+    resources :assignments, only: [:index, :show] do
+      member do
+        patch :start
+        patch :complete
+      end
+    end
+    resources :accounts, only: [:show, :update] do
+      member do
+        patch :verify
+        patch :reject
+      end
+    end
   end
 
   # Public browsing

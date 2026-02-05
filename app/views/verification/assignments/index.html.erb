@@ -1,0 +1,42 @@
+<div class="max-w-7xl mx-auto px-4 py-8">
+  <div class="flex justify-between items-center mb-6">
+    <h1 class="text-3xl font-bold text-gray-900">Verification Assignments</h1>
+    <%= link_to "Dashboard", verification_root_path, class: "text-purple-600 hover:text-purple-800" %>
+  </div>
+
+  <div class="bg-white rounded-lg shadow">
+    <% if @assignments.any? %>
+      <div class="divide-y divide-gray-200">
+        <% @assignments.each do |assignment| %>
+          <div class="px-6 py-4 hover:bg-gray-50">
+            <div class="flex justify-between items-center">
+              <div>
+                <div class="font-medium text-lg text-gray-900"><%= assignment.person.full_name %></div>
+                <div class="text-sm text-gray-600">
+                  <%= assignment.person.primary_party&.name || "No party" %> · 
+                  <%= assignment.person.state_of_residence || "Unknown state" %>
+                </div>
+                <div class="text-sm text-gray-500 mt-1">
+                  <% needs_verification = assignment.person.social_media_accounts.campaign.core_platforms.needs_verification.count %>
+                  <% if needs_verification > 0 %>
+                    <span class="text-orange-600"><%= needs_verification %> accounts need verification</span>
+                  <% else %>
+                    <span class="text-green-600">All accounts verified</span>
+                  <% end %>
+                </div>
+              </div>
+              <div class="flex items-center gap-3">
+                <%= assignment_status_badge(assignment.status) %>
+                <%= link_to "Verify", verification_assignment_path(assignment), class: "px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700" %>
+              </div>
+            </div>
+          </div>
+        <% end %>
+      </div>
+    <% else %>
+      <div class="px-6 py-12 text-center text-gray-500">
+        <p class="text-lg">No verification assignments.</p>
+      </div>
+    <% end %>
+  </div>
+</div>

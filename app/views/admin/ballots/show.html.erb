@@ -1,0 +1,52 @@
+<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+  <div class="mb-6">
+    <%= link_to "← Back to Ballots", admin_ballots_path, class: "text-blue-600 hover:text-blue-800" %>
+  </div>
+
+  <div class="bg-white rounded-lg shadow mb-6">
+    <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+      <div>
+        <h1 class="text-2xl font-bold text-gray-900"><%= @ballot.name %></h1>
+        <p class="text-gray-600"><%= @ballot.date.strftime('%B %d, %Y') %></p>
+      </div>
+      <div class="flex items-center gap-2">
+        <span class="px-3 py-1 text-sm rounded-full bg-purple-100 text-purple-800"><%= @ballot.election_type&.titleize %></span>
+        <%= link_to "Edit", edit_admin_ballot_path(@ballot), class: "px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300" %>
+      </div>
+    </div>
+
+    <div class="p-6 grid grid-cols-2 gap-6">
+      <div>
+        <div class="text-sm text-gray-500">State</div>
+        <div class="font-medium"><%= @ballot.state || 'N/A' %></div>
+      </div>
+      <div>
+        <div class="text-sm text-gray-500">Total Contests</div>
+        <div class="font-medium"><%= @contests.count %></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="bg-white rounded-lg shadow">
+    <div class="px-6 py-4 border-b border-gray-200">
+      <h2 class="text-xl font-semibold text-gray-900">Contests</h2>
+    </div>
+    <div class="divide-y divide-gray-200">
+      <% if @contests.any? %>
+        <% @contests.each do |contest| %>
+          <div class="px-6 py-4 flex justify-between items-center">
+            <div>
+              <div class="font-medium"><%= contest.office.title %></div>
+              <div class="text-sm text-gray-600">
+                <%= contest.contest_type&.titleize %> · <%= contest.candidates.count %> candidates
+              </div>
+            </div>
+            <%= link_to "View", admin_contest_path(contest), class: "text-blue-600 hover:text-blue-800 text-sm" %>
+          </div>
+        <% end %>
+      <% else %>
+        <div class="px-6 py-8 text-center text-gray-500">No contests on this ballot</div>
+      <% end %>
+    </div>
+  </div>
+</div>

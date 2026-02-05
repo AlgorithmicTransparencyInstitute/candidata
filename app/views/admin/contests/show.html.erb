@@ -1,0 +1,73 @@
+<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+  <div class="mb-6">
+    <%= link_to "← Back to Contests", admin_contests_path, class: "text-blue-600 hover:text-blue-800" %>
+  </div>
+
+  <div class="bg-white rounded-lg shadow mb-6">
+    <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+      <div>
+        <h1 class="text-2xl font-bold text-gray-900"><%= @contest.office.title %></h1>
+        <p class="text-gray-600"><%= @contest.date.strftime('%B %d, %Y') %></p>
+      </div>
+      <div class="flex items-center gap-2">
+        <span class="px-3 py-1 text-sm rounded-full bg-blue-100 text-blue-800"><%= @contest.contest_type&.titleize %></span>
+        <%= link_to "Edit", edit_admin_contest_path(@contest), class: "px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300" %>
+      </div>
+    </div>
+
+    <div class="p-6 grid grid-cols-2 gap-6">
+      <div>
+        <div class="text-sm text-gray-500">Ballot</div>
+        <div class="font-medium">
+          <% if @contest.ballot %>
+            <%= link_to @contest.ballot.name, admin_ballot_path(@contest.ballot), class: "text-blue-600 hover:text-blue-800" %>
+          <% else %>
+            N/A
+          <% end %>
+        </div>
+      </div>
+      <div>
+        <div class="text-sm text-gray-500">Office</div>
+        <div class="font-medium">
+          <%= link_to @contest.office.title, admin_office_path(@contest.office), class: "text-blue-600 hover:text-blue-800" %>
+        </div>
+      </div>
+      <div>
+        <div class="text-sm text-gray-500">Number Elected</div>
+        <div class="font-medium"><%= @contest.number_elected || 1 %></div>
+      </div>
+      <div>
+        <div class="text-sm text-gray-500">Partisan</div>
+        <div class="font-medium"><%= @contest.partisan? ? 'Yes' : 'No' %></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="bg-white rounded-lg shadow">
+    <div class="px-6 py-4 border-b border-gray-200">
+      <h2 class="text-xl font-semibold text-gray-900">Candidates (<%= @candidates.count %>)</h2>
+    </div>
+    <div class="divide-y divide-gray-200">
+      <% if @candidates.any? %>
+        <% @candidates.each do |candidate| %>
+          <div class="px-6 py-4 flex justify-between items-center">
+            <div class="flex items-center gap-4">
+              <div class="text-gray-400 w-6 text-center"><%= candidate.ballot_order %></div>
+              <div>
+                <div class="font-medium"><%= candidate.person.full_name %></div>
+                <div class="text-sm text-gray-600">
+                  <% if candidate.party %>
+                    <%= candidate.party.name %>
+                  <% end %>
+                </div>
+              </div>
+            </div>
+            <%= link_to "View Person", admin_person_path(candidate.person), class: "text-blue-600 hover:text-blue-800 text-sm" %>
+          </div>
+        <% end %>
+      <% else %>
+        <div class="px-6 py-8 text-center text-gray-500">No candidates</div>
+      <% end %>
+    </div>
+  </div>
+</div>

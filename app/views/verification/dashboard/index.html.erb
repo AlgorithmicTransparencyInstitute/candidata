@@ -1,0 +1,68 @@
+<div class="max-w-7xl mx-auto px-4 py-8">
+  <h1 class="text-3xl font-bold text-gray-900 mb-8">Verification Dashboard</h1>
+
+  <!-- Stats Overview -->
+  <div class="grid grid-cols-3 gap-4 mb-8">
+    <div class="bg-white rounded-lg shadow p-4">
+      <div class="text-2xl font-bold text-purple-600"><%= @stats[:pending] %></div>
+      <div class="text-sm text-gray-600">Pending Verification</div>
+    </div>
+    <div class="bg-white rounded-lg shadow p-4">
+      <div class="text-2xl font-bold text-orange-600"><%= @stats[:in_progress] %></div>
+      <div class="text-sm text-gray-600">In Progress</div>
+    </div>
+    <div class="bg-white rounded-lg shadow p-4">
+      <div class="text-2xl font-bold text-green-600"><%= @stats[:completed_total] %></div>
+      <div class="text-sm text-gray-600">Completed</div>
+    </div>
+  </div>
+
+  <!-- Assignments -->
+  <div class="bg-white rounded-lg shadow">
+    <div class="px-6 py-4 border-b border-gray-200">
+      <h2 class="text-xl font-semibold text-gray-900">Verification Queue</h2>
+      <p class="text-sm text-gray-600">Review and verify accounts entered by researchers</p>
+    </div>
+    <div class="divide-y divide-gray-200">
+      <% if @assignments.any? %>
+        <% @assignments.each do |assignment| %>
+          <div class="px-6 py-4 hover:bg-gray-50">
+            <div class="flex justify-between items-center">
+              <div>
+                <div class="font-medium text-gray-900"><%= assignment.person.full_name %></div>
+                <div class="text-sm text-gray-600">
+                  <%= assignment.person.social_media_accounts.campaign.needs_verification.count %> accounts to verify
+                </div>
+              </div>
+              <div class="flex items-center gap-2">
+                <%= assignment_status_badge(assignment.status) %>
+                <%= link_to "Verify", verification_assignment_path(assignment), class: "px-3 py-1 bg-purple-600 text-white text-sm rounded hover:bg-purple-700" %>
+              </div>
+            </div>
+          </div>
+        <% end %>
+      <% else %>
+        <div class="px-6 py-8 text-center text-gray-500">
+          No verification assignments pending.
+        </div>
+      <% end %>
+    </div>
+  </div>
+
+  <!-- Recent Completed -->
+  <% if @completed.any? %>
+    <div class="mt-8 bg-white rounded-lg shadow">
+      <div class="px-6 py-4 border-b border-gray-200">
+        <h2 class="text-xl font-semibold text-gray-900">Recently Completed</h2>
+      </div>
+      <div class="divide-y divide-gray-200">
+        <% @completed.each do |assignment| %>
+          <div class="px-6 py-3 flex justify-between items-center text-sm">
+            <span class="text-gray-900"><%= assignment.person.full_name %></span>
+            <span class="text-gray-500"><%= time_ago_in_words(assignment.completed_at) %> ago</span>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  <% end %>
+</div>
