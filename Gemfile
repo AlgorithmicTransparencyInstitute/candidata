@@ -24,6 +24,7 @@ gem "httparty"
 gem "devise"
 gem "omniauth"
 gem "omniauth-google-oauth2"
+gem "omniauth-entra-id"
 gem "omniauth-rails_csrf_protection"
 # Pagination
 gem "kaminari"

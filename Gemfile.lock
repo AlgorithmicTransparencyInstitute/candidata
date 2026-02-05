@@ -198,6 +198,9 @@ GEM
       logger
       rack (>= 2.2.3)
       rack-protection
+    omniauth-entra-id (3.1.1)
+      jwt (>= 2.9.2)
+      omniauth-oauth2 (~> 1.8)
     omniauth-google-oauth2 (1.2.1)
       jwt (>= 2.9.2)
       oauth2 (~> 2.0)
@@ -379,6 +382,7 @@ DEPENDENCIES
   jbuilder
   kaminari
   omniauth
+  omniauth-entra-id
   omniauth-google-oauth2
   omniauth-rails_csrf_protection
   paper_trail

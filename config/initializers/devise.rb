@@ -279,6 +279,11 @@ Devise.setup do |config|
                   ENV['GOOGLE_CLIENT_SECRET'],
                   scope: 'email,profile'
 
+  config.omniauth :entra_id,
+                  client_id: ENV['MICROSOFT_CLIENT_ID'],
+                  client_secret: ENV['MICROSOFT_CLIENT_SECRET'],
+                  tenant_id: ENV['MICROSOFT_TENANT_ID'] || 'common'
+
   # ==> Warden configuration
   # If you want to use other strategies, that are not supported by Devise, or
   # change the failure app, you can configure them inside the config.warden block.
