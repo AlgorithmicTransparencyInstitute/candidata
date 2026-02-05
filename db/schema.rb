@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_02_03_162445) do
+ActiveRecord::Schema[7.2].define(version: 2026_02_05_015614) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -54,6 +54,29 @@ ActiveRecord::Schema[7.2].define(version: 2026_02_03_162445) do
     t.index ["state", "date", "election_type"], name: "index_ballots_unique", unique: true
     t.index ["state", "year", "election_type"], name: "index_ballots_on_state_and_year_and_election_type", unique: true
     t.index ["year"], name: "index_ballots_on_year"
+  end
+
+  create_table "bodies", force: :cascade do |t|
+    t.string "name", null: false
+    t.string "level"
+    t.string "branch"
+    t.string "state"
+    t.string "country", default: "US"
+    t.string "jurisdiction"
+    t.string "jurisdiction_ocdid"
+    t.string "chamber_type"
+    t.integer "parent_body_id"
+    t.integer "seats_count"
+    t.date "founded_date"
+    t.string "website"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["country"], name: "index_bodies_on_country"
+    t.index ["level"], name: "index_bodies_on_level"
+    t.index ["name", "country"], name: "index_bodies_on_name_and_country", unique: true
+    t.index ["name"], name: "index_bodies_on_name"
+    t.index ["parent_body_id"], name: "index_bodies_on_parent_body_id"
+    t.index ["state"], name: "index_bodies_on_state"
   end
 
   create_table "candidates", force: :cascade do |t|
@@ -146,7 +169,9 @@ ActiveRecord::Schema[7.2].define(version: 2026_02_03_162445) do
     t.string "ocdid"
     t.string "airtable_id"
     t.string "county"
+    t.bigint "body_id"
     t.index ["airtable_id"], name: "index_offices_on_airtable_id", unique: true
+    t.index ["body_id"], name: "index_offices_on_body_id"
     t.index ["body_name"], name: "index_offices_on_body_name"
     t.index ["branch"], name: "index_offices_on_branch"
     t.index ["district_id"], name: "index_offices_on_district_id"
@@ -377,6 +402,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_02_03_162445) do
   add_foreign_key "contests", "offices"
   add_foreign_key "officeholders", "offices"
   add_foreign_key "officeholders", "people"
+  add_foreign_key "offices", "bodies"
   add_foreign_key "offices", "districts"
   add_foreign_key "people", "parties", column: "party_affiliation_id"
   add_foreign_key "person_parties", "parties"

@@ -79,8 +79,8 @@
           <% @bodies.each do |body| %>
             <tr class="hover:bg-gray-50">
               <td class="px-6 py-4">
-                <%= link_to body_path(body.body_name), class: "text-sm font-medium text-indigo-600 hover:text-indigo-900" do %>
-                  <%= body.body_name %>
+                <%= link_to body_path(body), class: "text-sm font-medium text-indigo-600 hover:text-indigo-900" do %>
+                  <%= body.name %>
                 <% end %>
               </td>
               <td class="px-6 py-4 whitespace-nowrap">
@@ -101,7 +101,7 @@
                 <% end %>
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                <%= body.offices_count %>
+                <%= body.seats_count || body.offices.count %>
               </td>
             </tr>
           <% end %>

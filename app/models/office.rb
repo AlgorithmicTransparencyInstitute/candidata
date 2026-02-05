@@ -1,5 +1,6 @@
 class Office < ApplicationRecord
   belongs_to :district, optional: true
+  belongs_to :body, optional: true
   has_many :contests
   has_many :officeholders
   has_many :people, through: :officeholders

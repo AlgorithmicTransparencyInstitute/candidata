@@ -3,12 +3,12 @@
 class OfficesController < ApplicationController
   
   def index
-    @offices = Office.includes(:district, :officeholders)
+    @offices = Office.includes(:district, :officeholders, :body)
     
     # Search by title
     if params[:q].present?
       search_term = "%#{params[:q].downcase}%"
-      @offices = @offices.where("LOWER(title) LIKE :term OR LOWER(body_name) LIKE :term", term: search_term)
+      @offices = @offices.left_joins(:body).where("LOWER(offices.title) LIKE :term OR LOWER(bodies.name) LIKE :term", term: search_term)
     end
     
     # Filter by state
@@ -33,7 +33,7 @@ class OfficesController < ApplicationController
     
     # Filter by body
     if params[:body].present?
-      @offices = @offices.where(body_name: params[:body])
+      @offices = @offices.where(body_id: params[:body])
     end
     
     # Sort
@@ -55,11 +55,11 @@ class OfficesController < ApplicationController
     @levels = Office::LEVELS
     @branches = Office::BRANCHES
     @categories = Office.where.not(office_category: [nil, '']).distinct.pluck(:office_category).compact.sort
-    @bodies = Office.where.not(body_name: [nil, '']).distinct.pluck(:body_name).compact.sort
+    @bodies = ::Body.order(:name).pluck(:id, :name)
   end
   
   def show
-    @office = Office.includes(:district, officeholders: :person).find(params[:id])
+    @office = Office.includes(:district, :body, officeholders: :person).find(params[:id])
     @current_holder = @office.officeholders.current.includes(:person).first
     @past_holders = @office.officeholders.former.includes(:person).order(end_date: :desc).limit(20)
   end
