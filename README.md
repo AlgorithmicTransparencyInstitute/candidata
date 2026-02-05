@@ -74,6 +74,10 @@ The import service will:
 5. Import candidate relationships
 6. Import officeholder records
 
+## Documentation
+
+- [Temp Data Analysis Report](docs/TEMP_DATA_ANALYSIS.md) - Analysis of staging tables with 2024 election data
+
 ## Development
 
 ```bash
