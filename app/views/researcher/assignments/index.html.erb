@@ -7,11 +7,12 @@
   <!-- Filters -->
   <div class="bg-white rounded-lg shadow mb-6 p-4">
     <div class="flex flex-wrap gap-2">
-      <%= link_to "All", researcher_assignments_path, class: "px-4 py-2 rounded #{@filter == 'all' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}" %>
-      <%= link_to "Research", researcher_assignments_path(filter: 'research'), class: "px-4 py-2 rounded #{@filter == 'research' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}" %>
-      <%= link_to "Verification", researcher_assignments_path(filter: 'verification'), class: "px-4 py-2 rounded #{@filter == 'verification' ? 'bg-purple-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}" %>
+      <%= link_to "All Active", researcher_assignments_path, class: "px-4 py-2 rounded #{@filter == 'all' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}" %>
+      <%= link_to "Data Collection", researcher_assignments_path(filter: 'data_collection'), class: "px-4 py-2 rounded #{@filter == 'data_collection' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}" %>
+      <%= link_to "Data Validation", researcher_assignments_path(filter: 'data_validation'), class: "px-4 py-2 rounded #{@filter == 'data_validation' ? 'bg-purple-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}" %>
       <%= link_to "Pending", researcher_assignments_path(filter: 'pending'), class: "px-4 py-2 rounded #{@filter == 'pending' ? 'bg-yellow-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}" %>
       <%= link_to "In Progress", researcher_assignments_path(filter: 'in_progress'), class: "px-4 py-2 rounded #{@filter == 'in_progress' ? 'bg-green-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}" %>
+      <%= link_to "Completed (#{@completed_count})", researcher_assignments_path(filter: 'completed'), class: "px-4 py-2 rounded #{@filter == 'completed' ? 'bg-gray-700 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}" %>
     </div>
   </div>
 
@@ -23,30 +24,45 @@
           <div class="px-6 py-4 hover:bg-gray-50">
             <div class="flex justify-between items-center">
               <div>
-                <div class="font-medium text-lg text-gray-900"><%= assignment.person.full_name %></div>
+                <%= link_to assignment.person.full_name, researcher_assignment_path(assignment), class: "font-medium text-lg text-gray-900 hover:text-blue-600" %>
                 <div class="text-sm text-gray-600">
                   <%= assignment.person.primary_party&.name || "No party" %> · 
                   <%= assignment.person.state_of_residence || "Unknown state" %>
                 </div>
-                <div class="text-sm text-gray-500 mt-1">
-                  <% needs_work = assignment.person.social_media_accounts.campaign.core_platforms.needs_research.count %>
-                  <% if needs_work > 0 %>
-                    <span class="text-orange-600"><%= needs_work %> platforms need research</span>
-                  <% else %>
-                    <span class="text-green-600">All platforms complete</span>
-                  <% end %>
-                </div>
+                <% if assignment.completed? %>
+                  <div class="text-sm text-gray-500 mt-1">
+                    Completed <%= time_ago_in_words(assignment.completed_at) %> ago
+                  </div>
+                <% else %>
+                  <div class="text-sm text-gray-500 mt-1">
+                    <% needs_work = assignment.person.social_media_accounts.campaign.core_platforms.needs_research.count %>
+                    <% if needs_work > 0 %>
+                      <span class="text-orange-600"><%= needs_work %> platforms need research</span>
+                    <% else %>
+                      <span class="text-green-600">All platforms complete</span>
+                    <% end %>
+                  </div>
+                <% end %>
               </div>
               <div class="flex items-center gap-3">
                 <div class="text-right">
-                  <span class="px-2 py-1 text-xs rounded-full <%= assignment.task_type == 'research' ? 'bg-blue-100 text-blue-800' : 'bg-purple-100 text-purple-800' %>">
+                  <span class="px-2 py-1 text-xs rounded-full <%= assignment.task_type == 'data_collection' ? 'bg-blue-100 text-blue-800' : 'bg-purple-100 text-purple-800' %>">
                     <%= assignment.task_type.humanize %>
                   </span>
                   <div class="mt-1">
                     <%= assignment_status_badge(assignment.status) %>
                   </div>
                 </div>
-                <%= link_to "Work", researcher_assignment_path(assignment), class: "px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700" %>
+                <% if assignment.completed? %>
+                  <% if assignment.has_validation_assignment? %>
+                    <span class="px-3 py-1.5 text-xs text-gray-400 italic">In validation</span>
+                  <% else %>
+                    <%= button_to "Reopen", reopen_researcher_assignment_path(assignment), method: :patch, class: "px-4 py-2 bg-yellow-600 text-white rounded hover:bg-yellow-700 text-sm" %>
+                  <% end %>
+                  <%= link_to "View", researcher_assignment_path(assignment), class: "px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 text-sm" %>
+                <% else %>
+                  <%= link_to "Work", researcher_assignment_path(assignment), class: "px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700" %>
+                <% end %>
               </div>
             </div>
           </div>
@@ -54,8 +70,10 @@
       </div>
     <% else %>
       <div class="px-6 py-12 text-center text-gray-500">
-        <p class="text-lg">No assignments found.</p>
-        <p class="text-sm mt-2">Check back later or contact an admin.</p>
+        <p class="text-lg">No <%= @filter == 'completed' ? 'completed' : '' %> assignments found.</p>
+        <% unless @filter == 'completed' %>
+          <p class="text-sm mt-2">Check back later or contact an admin.</p>
+        <% end %>
       </div>
     <% end %>
   </div>

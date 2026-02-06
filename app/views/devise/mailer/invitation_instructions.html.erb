@@ -1,0 +1,17 @@
+<h1>You're invited to join Candidata!</h1>
+
+<p>Hello<%= @resource.name.present? ? " #{@resource.name}" : "" %>!</p>
+
+<p>You've been invited to join <strong>Candidata</strong> as a <strong><%= @resource.role.titleize %></strong>. Candidata is a platform for tracking and validating candidate data for elections across the United States.</p>
+
+<p>As a researcher, you'll help update and verify social media accounts and other data for political candidates &mdash; work that directly supports algorithmic transparency and accountability.</p>
+
+<p style="text-align: center;">
+  <a href="<%= accept_invitation_url(@resource, invitation_token: @token) %>" class="btn">Accept Invitation &amp; Get Started</a>
+</p>
+
+<p>You can set up your account with a password, or sign in with your Google account &mdash; whichever you prefer.</p>
+
+<hr class="divider">
+
+<p class="muted">This invitation will expire in <%= distance_of_time_in_words(@resource.class.invite_for) %>. If you believe this was sent in error, you can safely ignore this email.</p>

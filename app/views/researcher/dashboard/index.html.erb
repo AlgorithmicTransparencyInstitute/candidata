@@ -5,7 +5,7 @@
   <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
     <div class="bg-white rounded-lg shadow p-4">
       <div class="text-2xl font-bold text-blue-600"><%= @stats[:pending_research] %></div>
-      <div class="text-sm text-gray-600">Pending Research</div>
+      <div class="text-sm text-gray-600">Pending Collection</div>
     </div>
     <div class="bg-white rounded-lg shadow p-4">
       <div class="text-2xl font-bold text-yellow-600"><%= @stats[:in_progress_research] %></div>
@@ -13,7 +13,7 @@
     </div>
     <div class="bg-white rounded-lg shadow p-4">
       <div class="text-2xl font-bold text-purple-600"><%= @stats[:pending_verification] %></div>
-      <div class="text-sm text-gray-600">Pending Verification</div>
+      <div class="text-sm text-gray-600">Pending Validation</div>
     </div>
     <div class="bg-white rounded-lg shadow p-4">
       <div class="text-2xl font-bold text-orange-600"><%= @stats[:in_progress_verification] %></div>
@@ -26,10 +26,10 @@
   </div>
 
   <div class="grid md:grid-cols-2 gap-8">
-    <!-- Research Assignments -->
+    <!-- Data Collection Assignments -->
     <div class="bg-white rounded-lg shadow">
       <div class="px-6 py-4 border-b border-gray-200">
-        <h2 class="text-xl font-semibold text-gray-900">Research Assignments</h2>
+        <h2 class="text-xl font-semibold text-gray-900">Data Collection</h2>
         <p class="text-sm text-gray-600">Find social media accounts for these candidates</p>
       </div>
       <div class="divide-y divide-gray-200">
@@ -54,16 +54,16 @@
           <% end %>
         <% else %>
           <div class="px-6 py-8 text-center text-gray-500">
-            No research assignments pending.
+            No data collection assignments pending.
           </div>
         <% end %>
       </div>
     </div>
 
-    <!-- Verification Assignments -->
+    <!-- Data Validation Assignments -->
     <div class="bg-white rounded-lg shadow">
       <div class="px-6 py-4 border-b border-gray-200">
-        <h2 class="text-xl font-semibold text-gray-900">Verification Assignments</h2>
+        <h2 class="text-xl font-semibold text-gray-900">Data Validation</h2>
         <p class="text-sm text-gray-600">Verify accounts entered by other researchers</p>
       </div>
       <div class="divide-y divide-gray-200">
@@ -88,7 +88,7 @@
           <% end %>
         <% else %>
           <div class="px-6 py-8 text-center text-gray-500">
-            No verification assignments pending.
+            No data validation assignments pending.
           </div>
         <% end %>
       </div>

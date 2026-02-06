@@ -1,7 +1,7 @@
 class Assignment < ApplicationRecord
   has_paper_trail
 
-  TASK_TYPES = %w[research verification].freeze
+  TASK_TYPES = %w[data_collection data_validation].freeze
   STATUSES = %w[pending in_progress completed].freeze
 
   belongs_to :user
@@ -15,8 +15,8 @@ class Assignment < ApplicationRecord
   scope :pending, -> { where(status: 'pending') }
   scope :in_progress, -> { where(status: 'in_progress') }
   scope :completed, -> { where(status: 'completed') }
-  scope :research, -> { where(task_type: 'research') }
-  scope :verification, -> { where(task_type: 'verification') }
+  scope :data_collection, -> { where(task_type: 'data_collection') }
+  scope :data_validation, -> { where(task_type: 'data_validation') }
   scope :for_user, ->(user) { where(user: user) }
   scope :active, -> { where(status: %w[pending in_progress]) }
 
@@ -26,6 +26,16 @@ class Assignment < ApplicationRecord
 
   def complete!
     update!(status: 'completed', completed_at: Time.current)
+  end
+
+  def reopen!
+    update!(status: 'in_progress', completed_at: nil)
+  end
+
+  def has_validation_assignment?
+    Assignment.where(person_id: person_id, task_type: 'data_validation')
+              .where.not(status: 'completed')
+              .exists?
   end
 
   def pending?

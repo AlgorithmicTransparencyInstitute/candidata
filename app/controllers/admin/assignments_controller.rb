@@ -27,23 +27,90 @@ module Admin
     end
 
     def new
-      @assignment = Assignment.new
-      @assignment.person_id = params[:person_id] if params[:person_id]
       @researchers = User.researchers.order(:name)
-      @people = Person.order(:last_name, :first_name).limit(100)
+      @researcher_workloads = Assignment.where(user_id: @researchers.pluck(:id))
+                                        .active
+                                        .group(:user_id)
+                                        .count
+
+      @task_type = params[:task_type] || 'data_collection'
+      @selected_researcher_id = params[:user_id]
+
+      @people = Person.includes(:parties, :assignments, officeholders: :office)
+                      .order(:last_name, :first_name)
+
+      if params[:state].present?
+        @people = @people.by_state(params[:state])
+      end
+
+      if params[:party_id].present?
+        @people = @people.by_party(params[:party_id])
+      end
+
+      if params[:body_id].present?
+        @people = @people.joins(offices: :body).where(bodies: { id: params[:body_id] }).distinct
+      end
+
+      if params[:level].present?
+        @people = @people.joins(:offices).where(offices: { level: params[:level] }).distinct
+      end
+
+      if params[:q].present?
+        search_term = "%#{params[:q].downcase}%"
+        @people = @people.where("LOWER(first_name) LIKE :term OR LOWER(last_name) LIKE :term", term: search_term)
+      end
+
+      case params[:assignment_filter]
+      when 'unassigned'
+        @people = @people.left_joins(:assignments)
+                         .where(assignments: { id: nil })
+                         .distinct
+      when 'no_collection'
+        assigned_ids = Assignment.where(task_type: 'data_collection').select(:person_id)
+        @people = @people.where.not(id: assigned_ids)
+      when 'no_validation'
+        assigned_ids = Assignment.where(task_type: 'data_validation').select(:person_id)
+        @people = @people.where.not(id: assigned_ids)
+      end
+
+      @people = @people.page(params[:page]).per(50)
+
+      @states = Person.where.not(state_of_residence: [nil, '']).distinct.pluck(:state_of_residence).sort
+      @parties = Party.order(:name)
+      @bodies = ::Body.order(:name)
+      @levels = Office.where.not(level: [nil, '']).distinct.pluck(:level).sort
     end
 
     def create
-      @assignment = Assignment.new(assignment_params)
-      @assignment.assigned_by = current_user
+      user = User.find(params[:user_id])
+      task_type = params[:task_type] || 'data_collection'
+      person_ids = params[:person_ids] || []
 
-      if @assignment.save
-        redirect_to admin_assignments_path, notice: "Assignment created."
-      else
-        @researchers = User.researchers.order(:name)
-        @people = Person.order(:last_name, :first_name).limit(100)
-        render :new, status: :unprocessable_entity
+      if person_ids.empty?
+        redirect_to new_admin_assignment_path, alert: "Please select at least one person."
+        return
       end
+
+      created = 0
+      skipped = 0
+
+      person_ids.each do |pid|
+        person = Person.find(pid)
+        assignment = person.assignments.find_or_initialize_by(user: user, task_type: task_type)
+
+        if assignment.new_record?
+          assignment.assigned_by = current_user
+          assignment.status = 'pending'
+          if assignment.save
+            SocialMediaAccount.prepopulate_for_person!(person) if task_type == 'data_collection'
+            created += 1
+          end
+        else
+          skipped += 1
+        end
+      end
+
+      redirect_to admin_assignments_path, notice: "Created #{created} assignments#{skipped > 0 ? ", skipped #{skipped} (already assigned)" : ''}."
     end
 
     def edit

@@ -37,7 +37,7 @@
             <div class="flex justify-between items-start">
               <div class="flex items-center gap-3">
                 <div class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center">
-                  <span class="text-lg"><%= platform_icon(account.platform) %></span>
+                  <%= platform_icon(account.platform, size: 22) %>
                 </div>
                 <div>
                   <div class="font-medium text-gray-900"><%= account.platform %></div>
@@ -52,6 +52,11 @@
                   <% if account.entered_by %>
                     <div class="text-xs text-gray-500 mt-1">
                       Entered by <%= account.entered_by.name %> · <%= time_ago_in_words(account.entered_at) %> ago
+                    </div>
+                  <% end %>
+                  <% if account.research_notes.present? %>
+                    <div class="mt-1.5 px-2.5 py-1.5 bg-amber-50 border border-amber-200 rounded text-xs text-amber-800">
+                      <span class="font-medium">Researcher note:</span> <%= account.research_notes %>
                     </div>
                   <% end %>
                 </div>
@@ -82,7 +87,7 @@
       <div class="divide-y divide-gray-200">
         <% @verified_accounts.each do |account| %>
           <div class="px-6 py-3 flex items-center gap-3">
-            <span class="text-lg"><%= platform_icon(account.platform) %></span>
+            <%= platform_icon(account.platform, size: 20) %>
             <div class="flex-1">
               <span class="font-medium"><%= account.platform %></span>
               <span class="text-gray-600">- <%= account.url.presence || "@#{account.handle}" %></span>

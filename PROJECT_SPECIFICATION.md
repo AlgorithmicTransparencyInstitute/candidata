@@ -65,9 +65,19 @@ Candidata is a Ruby on Rails application that serves as:
 
 ### 3. User & Authentication System
 - [x] Basic session-based login (stub) - replaced by Devise
-- [x] Real user authentication (Devise + OmniAuth Google)
-- [x] User model with roles (admin, researcher, researcher_assistant)
-- [x] Role helper methods (admin?, researcher?, can_assign_tasks?, etc.)
+- [x] Real user authentication (Devise + OmniAuth Google + Microsoft Entra ID)
+- [x] User model with roles (admin, researcher)
+- [x] Role helper methods (admin?, researcher?)
+- [x] User invitation system (devise_invitable) - invite one or many users via email
+- [x] Invited users can join via password OR Google OAuth
+- [x] Polished branded HTML invitation email template
+- [x] Admin UI for bulk invitations with role selection
+- [x] Admin actions: resend invitation, send password reset
+- [x] User profile editing (name, avatar upload)
+- [x] Avatar validation (content type, 5MB size limit)
+- [x] Google OAuth auto-downloads profile pictures
+- [x] S3 storage (Bucketeer) for production file uploads
+- [x] Letter_opener for dev email preview
 - [ ] Role-based access control (restrict admin features)
 - [ ] Airtable users table integration (optional)
 
@@ -128,7 +138,17 @@ Candidata is a Ruby on Rails application that serves as:
 | Implement User model with authentication | ✅ Complete |
 | Add Devise with email/password login | ✅ Complete |
 | Add Google OAuth2 login | ✅ Complete |
-| Add role system (admin, researcher, RA) | ✅ Complete |
+| Add Microsoft Entra ID OAuth | ✅ Complete |
+| Add role system (admin, researcher) | ✅ Complete |
+| User invitation system (devise_invitable) | ✅ Complete |
+| Admin bulk invitation UI with role selection | ✅ Complete |
+| Polished HTML invitation email template | ✅ Complete |
+| Accept invitation via password or OAuth | ✅ Complete |
+| Admin resend invitation / reset password actions | ✅ Complete |
+| User profile edit page with avatar upload | ✅ Complete |
+| Avatar validation (type + size) | ✅ Complete |
+| S3 storage for production (Bucketeer) | ✅ Complete |
+| Letter_opener for dev email preview | ✅ Complete |
 | Role-based access control | ⬜ Not started |
 
 ### Phase 4: Task Management
@@ -504,7 +524,9 @@ Based on analysis, consider adding:
 - **Styling**: Tailwind CSS
 - **JavaScript**: Hotwire (Turbo + Stimulus)
 - **External APIs**: Airtable for data sync
-- **Authentication**: Devise + OmniAuth (Google OAuth2)
+- **Authentication**: Devise + OmniAuth (Google OAuth2, Microsoft Entra ID) + devise_invitable
+- **File Storage**: Active Storage with local (dev) / S3 via Bucketeer (production)
+- **Email**: letter_opener (dev), configurable mailer sender via DEVISE_MAILER_FROM env var
 - **Data Import Strategy**: CSV export → temp tables → analyze → seed production tables
 
 ---
@@ -549,4 +571,4 @@ Based on analysis, consider adding:
 
 ---
 
-*Last updated: 2026-02-03*
+*Last updated: 2026-02-05*

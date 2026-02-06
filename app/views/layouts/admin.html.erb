@@ -55,6 +55,12 @@
                 </svg>
                 Users
               <% end %>
+              <%= link_to new_admin_invitation_path, class: "group flex items-center px-3 py-2 text-sm font-medium rounded-md #{request.path.start_with?('/admin/invitations') ? 'bg-gray-800 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white'}" do %>
+                <svg class="mr-3 h-5 w-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
+                </svg>
+                Invite Users
+              <% end %>
             </div>
           </div>
 
@@ -120,8 +126,10 @@
               </div>
             <% end %>
             <div class="ml-3 flex-1">
-              <p class="text-sm font-medium text-white truncate"><%= current_user&.name || current_user&.email %></p>
-              <p class="text-xs text-gray-400"><%= current_user&.role&.titleize %></p>
+              <%= link_to edit_profile_path, class: "block" do %>
+                <p class="text-sm font-medium text-white truncate hover:text-gray-200"><%= current_user&.name || current_user&.email %></p>
+                <p class="text-xs text-gray-400"><%= current_user&.role&.titleize %></p>
+              <% end %>
             </div>
             <%= button_to destroy_user_session_path, method: :delete, class: "text-gray-400 hover:text-white" do %>
               <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">

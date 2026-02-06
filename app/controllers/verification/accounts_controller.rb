@@ -42,7 +42,7 @@ module Verification
     end
 
     def verify_assignment
-      @assignment = current_user.assignments.verification.active.find_by(person_id: @account.person_id)
+      @assignment = current_user.assignments.data_validation.active.find_by(person_id: @account.person_id)
       unless @assignment
         redirect_to verification_assignments_path, alert: "You don't have an active verification assignment for this person."
       end

@@ -85,8 +85,10 @@
               </div>
             <% end %>
             <div class="ml-3 flex-1">
-              <p class="text-sm font-medium text-white truncate"><%= current_user&.name || current_user&.email %></p>
-              <p class="text-xs text-gray-400"><%= current_user&.role&.titleize %></p>
+              <%= link_to edit_profile_path, class: "block" do %>
+                <p class="text-sm font-medium text-white truncate hover:text-gray-200"><%= current_user&.name || current_user&.email %></p>
+                <p class="text-xs text-gray-400"><%= current_user&.role&.titleize %></p>
+              <% end %>
             </div>
             <%= button_to destroy_user_session_path, method: :delete, class: "text-gray-400 hover:text-white" do %>
               <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">

@@ -1,6 +1,6 @@
 module Admin
   class UsersController < Admin::BaseController
-    before_action :set_user, only: [:show, :edit, :update, :destroy]
+    before_action :set_user, only: [:show, :edit, :update, :destroy, :resend_invitation, :send_reset_password]
 
     def index
       @users = User.order(:name)
@@ -39,6 +39,20 @@ module Admin
     def destroy
       @user.destroy
       redirect_to admin_users_path, notice: "User deleted."
+    end
+
+    def resend_invitation
+      if @user.invitation_token.present? && !@user.invitation_accepted?
+        @user.invite!(current_user)
+        redirect_to admin_user_path(@user), notice: "Invitation resent to #{@user.email}."
+      else
+        redirect_to admin_user_path(@user), alert: "This user has already accepted their invitation."
+      end
+    end
+
+    def send_reset_password
+      @user.send_reset_password_instructions
+      redirect_to admin_user_path(@user), notice: "Password reset email sent to #{@user.email}."
     end
 
     private

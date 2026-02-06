@@ -63,16 +63,24 @@
       <% @accounts.each do |account| %>
         <div class="px-6 py-4 flex justify-between items-center">
           <div class="flex items-center gap-3">
-            <span class="text-lg"><%= platform_icon(account.platform) %></span>
+            <%= platform_icon(account.platform, size: 20) %>
             <div>
               <div class="font-medium"><%= account.platform %> (<%= account.channel_type %>)</div>
               <% if account.url.present? || account.handle.present? %>
                 <div class="text-sm text-gray-600"><%= account.url.presence || "@#{account.handle}" %></div>
               <% end %>
+              <% if account.research_notes.present? %>
+                <div class="mt-1 px-2 py-1 bg-amber-50 border border-amber-200 rounded text-xs text-amber-800">
+                  <span class="font-medium">Researcher note:</span> <%= account.research_notes %>
+                </div>
+              <% end %>
             </div>
           </div>
           <div class="flex items-center gap-2">
             <%= research_status_badge(account.research_status) %>
+            <% if account.researcher_verified? %>
+              <span class="text-xs text-green-600">✓ Researcher verified</span>
+            <% end %>
             <% if account.entered_by %>
               <span class="text-xs text-gray-500">by <%= account.entered_by.name %></span>
             <% end %>

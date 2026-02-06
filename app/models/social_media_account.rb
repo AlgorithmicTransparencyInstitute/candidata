@@ -57,6 +57,16 @@ class SocialMediaAccount < ApplicationRecord
     )
   end
 
+  def reset_status!(user)
+    update!(
+      url: nil,
+      handle: nil,
+      entered_by: user,
+      entered_at: Time.current,
+      research_status: 'not_started'
+    )
+  end
+
   def verify!(user, notes: nil)
     update!(
       verified_by: user,

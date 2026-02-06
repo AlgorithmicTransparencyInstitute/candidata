@@ -18,8 +18,8 @@ class Admin::DashboardController < Admin::BaseController
       pending: Assignment.pending.count,
       in_progress: Assignment.in_progress.count,
       completed: Assignment.completed.count,
-      research_pending: Assignment.research.pending.count,
-      verification_pending: Assignment.verification.pending.count
+      collection_pending: Assignment.data_collection.pending.count,
+      validation_pending: Assignment.data_validation.pending.count
     }
 
     # Research workflow stats

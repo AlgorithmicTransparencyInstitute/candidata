@@ -12,7 +12,7 @@ class Admin::PeopleController < Admin::BaseController
     if params[:needs_research].present?
       @people = @people.left_joins(:assignments)
                        .where(assignments: { id: nil })
-                       .or(@people.left_joins(:assignments).where.not(assignments: { task_type: 'research' }))
+                       .or(@people.left_joins(:assignments).where.not(assignments: { task_type: 'data_collection' }))
     end
 
     @people = @people.order(:last_name, :first_name).page(params[:page]).per(50)
@@ -55,14 +55,14 @@ class Admin::PeopleController < Admin::BaseController
 
   def assign_researcher
     user = User.find(params[:user_id])
-    task_type = params[:task_type] || 'research'
+    task_type = params[:task_type] || 'data_collection'
 
     assignment = @person.assignments.find_or_initialize_by(user: user, task_type: task_type)
     assignment.assigned_by = current_user
     assignment.status = 'pending'
 
     if assignment.save
-      SocialMediaAccount.prepopulate_for_person!(@person) if task_type == 'research'
+      SocialMediaAccount.prepopulate_for_person!(@person) if task_type == 'data_collection'
       redirect_to admin_person_path(@person), notice: "#{user.name} assigned to #{task_type} for #{@person.full_name}."
     else
       redirect_to admin_person_path(@person), alert: "Failed to assign: #{assignment.errors.full_messages.join(', ')}"
@@ -90,7 +90,7 @@ class Admin::PeopleController < Admin::BaseController
 
   def create_bulk_assignments
     user = User.find(params[:user_id])
-    task_type = params[:task_type] || 'research'
+    task_type = params[:task_type] || 'data_collection'
     person_ids = params[:person_ids] || []
 
     created = 0
@@ -104,7 +104,7 @@ class Admin::PeopleController < Admin::BaseController
         assignment.assigned_by = current_user
         assignment.status = 'pending'
         if assignment.save
-          SocialMediaAccount.prepopulate_for_person!(person) if task_type == 'research'
+          SocialMediaAccount.prepopulate_for_person!(person) if task_type == 'data_collection'
           created += 1
         end
       else

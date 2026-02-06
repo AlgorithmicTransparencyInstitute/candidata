@@ -1,5 +1,8 @@
 Rails.application.routes.draw do
-  devise_for :users, controllers: { omniauth_callbacks: 'users/omniauth_callbacks' }
+  devise_for :users, controllers: {
+    omniauth_callbacks: 'users/omniauth_callbacks',
+    invitations: 'users/invitations'
+  }
 
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
 
@@ -36,7 +39,13 @@ Rails.application.routes.draw do
         patch :complete
       end
     end
-    resources :users
+    resources :users do
+      member do
+        post :resend_invitation
+        post :send_reset_password
+      end
+    end
+    resources :invitations, only: [:new, :create]
   end
 
   # Researcher workspace
@@ -46,12 +55,16 @@ Rails.application.routes.draw do
       member do
         patch :start
         patch :complete
+        patch :reopen
       end
     end
     resources :accounts, only: [:show, :update] do
       member do
         patch :mark_entered
         patch :mark_not_found
+        patch :reset_status
+        patch :toggle_researcher_verified
+        patch :update_notes
       end
     end
   end
@@ -72,6 +85,9 @@ Rails.application.routes.draw do
       end
     end
   end
+
+  # User profile
+  resource :profile, only: [:show, :edit, :update]
 
   # Public browsing
   resources :people, only: [:index, :show]

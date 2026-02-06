@@ -1,5 +1,5 @@
 <% if page.current? %>
-  <span class="inline-flex items-center border-t-2 border-indigo-500 px-4 pt-4 text-sm font-medium text-indigo-600"><%= page %></span>
+  <span class="inline-flex items-center justify-center w-9 h-9 rounded-md bg-blue-600 text-white text-sm font-medium"><%= page %></span>
 <% else %>
-  <%= link_to page, url, class: "inline-flex items-center border-t-2 border-transparent px-4 pt-4 text-sm font-medium text-gray-500 hover:border-gray-300 hover:text-gray-700" %>
+  <%= link_to page, url, class: "inline-flex items-center justify-center w-9 h-9 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100" %>
 <% end %>

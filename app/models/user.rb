@@ -3,11 +3,17 @@ class User < ApplicationRecord
 
   ROLES = %w[admin researcher].freeze
 
-  devise :database_authenticatable, :registerable,
+  devise :invitable, :database_authenticatable, :registerable,
          :recoverable, :rememberable, :validatable,
          :trackable, :omniauthable, omniauth_providers: [:google_oauth2, :entra_id]
 
-  has_one_attached :avatar
+  has_one_attached :avatar do |attachable|
+    attachable.variant :thumb, resize_to_fill: [100, 100]
+  end
+  validates :avatar, content_type: ['image/png', 'image/jpeg', 'image/gif', 'image/webp'],
+                     size: { less_than: 5.megabytes, message: 'must be less than 5MB' },
+                     if: -> { avatar.attached? }
+
   has_many :assignments, dependent: :destroy
   has_many :assigned_people, through: :assignments, source: :person
   has_many :assignments_given, class_name: 'Assignment', foreign_key: 'assigned_by_id', dependent: :nullify
@@ -20,10 +26,31 @@ class User < ApplicationRecord
   scope :researchers, -> { where(role: 'researcher') }
 
   def self.from_omniauth(auth)
-    user = where(provider: auth.provider, uid: auth.uid).first_or_create do |u|
-      u.email = auth.info.email
-      u.password = Devise.friendly_token[0, 20]
-      u.name = auth.info.name
+    # First check if there's an existing user with this provider/uid
+    user = find_by(provider: auth.provider, uid: auth.uid)
+
+    # If not found by provider/uid, check for an invited user by email
+    user ||= find_by(email: auth.info.email)
+
+    if user
+      # Update OAuth credentials if not yet set
+      if user.provider.blank?
+        user.update(provider: auth.provider, uid: auth.uid)
+      end
+      # Accept invitation if pending
+      if user.invitation_token.present? && !user.invitation_accepted?
+        user.accept_invitation!
+      end
+      user.update(name: auth.info.name) if user.name.blank?
+    else
+      # Create a brand new user
+      user = create(
+        email: auth.info.email,
+        password: Devise.friendly_token[0, 20],
+        name: auth.info.name,
+        provider: auth.provider,
+        uid: auth.uid
+      )
     end
 
     if auth.info.image.present? && !user.avatar.attached?
@@ -69,11 +96,11 @@ class User < ApplicationRecord
     assignments.active
   end
 
-  def research_assignments
-    assignments.research.active
+  def data_collection_assignments
+    assignments.data_collection.active
   end
 
-  def verification_assignments
-    assignments.verification.active
+  def data_validation_assignments
+    assignments.data_validation.active
   end
 end

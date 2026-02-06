@@ -33,9 +33,13 @@
             <button type="button" 
                     data-action="click->dropdown#toggle"
                     class="flex items-center space-x-2 px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors duration-150 focus:outline-none">
-              <div class="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center">
-                <span class="text-indigo-600 font-medium text-sm"><%= (current_user.name || current_user.email).first.upcase %></span>
-              </div>
+              <% if current_user.avatar.attached? %>
+                <%= image_tag current_user.avatar, class: "w-8 h-8 rounded-full object-cover" %>
+              <% else %>
+                <div class="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center">
+                  <span class="text-indigo-600 font-medium text-sm"><%= (current_user.name || current_user.email).first.upcase %></span>
+                </div>
+              <% end %>
               <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
               </svg>
@@ -49,6 +53,9 @@
               <% if current_user.researcher? %>
                 <%= link_to "Researcher Dashboard", researcher_root_path, class: "block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50" %>
               <% end %>
+              <div class="border-t border-gray-100"></div>
+              <%= link_to "Edit Profile", edit_profile_path, class: "block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50" %>
+              <%= link_to "Account Settings", edit_user_registration_path, class: "block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50" %>
               <div class="border-t border-gray-100"></div>
               <%= button_to "Sign out", destroy_user_session_path, method: :delete, class: "block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50" %>
             </div>

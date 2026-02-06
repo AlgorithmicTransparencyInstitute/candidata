@@ -5,8 +5,8 @@ module Researcher
     layout 'researcher'
 
     def index
-      @research_assignments = current_user.assignments.research.active.includes(person: :social_media_accounts)
-      @verification_assignments = current_user.assignments.verification.active.includes(person: :social_media_accounts)
+      @research_assignments = current_user.assignments.data_collection.active.includes(person: :social_media_accounts)
+      @verification_assignments = current_user.assignments.data_validation.active.includes(person: :social_media_accounts)
       @completed_assignments = current_user.assignments.completed.includes(:person).order(completed_at: :desc).limit(10)
 
       @stats = {

@@ -5,13 +5,13 @@ module Verification
     layout 'researcher'
 
     def index
-      @assignments = current_user.assignments.verification.active.includes(person: :social_media_accounts)
-      @completed = current_user.assignments.verification.completed.includes(:person).order(completed_at: :desc).limit(10)
+      @assignments = current_user.assignments.data_validation.active.includes(person: :social_media_accounts)
+      @completed = current_user.assignments.data_validation.completed.includes(:person).order(completed_at: :desc).limit(10)
 
       @stats = {
         pending: @assignments.pending.count,
         in_progress: @assignments.in_progress.count,
-        completed_total: current_user.assignments.verification.completed.count
+        completed_total: current_user.assignments.data_validation.completed.count
       }
     end
 

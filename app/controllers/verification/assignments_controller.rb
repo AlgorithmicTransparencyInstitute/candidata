@@ -6,7 +6,7 @@ module Verification
     before_action :set_assignment, only: [:show, :start, :complete]
 
     def index
-      @assignments = current_user.assignments.verification.active.includes(person: :social_media_accounts).order(created_at: :asc)
+      @assignments = current_user.assignments.data_validation.active.includes(person: :social_media_accounts).order(created_at: :asc)
     end
 
     def show
@@ -34,7 +34,7 @@ module Verification
     private
 
     def set_assignment
-      @assignment = current_user.assignments.verification.find(params[:id])
+      @assignment = current_user.assignments.data_validation.find(params[:id])
     end
 
     def require_researcher_or_admin
