@@ -75,3 +75,6 @@ group :development do
   gem "error_highlight", ">= 0.4.0", platforms: [ :ruby ]
 end
 
+# Performance profiling (available in all environments, configured to show for admins only)
+gem "rack-mini-profiler"
+

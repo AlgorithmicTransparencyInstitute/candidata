@@ -90,4 +90,7 @@ Rails.application.configure do
 
   # Skip DNS rebinding protection for the default health check endpoint.
   config.host_authorization = { exclude: ->(request) { request.path == "/up" } }
+
+  # Enable rack-mini-profiler for admin users in production
+  config.middleware.insert(0, Rack::MiniProfiler) if defined?(Rack::MiniProfiler)
 end
