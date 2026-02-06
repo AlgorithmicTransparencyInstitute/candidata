@@ -50,7 +50,8 @@ Rails.application.configure do
   # config.cache_store = :mem_cache_store
 
   # Replace the default in-process and non-durable queuing backend for Active Job.
-  # config.active_job.queue_adapter = :resque
+  # Use inline adapter to execute jobs synchronously (fixes devise_invitable email delivery)
+  config.active_job.queue_adapter = :inline
 
   # Raise delivery errors in production to catch issues early.
   config.action_mailer.raise_delivery_errors = true
