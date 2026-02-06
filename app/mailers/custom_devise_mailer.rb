@@ -1,6 +1,7 @@
 class CustomDeviseMailer < Devise::Mailer
   helper :application
   include Devise::Controllers::UrlHelpers
+  include DeviseInvitable::Mailer if defined?(DeviseInvitable)
 
   layout "mailer"
 
