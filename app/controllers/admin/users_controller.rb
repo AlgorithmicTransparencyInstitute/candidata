@@ -29,7 +29,7 @@ module Admin
     end
 
     def update
-      if @user.update(user_params)
+      if @user.update(user_edit_params)
         redirect_to admin_user_path(@user), notice: "User updated."
       else
         render :edit, status: :unprocessable_entity
@@ -49,6 +49,10 @@ module Admin
 
     def user_params
       params.require(:user).permit(:name, :email, :role, :password, :password_confirmation)
+    end
+
+    def user_edit_params
+      params.require(:user).permit(:name, :email, :role)
     end
   end
 end

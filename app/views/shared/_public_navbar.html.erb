@@ -45,8 +45,11 @@
                  class="hidden absolute right-0 mt-2 w-48 rounded-lg bg-white shadow-lg ring-1 ring-black ring-opacity-5 py-1 z-50">
               <% if current_user.admin? %>
                 <%= link_to "Admin Dashboard", admin_root_path, class: "block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50" %>
-                <div class="border-t border-gray-100"></div>
               <% end %>
+              <% if current_user.researcher? %>
+                <%= link_to "Researcher Dashboard", researcher_root_path, class: "block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50" %>
+              <% end %>
+              <div class="border-t border-gray-100"></div>
               <%= button_to "Sign out", destroy_user_session_path, method: :delete, class: "block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50" %>
             </div>
           </div>
