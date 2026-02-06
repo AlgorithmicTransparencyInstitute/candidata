@@ -28,11 +28,28 @@ module Researcher
       end
 
       @account.mark_entered!(current_user, url: url, handle: handle)
+
+      # Track account entry
+      track_event('Social Media Account Entered', {
+        platform: @account.platform,
+        channel_type: @account.channel_type,
+        has_url: url.present?,
+        has_handle: handle.present?
+      })
+      increment_mixpanel_counter(current_user, 'accounts_entered')
+
       redirect_to researcher_assignment_path(@assignment), notice: "Account marked as entered."
     end
 
     def mark_not_found
       @account.mark_not_found!(current_user)
+
+      # Track account not found
+      track_event('Social Media Account Not Found', {
+        platform: @account.platform,
+        channel_type: @account.channel_type
+      })
+
       redirect_to researcher_assignment_path(@assignment), notice: "Account marked as not found."
     end
 

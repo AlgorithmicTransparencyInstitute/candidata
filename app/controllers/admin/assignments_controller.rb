@@ -110,6 +110,14 @@ module Admin
         end
       end
 
+      # Track assignment creation
+      track_event('Assignments Created', {
+        count: created,
+        skipped: skipped,
+        task_type: task_type,
+        assigned_to_user_id: user.id
+      })
+
       redirect_to admin_assignments_path, notice: "Created #{created} assignments#{skipped > 0 ? ", skipped #{skipped} (already assigned)" : ''}."
     end
 

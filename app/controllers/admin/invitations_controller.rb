@@ -33,6 +33,13 @@ module Admin
       end
 
       if results[:sent].any?
+        # Track invitation sends
+        track_event('Invitations Sent', {
+          count: results[:sent].count,
+          role: role,
+          failed_count: results[:failed].count
+        })
+
         notice = "Invitations sent to #{results[:sent].count} #{'user'.pluralize(results[:sent].count)}."
         if results[:failed].any?
           notice += " #{results[:failed].count} failed."

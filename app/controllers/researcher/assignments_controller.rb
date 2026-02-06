@@ -58,6 +58,14 @@ module Researcher
       end
 
       @assignment.complete!
+
+      # Track assignment completion
+      track_event('Assignment Completed', {
+        task_type: @assignment.task_type,
+        person_id: @assignment.person_id
+      })
+      increment_mixpanel_counter(current_user, 'assignments_completed')
+
       redirect_to researcher_assignments_path, notice: "Assignment completed!"
     end
 

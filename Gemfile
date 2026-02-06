@@ -32,6 +32,8 @@ gem "kaminari"
 # Audit trail for tracking changes
 gem "paper_trail"
 gem "dotenv-rails", groups: [:development, :test]
+# Analytics tracking
+gem "mixpanel-ruby"
 # Use Redis adapter to run Action Cable in production
 # gem "redis", ">= 4.0.1"
 
