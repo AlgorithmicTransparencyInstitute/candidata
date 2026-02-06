@@ -1,4 +1,4 @@
 class ApplicationMailer < ActionMailer::Base
-  default from: ENV.fetch('DEVISE_MAILER_FROM', 'noreply@candidata.org')
+  default from: "Candidata <noreply@candidata.space>"
   layout "mailer"
 end
