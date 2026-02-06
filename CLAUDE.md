@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Overview
 
-Candidata is a Ruby on Rails 7.2.3 application that serves as a comprehensive database system for managing elected officials, candidates, elections, and social media presence for social listening research. It enables researchers to assign data collection and validation tasks to research assistants.
+Candidata is a Ruby on Rails 8.0.4 application that serves as a comprehensive database system for managing elected officials, candidates, elections, and social media presence for social listening research. It enables researchers to assign data collection and validation tasks to research assistants.
 
 ## Development Commands
 
