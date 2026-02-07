@@ -103,6 +103,9 @@ Rails.application.routes.draw do
   get "help/data-model", to: "help#data_model", as: :help_data_model
   get "help/coverage", to: "help#coverage", as: :help_coverage
 
+  # About page
+  get "about", to: "about#index", as: :about
+
   # Defines the root path route ("/")
   root "home#index"
 end

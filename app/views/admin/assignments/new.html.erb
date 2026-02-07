@@ -111,6 +111,21 @@
                 class: "px-3 py-1.5 text-sm border border-gray-300 rounded-md" %>
           </div>
           <div>
+            <label class="block text-xs font-medium text-gray-600 mb-1">Year</label>
+            <%= select_tag :year, options_for_select([['All Years', '']] + @years.map { |y| [y, y] }, params[:year]),
+                class: "px-3 py-1.5 text-sm border border-gray-300 rounded-md", id: "year_filter" %>
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-gray-600 mb-1">Ballot</label>
+            <%= select_tag :ballot_id, options_for_select([['All Ballots', '']] + @ballots.map { |b| [b.full_name, b.id] }, params[:ballot_id]),
+                class: "px-3 py-1.5 text-sm border border-gray-300 rounded-md", id: "ballot_filter" %>
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-gray-600 mb-1">Contest</label>
+            <%= select_tag :contest_id, options_for_select([['All Contests', '']] + @contests.map { |c| [c.full_name, c.id] }, params[:contest_id]),
+                class: "px-3 py-1.5 text-sm border border-gray-300 rounded-md", id: "contest_filter" %>
+          </div>
+          <div>
             <label class="block text-xs font-medium text-gray-600 mb-1">Assignment</label>
             <%= select_tag :assignment_filter, options_for_select([
               ['All People', ''],
@@ -263,4 +278,17 @@
 
   // Initialize count
   updateCount();
+
+  // Auto-submit form when year or ballot changes (for cascading filters)
+  document.getElementById('year_filter').addEventListener('change', function() {
+    const form = this.closest('form');
+    const filterBtn = form.querySelector('button[formaction*="new_admin_assignment"]');
+    filterBtn.click();
+  });
+
+  document.getElementById('ballot_filter').addEventListener('change', function() {
+    const form = this.closest('form');
+    const filterBtn = form.querySelector('button[formaction*="new_admin_assignment"]');
+    filterBtn.click();
+  });
 </script>

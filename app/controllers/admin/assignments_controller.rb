@@ -60,6 +60,23 @@ module Admin
         @people = @people.where("LOWER(first_name) LIKE :term OR LOWER(last_name) LIKE :term", term: search_term)
       end
 
+      # 2026 candidate filters
+      if params[:year].present?
+        @people = @people.candidates_in_year(params[:year].to_i)
+      end
+
+      if params[:ballot_id].present?
+        @people = @people.joins(candidates: { contest: :ballot })
+                         .where(ballots: { id: params[:ballot_id] })
+                         .distinct
+      end
+
+      if params[:contest_id].present?
+        @people = @people.joins(candidates: :contest)
+                         .where(contests: { id: params[:contest_id] })
+                         .distinct
+      end
+
       case params[:assignment_filter]
       when 'unassigned'
         @people = @people.left_joins(:assignments)
@@ -79,6 +96,13 @@ module Admin
       @parties = Party.order(:name)
       @bodies = ::Body.order(:name)
       @levels = Office.where.not(level: [nil, '']).distinct.pluck(:level).sort
+      @years = Contest.where.not(date: nil).distinct.pluck(Arel.sql('EXTRACT(YEAR FROM date)::integer')).sort.reverse
+      @ballots = Ballot.where(year: params[:year] || 2026).order(:state, :party)
+      @contests = if params[:ballot_id].present?
+                    Contest.where(ballot_id: params[:ballot_id]).includes(:office).order(Arel.sql('offices.title'), :party)
+                  else
+                    []
+                  end
     end
 
     def create

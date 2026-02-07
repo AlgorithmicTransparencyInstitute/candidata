@@ -24,6 +24,8 @@
               class: "#{request.path.start_with?('/districts') ? 'bg-indigo-50 text-indigo-700' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'} px-3 py-2 rounded-md text-sm font-medium" %>
           <%= link_to "Help", help_path, 
               class: "#{request.path.start_with?('/help') ? 'bg-indigo-50 text-indigo-700' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'} px-3 py-2 rounded-md text-sm font-medium" %>
+          <%= link_to "About", about_path, 
+              class: "#{request.path == '/about' ? 'bg-indigo-50 text-indigo-700' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'} px-3 py-2 rounded-md text-sm font-medium" %>
         </div>
       </div>
 
