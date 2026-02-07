@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@plugin "@tailwindcss/forms";
 
 @source "../../../app/views/**/*.erb";
 @source "../../../app/helpers/**/*.rb";

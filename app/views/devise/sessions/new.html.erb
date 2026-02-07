@@ -56,14 +56,18 @@
     </div>
 
     <%= form_for(resource, as: resource_name, url: session_path(resource_name), html: { class: "mt-6 space-y-6" }) do |f| %>
-      <div class="rounded-md shadow-sm -space-y-px">
+      <div class="space-y-4">
         <div>
-          <%= f.label :email, class: "sr-only" %>
-          <%= f.email_field :email, autofocus: true, autocomplete: "email", placeholder: "Email address", class: "appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm" %>
+          <%= f.label :email, class: "block text-sm font-medium text-gray-700" %>
+          <%= f.email_field :email, autofocus: true, autocomplete: "email",
+              placeholder: "Email address",
+              class: "mt-1 block w-full rounded-lg border-gray-300 focus:border-indigo-500 focus:ring-indigo-500" %>
         </div>
         <div>
-          <%= f.label :password, class: "sr-only" %>
-          <%= f.password_field :password, autocomplete: "current-password", placeholder: "Password", class: "appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm" %>
+          <%= f.label :password, class: "block text-sm font-medium text-gray-700" %>
+          <%= f.password_field :password, autocomplete: "current-password",
+              placeholder: "Password",
+              class: "mt-1 block w-full rounded-lg border-gray-300 focus:border-indigo-500 focus:ring-indigo-500" %>
         </div>
       </div>
 

@@ -36,20 +36,23 @@
       <div class="space-y-4">
         <div>
           <%= f.label :email, class: "block text-sm font-medium text-gray-700" %>
-          <%= f.email_field :email, autofocus: true, autocomplete: "email", class: "mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" %>
+          <%= f.email_field :email, autofocus: true, autocomplete: "email",
+              class: "mt-1 block w-full rounded-lg border-gray-300 focus:border-indigo-500 focus:ring-indigo-500" %>
         </div>
 
         <div>
           <%= f.label :password, class: "block text-sm font-medium text-gray-700" %>
+          <%= f.password_field :password, autocomplete: "new-password",
+              class: "mt-1 block w-full rounded-lg border-gray-300 focus:border-indigo-500 focus:ring-indigo-500" %>
           <% if @minimum_password_length %>
-            <p class="text-xs text-gray-500">(<%= @minimum_password_length %> characters minimum)</p>
+            <p class="mt-1 text-xs text-gray-500"><%= @minimum_password_length %> characters minimum</p>
           <% end %>
-          <%= f.password_field :password, autocomplete: "new-password", class: "mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" %>
         </div>
 
         <div>
           <%= f.label :password_confirmation, class: "block text-sm font-medium text-gray-700" %>
-          <%= f.password_field :password_confirmation, autocomplete: "new-password", class: "mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" %>
+          <%= f.password_field :password_confirmation, autocomplete: "new-password",
+              class: "mt-1 block w-full rounded-lg border-gray-300 focus:border-indigo-500 focus:ring-indigo-500" %>
         </div>
       </div>
 

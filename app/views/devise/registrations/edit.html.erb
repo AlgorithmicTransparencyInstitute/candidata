@@ -81,8 +81,8 @@
           <!-- Email -->
           <div>
             <%= f.label :email, class: "block text-sm font-medium text-gray-700" %>
-            <%= f.email_field :email, autofocus: true, autocomplete: "email", 
-                class: "mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" %>
+            <%= f.email_field :email, autofocus: true, autocomplete: "email",
+                class: "mt-1 block w-full rounded-lg border-gray-300 focus:border-indigo-500 focus:ring-indigo-500" %>
             <% if devise_mapping.confirmable? && resource.pending_reconfirmation? %>
               <p class="mt-2 text-sm text-amber-600">
                 <svg class="inline w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
@@ -106,7 +106,7 @@
             <div>
               <%= f.label :password, "New Password", class: "block text-sm font-medium text-gray-700" %>
               <%= f.password_field :password, autocomplete: "new-password",
-                  class: "mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm",
+                  class: "mt-1 block w-full rounded-lg border-gray-300 focus:border-indigo-500 focus:ring-indigo-500",
                   placeholder: "••••••••" %>
               <% if @minimum_password_length %>
                 <p class="mt-1 text-xs text-gray-500"><%= @minimum_password_length %> characters minimum</p>
@@ -116,7 +116,7 @@
             <div>
               <%= f.label :password_confirmation, "Confirm New Password", class: "block text-sm font-medium text-gray-700" %>
               <%= f.password_field :password_confirmation, autocomplete: "new-password",
-                  class: "mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm",
+                  class: "mt-1 block w-full rounded-lg border-gray-300 focus:border-indigo-500 focus:ring-indigo-500",
                   placeholder: "••••••••" %>
             </div>
           </div>
@@ -133,7 +133,7 @@
           <div class="max-w-sm">
             <%= f.label :current_password, class: "block text-sm font-medium text-gray-700" %>
             <%= f.password_field :current_password, autocomplete: "current-password",
-                class: "mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm",
+                class: "mt-1 block w-full rounded-lg border-gray-300 focus:border-indigo-500 focus:ring-indigo-500",
                 placeholder: "••••••••" %>
           </div>
         </div>
