@@ -48,7 +48,27 @@ module Admin
       end
 
       if params[:body_id].present?
-        @people = @people.joins(officeholders: { office: :body }).where(bodies: { id: params[:body_id] }).distinct
+        # Find people who are EITHER officeholders OR candidates in this body
+        officeholder_ids = Person.joins(officeholders: { office: :body })
+                                 .where(bodies: { id: params[:body_id] })
+                                 .distinct
+                                 .pluck(:id)
+
+        candidate_ids = Person.joins(candidates: { contest: { office: :body } })
+                              .where(bodies: { id: params[:body_id] })
+                              .distinct
+                              .pluck(:id)
+
+        combined_ids = (officeholder_ids + candidate_ids).uniq
+        @people = @people.where(id: combined_ids)
+      end
+
+      # Role filter: current officeholders vs candidates
+      case params[:role_filter]
+      when 'officeholders'
+        @people = @people.current_officeholders
+      when 'candidates'
+        @people = @people.joins(:candidates).distinct
       end
 
       if params[:level].present?

@@ -111,6 +111,15 @@
                 class: "mt-1 block text-sm rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500", id: "level_filter" %>
           </div>
           <div>
+            <label class="block text-xs font-medium text-gray-600 mb-1">Role</label>
+            <%= select_tag :role_filter, options_for_select([
+              ['All', ''],
+              ['Current Officeholders', 'officeholders'],
+              ['Candidates', 'candidates']
+            ], params[:role_filter]),
+                class: "mt-1 block text-sm rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500", id: "role_filter" %>
+          </div>
+          <div>
             <label class="block text-xs font-medium text-gray-600 mb-1">Year</label>
             <%= select_tag :year, options_for_select([['All Years', '']] + @years.map { |y| [y, y] }, params[:year]),
                 class: "mt-1 block text-sm rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500", id: "year_filter" %>
@@ -313,6 +322,7 @@
       party_id: 'party_filter',
       body_id: 'body_filter',
       level: 'level_filter',
+      role_filter: 'role_filter',
       year: 'year_filter',
       ballot_id: 'ballot_filter',
       contest_id: 'contest_filter',
@@ -406,7 +416,7 @@
   // Initialize filter event listeners
   function initializeFilters() {
     // Attach filter event listeners for simple filters
-    ['state_filter', 'party_filter', 'body_filter', 'level_filter', 'assignment_filter'].forEach(id => {
+    ['state_filter', 'party_filter', 'body_filter', 'level_filter', 'role_filter', 'assignment_filter'].forEach(id => {
       const element = document.getElementById(id);
       if (element) {
         element.addEventListener('change', applyFilters);
