@@ -15,18 +15,22 @@ class District < ApplicationRecord
   scope :upper_chamber, -> { where(chamber: 'upper') }
   scope :lower_chamber, -> { where(chamber: 'lower') }
   scope :congressional, -> { federal.where(chamber: nil) }
+  scope :at_large, -> { federal.where(district_number: 0) }
+  scope :numbered_congressional, -> { federal.where(chamber: nil).where('district_number > 0') }
   scope :state_senate, -> { state_level.upper_chamber }
   scope :state_house, -> { state_level.lower_chamber }
 
   def full_name
     case
-    when level == 'federal' && district_number
+    when level == 'federal' && district_number && district_number > 0
       "#{state} Congressional District #{district_number}"
+    when level == 'federal' && district_number == 0
+      "#{state} At-Large"
     when level == 'state' && chamber == 'upper'
       "#{state} State Senate District #{district_number}"
     when level == 'state' && chamber == 'lower'
       "#{state} State House District #{district_number}"
-    when district_number
+    when district_number && district_number > 0
       "#{state} #{level.capitalize} District #{district_number}"
     else
       "#{state} #{level.capitalize}"

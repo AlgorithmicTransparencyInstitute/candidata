@@ -196,6 +196,7 @@ namespace :rebuild do
 
     stats = {
       congressional: 0,
+      at_large: 0,
       state_senate: 0,
       state_house: 0,
       other: 0,
@@ -253,10 +254,31 @@ namespace :rebuild do
       print "." if (stats[:congressional] + stats[:state_senate] + stats[:state_house]) % 100 == 0
     end
 
+    # Extract at-large congressional districts (states/territories with only 1 House member)
+    # These don't have /cd:N suffix, just use the state/territory OCDID
+    puts "\n\nExtracting at-large congressional districts..."
+    TempGovproj.where(body_name: 'U.S. House of Representatives')
+               .where.not('electoral_district_ocdid LIKE ?', '%/cd:%')
+               .distinct
+               .pluck(:state, :electoral_district_ocdid)
+               .each do |state, ocdid|
+      district = District.find_or_create_by!(
+        state: state.upcase,
+        level: 'federal',
+        chamber: nil,
+        district_number: 0  # Use 0 to indicate at-large
+      )
+      district.update(ocdid: ocdid) if district.ocdid.blank?
+      stats[:at_large] += 1
+      print "."
+    end
+
     puts "\n\n" + "="*80
     puts "DISTRICT EXTRACTION COMPLETE"
     puts "="*80
-    puts "  Congressional districts: #{stats[:congressional]}"
+    puts "  Congressional districts (numbered): #{stats[:congressional]}"
+    puts "  Congressional districts (at-large): #{stats[:at_large]}"
+    puts "  Total congressional: #{stats[:congressional] + stats[:at_large]}"
     puts "  State senate districts: #{stats[:state_senate]}"
     puts "  State house districts: #{stats[:state_house]}"
     puts "  Other/skipped: #{stats[:skipped]}"
