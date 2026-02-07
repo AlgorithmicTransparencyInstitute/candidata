@@ -52,10 +52,12 @@ Officeholders: ~42,780
 Offices: ~42,781
 Offices with body_id: ~30,648 (71.6%)
 Bodies: ~3,098+
-Districts: 6,428
-  - Congressional: 429
-  - State Senate: 1,933
-  - State House: 4,066
+Districts: 6,440
+  - Congressional (numbered): 429
+  - Congressional (at-large): 12
+  - Total Congressional: 441 (435 voting + 6 territories)
+  - State Senate: 1,967
+  - State House: 4,676
 2026 Candidates: 524
 Campaign websites: ~432 (82.4% of 2026 candidates)
 Social Media Accounts: ~49,217
