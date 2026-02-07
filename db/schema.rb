@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_02_06_151759) do
+ActiveRecord::Schema[8.0].define(version: 2026_02_07_010449) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -68,9 +68,10 @@ ActiveRecord::Schema[8.0].define(version: 2026_02_06_151759) do
     t.datetime "updated_at", null: false
     t.integer "year"
     t.string "name"
+    t.string "party"
     t.index ["date"], name: "index_ballots_on_date"
-    t.index ["state", "date", "election_type"], name: "index_ballots_unique", unique: true
-    t.index ["state", "year", "election_type"], name: "index_ballots_on_state_and_year_and_election_type", unique: true
+    t.index ["party"], name: "index_ballots_on_party"
+    t.index ["state", "date", "election_type", "party"], name: "index_ballots_unique_with_party", unique: true
     t.index ["year"], name: "index_ballots_on_year"
   end
 
@@ -117,17 +118,19 @@ ActiveRecord::Schema[8.0].define(version: 2026_02_06_151759) do
 
   create_table "contests", force: :cascade do |t|
     t.date "date", null: false
-    t.string "location", null: false
+    t.string "location"
     t.string "contest_type", null: false
     t.bigint "office_id", null: false
     t.bigint "ballot_id", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "party"
     t.index ["ballot_id"], name: "index_contests_on_ballot_id"
     t.index ["contest_type"], name: "index_contests_on_contest_type"
     t.index ["date", "location", "office_id", "ballot_id"], name: "index_contests_unique", unique: true
     t.index ["date"], name: "index_contests_on_date"
     t.index ["office_id"], name: "index_contests_on_office_id"
+    t.index ["party"], name: "index_contests_on_party"
   end
 
   create_table "districts", force: :cascade do |t|
