@@ -1,11 +1,14 @@
-<div class="max-w-4xl mx-auto px-4 py-8">
-  <h1 class="text-3xl font-bold text-gray-900 mb-6">Help & Documentation</h1>
-  
-  <p class="text-lg text-gray-600 mb-8">
-    Candidata is a comprehensive database of elected officials, candidates, and political data 
-    for the United States. This help section explains our data sources, coverage, and how the 
-    information is organized.
-  </p>
+<div class="min-h-screen bg-gray-50">
+  <%= render "shared/public_navbar" %>
+
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <h1 class="text-3xl font-bold text-gray-900 mb-6">Help & Documentation</h1>
+
+    <p class="text-lg text-gray-600 mb-8">
+      Candidata is a comprehensive database of elected officials, candidates, and political data
+      for the United States. This help section explains our data sources, coverage, and how the
+      information is organized.
+    </p>
 
   <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
     <%= link_to help_data_sources_path, class: "block p-6 bg-white rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-shadow" do %>
@@ -49,8 +52,9 @@
     <h3 class="text-lg font-semibold text-blue-900 mb-2">About This Project</h3>
     <p class="text-blue-800">
       Candidata is developed by the Algorithmic Transparency Institute for social listening research. 
-      Our goal is to provide accurate, comprehensive data about elected officials and candidates 
+      Our goal is to provide accurate, comprehensive data about elected officials and candidates
       across all levels of government in the United States.
     </p>
-  </div>
+    </div>
+  </main>
 </div>

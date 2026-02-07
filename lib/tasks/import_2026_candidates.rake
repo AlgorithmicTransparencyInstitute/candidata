@@ -1,5 +1,3 @@
-require_relative '../importers/candidate_2026_importer'
-
 namespace :import do
   desc "Import 2026 primary candidates from cleaned CSV"
   task candidates_2026: :environment do
@@ -11,7 +9,7 @@ namespace :import do
       exit 1
     end
 
-    importer = Candidate2026Importer.new(csv_path)
+    importer = Importers::Candidate2026Importer.new(csv_path)
     importer.import
   end
 
@@ -25,7 +23,7 @@ namespace :import do
       system("head -20 #{Rails.root}/data/2026_states/2026_candidates_cleaned.csv > #{csv_path}")
     end
 
-    importer = Candidate2026Importer.new(csv_path)
+    importer = Importers::Candidate2026Importer.new(csv_path)
     importer.import
   end
 end

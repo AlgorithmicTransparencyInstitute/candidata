@@ -1,0 +1,36 @@
+<div data-controller="cookie-consent">
+  <div data-cookie-consent-target="banner"
+       class="hidden translate-y-full opacity-0 fixed bottom-0 left-0 right-0 z-50 transition-all duration-300 ease-in-out">
+    <div class="bg-gray-900 border-t border-gray-700 shadow-2xl">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div class="flex-1">
+            <div class="flex items-start gap-3">
+              <svg class="w-6 h-6 text-indigo-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+              <div>
+                <h3 class="text-white font-semibold mb-1">Cookie Notice</h3>
+                <p class="text-gray-300 text-sm leading-relaxed">
+                  This website requires cookies to function properly. We use essential cookies for authentication, security, and session management. These cookies are necessary for the site to work and cannot be disabled. By continuing to use this site, you acknowledge and accept our use of these required cookies.
+                </p>
+                <p class="text-gray-400 text-xs mt-2">
+                  We do not use optional tracking or advertising cookies. For more information, see our privacy practices in the
+                  <%= link_to "Help section", help_path, class: "text-indigo-400 hover:text-indigo-300 underline" %>.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-3 flex-shrink-0 w-full sm:w-auto">
+            <button type="button"
+                    data-action="click->cookie-consent#accept"
+                    class="flex-1 sm:flex-none px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg transition-colors duration-150 shadow-lg hover:shadow-xl">
+              I Understand
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

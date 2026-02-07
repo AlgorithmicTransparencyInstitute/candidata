@@ -1,23 +1,21 @@
-<div class="min-h-screen bg-white">
+<div class="min-h-screen bg-gray-50">
   <%= render "shared/public_navbar" %>
 
-  <!-- Hero -->
-  <div class="bg-gradient-to-br from-indigo-700 via-indigo-800 to-gray-900 text-white">
-    <div class="max-w-5xl mx-auto px-6 py-20 sm:py-28">
-      <p class="text-indigo-300 font-medium tracking-wide uppercase text-sm mb-4">Algorithmic Transparency Institute</p>
-      <h1 class="text-4xl sm:text-5xl lg:text-6xl font-extrabold leading-tight mb-6">Candidata</h1>
-      <p class="text-xl sm:text-2xl text-indigo-100 max-w-3xl leading-relaxed">
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Header -->
+    <div class="mb-8">
+      <p class="text-indigo-600 font-medium tracking-wide uppercase text-sm mb-3">Algorithmic Transparency Institute</p>
+      <h1 class="text-4xl sm:text-5xl font-extrabold text-gray-900 leading-tight mb-4">About Candidata</h1>
+      <p class="text-xl text-gray-600 max-w-3xl leading-relaxed">
         A comprehensive, human-verified database of U.S. elected officials, candidates, and their social media presence &mdash; purpose-built for algorithmic transparency and social listening research.
       </p>
     </div>
-  </div>
-
-  <div class="max-w-5xl mx-auto px-6">
 
     <!-- Mission -->
-    <section class="py-16 border-b border-gray-200">
-      <h2 class="text-3xl font-bold text-gray-900 mb-6">Why Candidata Exists</h2>
-      <div class="prose prose-lg max-w-none text-gray-600 space-y-4">
+    <section class="py-8">
+      <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
+        <h2 class="text-3xl font-bold text-gray-900 mb-6">Why Candidata Exists</h2>
+        <div class="prose prose-lg max-w-none text-gray-600 space-y-4">
         <p>
           Social media platforms shape how citizens encounter political speech, yet there is no single, reliable, open source that maps every elected official and candidate in the United States to their social media accounts across every major platform. Existing datasets are fragmented, outdated, or limited to federal officials.
         </p>
@@ -27,13 +25,15 @@
         <p>
           The project is developed by the <strong class="text-gray-900">Algorithmic Transparency Institute</strong>, a nonpartisan research organization dedicated to understanding and improving the accountability of algorithmic systems.
         </p>
+        </div>
       </div>
     </section>
 
     <!-- What's in the Database (live stats) -->
-    <section class="py-16 border-b border-gray-200">
-      <h2 class="text-3xl font-bold text-gray-900 mb-3">What's in the Database</h2>
-      <p class="text-lg text-gray-500 mb-10">Live counts from the Candidata database.</p>
+    <section class="py-8">
+      <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
+        <h2 class="text-3xl font-bold text-gray-900 mb-3">What's in the Database</h2>
+        <p class="text-lg text-gray-500 mb-10">Live counts from the Candidata database.</p>
 
       <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
         <div class="bg-gray-50 rounded-xl p-6 text-center">
@@ -68,12 +68,14 @@
           <div class="text-3xl font-bold text-indigo-600"><%= @stats[:states] %></div>
           <div class="text-sm text-gray-500 mt-1">States &amp; Territories</div>
         </div>
+        </div>
       </div>
     </section>
 
     <!-- Scope of Coverage -->
-    <section class="py-16 border-b border-gray-200">
-      <h2 class="text-3xl font-bold text-gray-900 mb-6">Scope of Coverage</h2>
+    <section class="py-8">
+      <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
+        <h2 class="text-3xl font-bold text-gray-900 mb-6">Scope of Coverage</h2>
 
       <div class="grid md:grid-cols-3 gap-8">
         <div>
@@ -110,15 +112,17 @@
         <p class="text-indigo-800">
           All 50 U.S. states, the District of Columbia, and five territories: Puerto Rico, Guam, U.S. Virgin Islands, American Samoa, and the Northern Mariana Islands. Coverage includes 435 congressional districts and over 6,600 state legislative districts.
         </p>
+        </div>
       </div>
     </section>
 
     <!-- Social Media Tracking -->
-    <section class="py-16 border-b border-gray-200">
-      <h2 class="text-3xl font-bold text-gray-900 mb-3">Social Media Tracking</h2>
-      <p class="text-lg text-gray-500 mb-8">
-        For each politician, we identify and verify accounts across all major social media platforms.
-      </p>
+    <section class="py-8">
+      <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
+        <h2 class="text-3xl font-bold text-gray-900 mb-3">Social Media Tracking</h2>
+        <p class="text-lg text-gray-500 mb-8">
+          For each politician, we identify and verify accounts across all major social media platforms.
+        </p>
 
       <div class="grid sm:grid-cols-2 gap-6 mb-10">
         <div class="bg-white border border-gray-200 rounded-xl p-6">
@@ -199,15 +203,17 @@
             <p class="text-sm text-gray-500">Private accounts that may also contain political content but are not maintained in an official or campaign capacity.</p>
           </div>
         </div>
+        </div>
       </div>
     </section>
 
     <!-- Data Model -->
-    <section class="py-16 border-b border-gray-200">
-      <h2 class="text-3xl font-bold text-gray-900 mb-3">How the Data Is Structured</h2>
-      <p class="text-lg text-gray-500 mb-10">
-        Candidata's data model is designed to capture the full complexity of American political life: people hold multiple offices over time, run in elections, change party affiliations, and maintain social media accounts across many platforms.
-      </p>
+    <section class="py-8">
+      <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
+        <h2 class="text-3xl font-bold text-gray-900 mb-3">How the Data Is Structured</h2>
+        <p class="text-lg text-gray-500 mb-10">
+          Candidata's data model is designed to capture the full complexity of American political life: people hold multiple offices over time, run in elections, change party affiliations, and maintain social media accounts across many platforms.
+        </p>
 
       <!-- ER Diagram (text-based) -->
       <div class="bg-gray-50 rounded-xl p-8 mb-10 overflow-x-auto">
@@ -314,17 +320,19 @@
             <dd class="text-gray-600 text-sm mt-1">A person's participation in a contest. Tracks outcome (won, lost, pending, withdrawn), vote tally, incumbency status, and party at time of candidacy.</dd>
           </div>
         </dl>
+        </div>
       </div>
     </section>
 
     <!-- Why It's Designed This Way -->
-    <section class="py-16 border-b border-gray-200">
-      <h2 class="text-3xl font-bold text-gray-900 mb-6">Design Principles</h2>
+    <section class="py-8">
+      <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
+        <h2 class="text-3xl font-bold text-gray-900 mb-6">Design Principles</h2>
 
       <div class="space-y-8">
-        <div class="flex gap-5">
-          <div class="flex-shrink-0 w-10 h-10 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-600 font-bold">1</div>
-          <div>
+        <div class="flex gap-6">
+          <div class="flex-shrink-0 w-12 h-12 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-600 font-bold text-lg mt-1">1</div>
+          <div class="flex-1">
             <h3 class="text-lg font-semibold text-gray-900 mb-2">Temporal Accuracy</h3>
             <p class="text-gray-600">
               Politicians change offices, switch parties, and create new social media accounts over time. Rather than storing a single snapshot, Candidata records officeholder terms with start and end dates, candidate records per election cycle, and party affiliations as a many-to-many relationship. This means we can answer questions like "Who held this seat in 2020?" or "Which candidates ran in the 2024 primaries?" without losing historical context.
@@ -332,9 +340,9 @@
           </div>
         </div>
 
-        <div class="flex gap-5">
-          <div class="flex-shrink-0 w-10 h-10 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-600 font-bold">2</div>
-          <div>
+        <div class="flex gap-6">
+          <div class="flex-shrink-0 w-12 h-12 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-600 font-bold text-lg mt-1">2</div>
+          <div class="flex-1">
             <h3 class="text-lg font-semibold text-gray-900 mb-2">Human Verification</h3>
             <p class="text-gray-600">
               Automated scraping of social media accounts produces unreliable results &mdash; impersonation accounts, outdated handles, and misattributed pages are common. Candidata uses a structured research and verification workflow where every social media account is entered by a trained researcher and independently verified by a second person. This two-step process ensures high data quality at the cost of speed, a trade-off we consider essential for research integrity.
@@ -342,9 +350,9 @@
           </div>
         </div>
 
-        <div class="flex gap-5">
-          <div class="flex-shrink-0 w-10 h-10 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-600 font-bold">3</div>
-          <div>
+        <div class="flex gap-6">
+          <div class="flex-shrink-0 w-12 h-12 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-600 font-bold text-lg mt-1">3</div>
+          <div class="flex-1">
             <h3 class="text-lg font-semibold text-gray-900 mb-2">Full Government Coverage</h3>
             <p class="text-gray-600">
               Most political data projects focus exclusively on Congress. Candidata covers all levels &mdash; federal, state, and local &mdash; because algorithmic transparency research must account for the full landscape of political speech online. A state legislator's Facebook page is subject to the same algorithmic decisions as a U.S. Senator's, and researchers need both.
@@ -352,9 +360,9 @@
           </div>
         </div>
 
-        <div class="flex gap-5">
-          <div class="flex-shrink-0 w-10 h-10 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-600 font-bold">4</div>
-          <div>
+        <div class="flex gap-6">
+          <div class="flex-shrink-0 w-12 h-12 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-600 font-bold text-lg mt-1">4</div>
+          <div class="flex-1">
             <h3 class="text-lg font-semibold text-gray-900 mb-2">Platform Breadth</h3>
             <p class="text-gray-600">
               Political speech is no longer confined to mainstream platforms. Candidata tracks 11 platforms including emerging and alternative networks like BlueSky, Truth Social, Gettr, Rumble, and Telegram. As new platforms gain political significance, they are added to our tracking scope.
@@ -362,34 +370,36 @@
           </div>
         </div>
 
-        <div class="flex gap-5">
-          <div class="flex-shrink-0 w-10 h-10 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-600 font-bold">5</div>
-          <div>
+        <div class="flex gap-6">
+          <div class="flex-shrink-0 w-12 h-12 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-600 font-bold text-lg mt-1">5</div>
+          <div class="flex-1">
             <h3 class="text-lg font-semibold text-gray-900 mb-2">Provenance &amp; Audit Trail</h3>
             <p class="text-gray-600">
               Every change to the database is tracked. We record which researcher entered each social media account, which verifier confirmed it, and when. The system maintains a full version history of changes to people, assignments, and account records, providing a transparent chain of custody for every data point.
             </p>
           </div>
         </div>
+        </div>
       </div>
     </section>
 
     <!-- Research Workflow -->
-    <section class="py-16 border-b border-gray-200">
-      <h2 class="text-3xl font-bold text-gray-900 mb-3">The Research Process</h2>
-      <p class="text-lg text-gray-500 mb-10">
-        Data quality is the foundation of meaningful research. Every record in Candidata passes through a structured, multi-stage workflow.
-      </p>
+    <section class="py-8">
+      <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
+        <h2 class="text-3xl font-bold text-gray-900 mb-3">The Research Process</h2>
+        <p class="text-lg text-gray-500 mb-10">
+          Data quality is the foundation of meaningful research. Every record in Candidata passes through a structured, multi-stage workflow.
+        </p>
 
       <!-- Step 1: Data Ingestion -->
       <div class="relative">
-        <div class="space-y-12">
-          <div class="flex gap-6">
+        <div class="space-y-8">
+          <div class="flex gap-6 mb-12">
             <div class="flex-shrink-0 flex flex-col items-center">
               <div class="w-12 h-12 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold text-lg">1</div>
-              <div class="w-0.5 flex-1 bg-gray-200 mt-2"></div>
+              <div class="w-0.5 flex-1 bg-gray-200 mt-4 mb-12"></div>
             </div>
-            <div class="pb-8">
+            <div class="flex-1">
               <h3 class="text-xl font-semibold text-gray-900 mb-3">Data Ingestion &amp; Seeding</h3>
               <p class="text-gray-600 mb-4">
                 We begin by importing authoritative reference data from multiple public sources to establish the universe of elected officials and candidates.
@@ -416,12 +426,12 @@
           </div>
 
           <!-- Step 2: Assignment -->
-          <div class="flex gap-6">
+          <div class="flex gap-6 mb-12">
             <div class="flex-shrink-0 flex flex-col items-center">
               <div class="w-12 h-12 bg-indigo-600 text-white rounded-full flex items-center justify-center font-bold text-lg">2</div>
-              <div class="w-0.5 flex-1 bg-gray-200 mt-2"></div>
+              <div class="w-0.5 flex-1 bg-gray-200 mt-4 mb-12"></div>
             </div>
-            <div class="pb-8">
+            <div class="flex-1">
               <h3 class="text-xl font-semibold text-gray-900 mb-3">Assignment &amp; Data Collection</h3>
               <p class="text-gray-600 mb-4">
                 An administrator assigns individual politicians to researchers for data collection. When an assignment is created, the system pre-populates placeholder records for each core platform (Facebook, Twitter/X, Instagram, YouTube, TikTok, BlueSky), creating a structured checklist.
@@ -446,12 +456,12 @@
           </div>
 
           <!-- Step 3: Verification -->
-          <div class="flex gap-6">
+          <div class="flex gap-6 mb-12">
             <div class="flex-shrink-0 flex flex-col items-center">
               <div class="w-12 h-12 bg-green-600 text-white rounded-full flex items-center justify-center font-bold text-lg">3</div>
-              <div class="w-0.5 flex-1 bg-gray-200 mt-2"></div>
+              <div class="w-0.5 flex-1 bg-gray-200 mt-4 mb-12"></div>
             </div>
-            <div class="pb-8">
+            <div class="flex-1">
               <h3 class="text-xl font-semibold text-gray-900 mb-3">Independent Verification</h3>
               <p class="text-gray-600 mb-4">
                 Once a researcher completes their assignment, the person's accounts enter the verification queue. A different researcher &mdash; acting as a verifier &mdash; independently reviews each account record. They can see the researcher's entries and notes, but must independently confirm accuracy.
@@ -467,7 +477,7 @@
             <div class="flex-shrink-0 flex flex-col items-center">
               <div class="w-12 h-12 bg-amber-500 text-white rounded-full flex items-center justify-center font-bold text-lg">4</div>
             </div>
-            <div>
+            <div class="flex-1">
               <h3 class="text-xl font-semibold text-gray-900 mb-3">Quality Assurance &amp; Publication</h3>
               <p class="text-gray-600 mb-4">
                 Verified accounts are marked as confirmed in the database with a timestamp and the identity of the verifier. Administrators have a global view of all assignments, account statuses, and research progress, enabling them to monitor data quality and reassign work as needed.
@@ -478,12 +488,14 @@
             </div>
           </div>
         </div>
+        </div>
       </div>
     </section>
 
     <!-- Data Sources -->
-    <section class="py-16 border-b border-gray-200">
-      <h2 class="text-3xl font-bold text-gray-900 mb-6">Data Sources</h2>
+    <section class="py-8">
+      <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
+        <h2 class="text-3xl font-bold text-gray-900 mb-6">Data Sources</h2>
 
       <div class="overflow-hidden rounded-xl border border-gray-200">
         <table class="min-w-full divide-y divide-gray-200">
@@ -529,15 +541,17 @@
             </tr>
           </tbody>
         </table>
+        </div>
       </div>
     </section>
 
     <!-- Technical Architecture (brief) -->
-    <section class="py-16 border-b border-gray-200">
-      <h2 class="text-3xl font-bold text-gray-900 mb-6">Technical Architecture</h2>
-      <p class="text-gray-600 mb-8">
-        Candidata is a web application designed for reliability, auditability, and ease of use by non-technical researchers.
-      </p>
+    <section class="py-8">
+      <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
+        <h2 class="text-3xl font-bold text-gray-900 mb-6">Technical Architecture</h2>
+        <p class="text-gray-600 mb-8">
+          Candidata is a web application designed for reliability, auditability, and ease of use by non-technical researchers.
+        </p>
 
       <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
         <div class="bg-gray-50 rounded-xl p-5">
@@ -556,15 +570,17 @@
           <div class="font-medium text-gray-900 mb-1">Open Civic Data</div>
           <p class="text-sm text-gray-500">OCD-ID integration for standardized district and office identification.</p>
         </div>
+        </div>
       </div>
     </section>
 
     <!-- Use Cases -->
-    <section class="py-16 border-b border-gray-200">
-      <h2 class="text-3xl font-bold text-gray-900 mb-6">Research Applications</h2>
-      <p class="text-gray-600 mb-8">
-        Candidata enables a range of research questions at the intersection of politics and technology:
-      </p>
+    <section class="py-8">
+      <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
+        <h2 class="text-3xl font-bold text-gray-900 mb-6">Research Applications</h2>
+        <p class="text-gray-600 mb-8">
+          Candidata enables a range of research questions at the intersection of politics and technology:
+        </p>
 
       <div class="grid md:grid-cols-2 gap-6">
         <div class="border border-gray-200 rounded-xl p-6">
@@ -583,11 +599,72 @@
           <h3 class="font-semibold text-gray-900 mb-2">Election Integrity</h3>
           <p class="text-gray-600 text-sm">A verified database of official campaign accounts helps distinguish legitimate political speech from impersonation and disinformation during election cycles.</p>
         </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Partners -->
+    <section class="py-8">
+      <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
+        <h2 class="text-3xl font-bold text-gray-900 mb-3">Partners</h2>
+        <p class="text-gray-600 mb-8">
+          Candidata is grateful to the following organizations for their contributions to data collection, validation, and research infrastructure.
+        </p>
+
+        <div class="grid md:grid-cols-2 gap-6">
+          <div class="border border-gray-200 rounded-xl p-6 hover:border-indigo-300 transition-colors">
+            <h3 class="font-semibold text-gray-900 mb-2">Algorithmic Transparency Institute</h3>
+            <p class="text-gray-600 text-sm mb-3">
+              A project of the National Conference on Citizenship (NCoC), ATI is dedicated to understanding and improving the accountability of algorithmic systems.
+            </p>
+            <%= link_to "ncoc.org", "https://ncoc.org", target: "_blank", rel: "noopener noreferrer", class: "text-indigo-600 hover:text-indigo-800 text-sm font-medium" %>
+          </div>
+
+          <div class="border border-gray-200 rounded-xl p-6 hover:border-indigo-300 transition-colors">
+            <h3 class="font-semibold text-gray-900 mb-2">The Center for Tech and Civic Life</h3>
+            <p class="text-gray-600 text-sm mb-3">
+              Works to modernize U.S. elections and foster civic engagement through technology.
+            </p>
+            <%= link_to "techandciviclife.org", "https://www.techandciviclife.org", target: "_blank", rel: "noopener noreferrer", class: "text-indigo-600 hover:text-indigo-800 text-sm font-medium" %>
+          </div>
+
+          <div class="border border-gray-200 rounded-xl p-6 hover:border-indigo-300 transition-colors">
+            <h3 class="font-semibold text-gray-900 mb-2">Media and Democracy Data Cooperative</h3>
+            <p class="text-gray-600 text-sm mb-3">
+              MDDC supports research on the role of media in democratic processes through data infrastructure and collaboration.
+            </p>
+            <%= link_to "mddatacoop.org", "https://mddatacoop.org", target: "_blank", rel: "noopener noreferrer", class: "text-indigo-600 hover:text-indigo-800 text-sm font-medium" %>
+          </div>
+
+          <div class="border border-gray-200 rounded-xl p-6 hover:border-indigo-300 transition-colors">
+            <h3 class="font-semibold text-gray-900 mb-2">SOMAR & University of Michigan</h3>
+            <p class="text-gray-600 text-sm mb-3">
+              Housed in the Inter-university Consortium for Political and Social Research (ICPSR), providing expertise in social media and political communication research.
+            </p>
+            <%= link_to "icpsr.umich.edu", "https://www.icpsr.umich.edu", target: "_blank", rel: "noopener noreferrer", class: "text-indigo-600 hover:text-indigo-800 text-sm font-medium" %>
+          </div>
+
+          <div class="border border-gray-200 rounded-xl p-6 hover:border-indigo-300 transition-colors">
+            <h3 class="font-semibold text-gray-900 mb-2">University of Kentucky Political Science</h3>
+            <p class="text-gray-600 text-sm mb-3">
+              The Political Science Department at the University of Kentucky contributes research expertise and data validation support.
+            </p>
+            <%= link_to "polsci.uky.edu", "https://polsci.uky.edu", target: "_blank", rel: "noopener noreferrer", class: "text-indigo-600 hover:text-indigo-800 text-sm font-medium" %>
+          </div>
+
+          <div class="border border-gray-200 rounded-xl p-6 hover:border-indigo-300 transition-colors">
+            <h3 class="font-semibold text-gray-900 mb-2">The Carter Center</h3>
+            <p class="text-gray-600 text-sm mb-3">
+              A nongovernmental organization advancing peace and health worldwide, including supporting election integrity and democratic processes.
+            </p>
+            <%= link_to "cartercenter.org", "https://www.cartercenter.org", target: "_blank", rel: "noopener noreferrer", class: "text-indigo-600 hover:text-indigo-800 text-sm font-medium" %>
+          </div>
+        </div>
       </div>
     </section>
 
     <!-- Footer / CTA -->
-    <section class="py-16">
+    <section class="py-8 pb-16">
       <div class="bg-gradient-to-br from-indigo-600 to-indigo-800 rounded-2xl p-8 sm:p-12 text-center text-white">
         <h2 class="text-2xl sm:text-3xl font-bold mb-4">Built for Transparency</h2>
         <p class="text-indigo-100 max-w-2xl mx-auto text-lg mb-8">
@@ -599,6 +676,5 @@
         </div>
       </div>
     </section>
-
-  </div>
+  </main>
 </div>

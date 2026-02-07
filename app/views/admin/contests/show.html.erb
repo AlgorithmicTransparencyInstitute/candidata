@@ -33,12 +33,12 @@
         </div>
       </div>
       <div>
-        <div class="text-sm text-gray-500">Number Elected</div>
-        <div class="font-medium"><%= @contest.number_elected || 1 %></div>
+        <div class="text-sm text-gray-500">Contest Type</div>
+        <div class="font-medium"><%= @contest.contest_type&.titleize %></div>
       </div>
       <div>
-        <div class="text-sm text-gray-500">Partisan</div>
-        <div class="font-medium"><%= @contest.partisan? ? 'Yes' : 'No' %></div>
+        <div class="text-sm text-gray-500">Party</div>
+        <div class="font-medium"><%= @contest.party || 'Nonpartisan' %></div>
       </div>
     </div>
   </div>
@@ -52,17 +52,29 @@
         <% @candidates.each do |candidate| %>
           <div class="px-6 py-4 flex justify-between items-center">
             <div class="flex items-center gap-4">
-              <div class="text-gray-400 w-6 text-center"><%= candidate.ballot_order %></div>
               <div>
                 <div class="font-medium"><%= candidate.person.full_name %></div>
                 <div class="text-sm text-gray-600">
-                  <% if candidate.party %>
-                    <%= candidate.party.name %>
+                  <% if candidate.party_at_time.present? %>
+                    <%= candidate.party_at_time %>
+                  <% end %>
+                  <% if candidate.incumbent %>
+                    <span class="ml-2 px-2 py-0.5 text-xs rounded bg-purple-100 text-purple-800">Incumbent</span>
+                  <% end %>
+                  <% if candidate.outcome.present? %>
+                    <span class="ml-2 px-2 py-0.5 text-xs rounded <%= candidate.outcome == 'won' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600' %>">
+                      <%= candidate.outcome.titleize %>
+                    </span>
                   <% end %>
                 </div>
               </div>
             </div>
-            <%= link_to "View Person", admin_person_path(candidate.person), class: "text-blue-600 hover:text-blue-800 text-sm" %>
+            <div class="flex items-center gap-4">
+              <% if candidate.tally && candidate.tally > 0 %>
+                <span class="text-sm text-gray-600"><%= number_with_delimiter(candidate.tally) %> votes</span>
+              <% end %>
+              <%= link_to "View Person", admin_person_path(candidate.person), class: "text-blue-600 hover:text-blue-800 text-sm" %>
+            </div>
           </div>
         <% end %>
       <% else %>

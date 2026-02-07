@@ -29,6 +29,6 @@ class ContestsController < ApplicationController
 
   def show
     @contest = Contest.includes(:office, :ballot, candidates: :person).find(params[:id])
-    @candidates = @contest.candidates.includes(:person).order('candidates.created_at')
+    @candidates = @contest.candidates.includes(:person).order(tally: :desc, created_at: :asc)
   end
 end

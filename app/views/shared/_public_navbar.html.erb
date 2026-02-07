@@ -10,21 +10,21 @@
         <% end %>
         
         <div class="hidden sm:ml-8 sm:flex sm:space-x-1">
-          <%= link_to "Politicians", people_path, 
+          <%= link_to "Politicians", people_path,
               class: "#{request.path.start_with?('/people') ? 'bg-indigo-50 text-indigo-700' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'} px-3 py-2 rounded-md text-sm font-medium" %>
-          <%= link_to "Offices", offices_path, 
+          <%= link_to "Ballots", ballots_path,
+              class: "#{request.path.start_with?('/ballots') ? 'bg-indigo-50 text-indigo-700' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'} px-3 py-2 rounded-md text-sm font-medium" %>
+          <%= link_to "Contests", contests_path,
+              class: "#{request.path.start_with?('/contests') ? 'bg-indigo-50 text-indigo-700' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'} px-3 py-2 rounded-md text-sm font-medium" %>
+          <%= link_to "Offices", offices_path,
               class: "#{request.path.start_with?('/offices') ? 'bg-indigo-50 text-indigo-700' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'} px-3 py-2 rounded-md text-sm font-medium" %>
-          <%= link_to "Bodies", bodies_path, 
-              class: "#{request.path.start_with?('/bodies') ? 'bg-indigo-50 text-indigo-700' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'} px-3 py-2 rounded-md text-sm font-medium" %>
-          <%= link_to "Parties", parties_path, 
+          <%= link_to "Parties", parties_path,
               class: "#{request.path.start_with?('/parties') ? 'bg-indigo-50 text-indigo-700' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'} px-3 py-2 rounded-md text-sm font-medium" %>
-          <%= link_to "States", states_path, 
+          <%= link_to "States", states_path,
               class: "#{request.path.start_with?('/states') ? 'bg-indigo-50 text-indigo-700' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'} px-3 py-2 rounded-md text-sm font-medium" %>
-          <%= link_to "Districts", districts_path, 
-              class: "#{request.path.start_with?('/districts') ? 'bg-indigo-50 text-indigo-700' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'} px-3 py-2 rounded-md text-sm font-medium" %>
-          <%= link_to "Help", help_path, 
+          <%= link_to "Help", help_path,
               class: "#{request.path.start_with?('/help') ? 'bg-indigo-50 text-indigo-700' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'} px-3 py-2 rounded-md text-sm font-medium" %>
-          <%= link_to "About", about_path, 
+          <%= link_to "About", about_path,
               class: "#{request.path == '/about' ? 'bg-indigo-50 text-indigo-700' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'} px-3 py-2 rounded-md text-sm font-medium" %>
         </div>
       </div>
@@ -72,11 +72,11 @@
     <div class="sm:hidden pb-3 pt-2 border-t border-gray-100">
       <div class="flex flex-wrap gap-2">
         <%= link_to "Politicians", people_path, class: "text-gray-600 hover:text-gray-900 px-3 py-1 text-sm rounded-md hover:bg-gray-50" %>
+        <%= link_to "Ballots", ballots_path, class: "text-gray-600 hover:text-gray-900 px-3 py-1 text-sm rounded-md hover:bg-gray-50" %>
+        <%= link_to "Contests", contests_path, class: "text-gray-600 hover:text-gray-900 px-3 py-1 text-sm rounded-md hover:bg-gray-50" %>
         <%= link_to "Offices", offices_path, class: "text-gray-600 hover:text-gray-900 px-3 py-1 text-sm rounded-md hover:bg-gray-50" %>
-        <%= link_to "Bodies", bodies_path, class: "text-gray-600 hover:text-gray-900 px-3 py-1 text-sm rounded-md hover:bg-gray-50" %>
         <%= link_to "Parties", parties_path, class: "text-gray-600 hover:text-gray-900 px-3 py-1 text-sm rounded-md hover:bg-gray-50" %>
         <%= link_to "States", states_path, class: "text-gray-600 hover:text-gray-900 px-3 py-1 text-sm rounded-md hover:bg-gray-50" %>
-        <%= link_to "Districts", districts_path, class: "text-gray-600 hover:text-gray-900 px-3 py-1 text-sm rounded-md hover:bg-gray-50" %>
       </div>
     </div>
   </div>

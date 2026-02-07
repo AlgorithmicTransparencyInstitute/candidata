@@ -1,7 +1,8 @@
 require 'csv'
 
-class Candidate2026Importer
-  PRIMARY_DATE = Date.new(2026, 3, 4) # Default primary date (will vary by state)
+module Importers
+  class Candidate2026Importer
+    PRIMARY_DATE = Date.new(2026, 3, 4) # Default primary date (will vary by state)
 
   def initialize(csv_path)
     @csv_path = csv_path
@@ -394,5 +395,6 @@ class Candidate2026Importer
     puts "  Contests: Contest.for_year(2026).for_party('Democratic')"
     puts "  Candidates: Candidate.joins(:contest).merge(Contest.for_year(2026))"
     puts "="*80
+  end
   end
 end

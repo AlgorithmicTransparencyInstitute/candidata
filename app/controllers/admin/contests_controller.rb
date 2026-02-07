@@ -23,7 +23,7 @@ module Admin
     end
 
     def show
-      @candidates = @contest.candidates.includes(:person).order(:ballot_order)
+      @candidates = @contest.candidates.includes(:person).order(tally: :desc, created_at: :asc)
     end
 
     def new
@@ -70,8 +70,7 @@ module Admin
     end
 
     def contest_params
-      params.require(:contest).permit(:office_id, :ballot_id, :date, :contest_type, :number_elected,
-                                      :vote_type, :partisan, :retention)
+      params.require(:contest).permit(:office_id, :ballot_id, :date, :contest_type, :party, :location)
     end
   end
 end

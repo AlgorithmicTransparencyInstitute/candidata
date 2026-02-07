@@ -1,9 +1,12 @@
-<div class="max-w-4xl mx-auto px-4 py-8">
-  <nav class="mb-6">
-    <%= link_to "← Back to Help", help_path, class: "text-blue-600 hover:text-blue-800" %>
-  </nav>
+<div class="min-h-screen bg-gray-50">
+  <%= render "shared/public_navbar" %>
 
-  <h1 class="text-3xl font-bold text-gray-900 mb-6">Coverage Statistics</h1>
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <nav class="mb-6">
+      <%= link_to "← Back to Help", help_path, class: "text-indigo-600 hover:text-indigo-800" %>
+    </nav>
+
+    <h1 class="text-3xl font-bold text-gray-900 mb-6">Coverage Statistics</h1>
 
   <p class="text-lg text-gray-600 mb-8">
     Current database statistics showing the extent of our political data coverage.
@@ -150,4 +153,5 @@
       </ul>
     </div>
   </section>
+  </main>
 </div>

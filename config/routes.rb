@@ -96,6 +96,8 @@ Rails.application.routes.draw do
   resources :parties, only: [:index, :show]
   resources :states, only: [:index, :show], param: :id
   resources :districts, only: [:index, :show]
+  resources :ballots, only: [:index, :show]
+  resources :contests, only: [:index, :show]
 
   # Public help section
   get "help", to: "help#index", as: :help
