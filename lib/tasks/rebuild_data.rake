@@ -8,8 +8,9 @@ namespace :rebuild do
     puts "  1. Clear all people, contests, candidates, officeholders, accounts"
     puts "  2. Preserve: Users, States, Parties, Bodies"
     puts "  3. Import GovProj officeholder data"
-    puts "  4. Import temp data for matched people"
-    puts "  5. Import 2026 candidates with websites + placeholder accounts"
+    puts "  4. Extract districts from GovProj data"
+    puts "  5. Import temp data for matched people"
+    puts "  6. Import 2026 candidates with websites + placeholder accounts"
     puts "\n" + "="*80
 
     print "\nType 'yes' to continue: "
@@ -22,6 +23,7 @@ namespace :rebuild do
 
     Rake::Task['rebuild:clear_data'].invoke
     Rake::Task['rebuild:import_govproj'].invoke
+    Rake::Task['rebuild:extract_districts'].invoke
     Rake::Task['rebuild:import_temp_enrichment'].invoke
     Rake::Task['rebuild:import_2026_candidates'].invoke
 
@@ -31,6 +33,7 @@ namespace :rebuild do
     puts "\nFinal counts:"
     puts "  People: #{Person.count}"
     puts "  Officeholders: #{Officeholder.count}"
+    puts "  Districts: #{District.count}"
     puts "  Social Media Accounts: #{SocialMediaAccount.count}"
     puts "  Contests: #{Contest.count}"
     puts "  Candidates: #{Candidate.count}"
@@ -183,7 +186,85 @@ namespace :rebuild do
     puts "="*80
   end
 
-  desc "Step 4: Import 2026 candidates with websites and smart placeholder accounts"
+  desc "Step 4: Extract districts from GovProj data"
+  task extract_districts: :environment do
+    puts "\n" + "="*80
+    puts "EXTRACTING DISTRICTS FROM GOVPROJ DATA"
+    puts "="*80
+    puts "Parsing district information from electoral_district_ocdid field"
+    puts "="*80
+
+    stats = {
+      congressional: 0,
+      state_senate: 0,
+      state_house: 0,
+      other: 0,
+      skipped: 0
+    }
+
+    # Extract districts from unique OCDIDs
+    TempGovproj.where.not(electoral_district_ocdid: [nil, '']).distinct.pluck(:electoral_district_ocdid, :state).each do |ocdid, state|
+      # Parse OCDID for district information
+      # Congressional: ocd-division/country:us/state:al/cd:1
+      # State Senate (upper): ocd-division/country:us/state:ak/sldu:a
+      # State House (lower): ocd-division/country:us/state:ak/sldl:1
+
+      if ocdid =~ /\/cd:(\d+)$/
+        # Congressional district
+        district_number = $1.to_i
+        district = District.find_or_create_by!(
+          state: state.upcase,
+          level: 'federal',
+          chamber: nil,
+          district_number: district_number
+        )
+        district.update(ocdid: ocdid) if district.ocdid.blank?
+        stats[:congressional] += 1
+      elsif ocdid =~ /\/sldu:(.+)$/
+        # State senate (upper chamber)
+        district_id = $1
+        # Convert letter districts to numbers (A=1, B=2, etc) if all letters
+        district_number = district_id =~ /^\d+$/ ? district_id.to_i : district_id.upcase.ord - 64
+        district = District.find_or_create_by!(
+          state: state.upcase,
+          level: 'state',
+          chamber: 'upper',
+          district_number: district_number
+        )
+        district.update(ocdid: ocdid) if district.ocdid.blank?
+        stats[:state_senate] += 1
+      elsif ocdid =~ /\/sldl:(.+)$/
+        # State house (lower chamber)
+        district_id = $1
+        district_number = district_id =~ /^\d+$/ ? district_id.to_i : district_id.upcase.ord - 64
+        district = District.find_or_create_by!(
+          state: state.upcase,
+          level: 'state',
+          chamber: 'lower',
+          district_number: district_number
+        )
+        district.update(ocdid: ocdid) if district.ocdid.blank?
+        stats[:state_house] += 1
+      else
+        # Other district types (local, etc) - skip for now
+        stats[:skipped] += 1
+      end
+
+      print "." if (stats[:congressional] + stats[:state_senate] + stats[:state_house]) % 100 == 0
+    end
+
+    puts "\n\n" + "="*80
+    puts "DISTRICT EXTRACTION COMPLETE"
+    puts "="*80
+    puts "  Congressional districts: #{stats[:congressional]}"
+    puts "  State senate districts: #{stats[:state_senate]}"
+    puts "  State house districts: #{stats[:state_house]}"
+    puts "  Other/skipped: #{stats[:skipped]}"
+    puts "  Total districts created: #{District.count}"
+    puts "="*80
+  end
+
+  desc "Step 5: Import 2026 candidates with websites and smart placeholder accounts"
   task import_2026_candidates: :environment do
     puts "\n" + "="*80
     puts "IMPORTING 2026 CANDIDATES"
