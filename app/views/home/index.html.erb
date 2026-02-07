@@ -43,6 +43,45 @@
       </div>
     </div>
 
+    <% if @ballots_2026.any? %>
+      <!-- 2026 Primaries Spotlight -->
+      <div class="bg-gradient-to-br from-purple-600 to-indigo-700 rounded-2xl p-8 mb-12 text-white shadow-lg">
+        <div class="flex items-center gap-3 mb-4">
+          <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+          <h2 class="text-3xl font-bold">2026 Primary Elections</h2>
+        </div>
+        <p class="text-purple-100 text-lg mb-6">
+          Tracking <%= @total_2026_candidates %> candidates across <%= @total_2026_contests %> contests in <%= @ballots_2026.count %> primary elections.
+        </p>
+
+        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3 mb-6">
+          <% @ballots_2026.group_by(&:state).each do |state, state_ballots| %>
+            <div class="bg-white/10 backdrop-blur-sm rounded-lg p-3 text-center hover:bg-white/20 transition-colors">
+              <div class="text-2xl font-bold"><%= state %></div>
+              <div class="text-xs text-purple-200 mt-1"><%= state_ballots.count %> <%= 'ballot'.pluralize(state_ballots.count) %></div>
+            </div>
+          <% end %>
+        </div>
+
+        <div class="flex flex-wrap gap-3">
+          <%= link_to ballots_path(year: 2026), class: "inline-flex items-center px-5 py-2.5 bg-white text-indigo-700 font-semibold rounded-lg hover:bg-purple-50 transition-colors shadow-md" do %>
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+            </svg>
+            View All 2026 Ballots
+          <% end %>
+          <%= link_to contests_path(year: 2026), class: "inline-flex items-center px-5 py-2.5 bg-purple-500 text-white font-semibold rounded-lg hover:bg-purple-600 transition-colors" do %>
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+            </svg>
+            Browse Contests
+          <% end %>
+        </div>
+      </div>
+    <% end %>
+
     <!-- Browse Cards -->
     <h2 class="text-2xl font-bold text-gray-900 mb-6">Browse the Data</h2>
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">

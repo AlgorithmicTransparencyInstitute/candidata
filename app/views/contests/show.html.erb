@@ -1,0 +1,133 @@
+<div class="min-h-screen bg-gray-50">
+  <%= render "shared/public_navbar" %>
+
+  <main class="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+    <div class="mb-6">
+      <%= link_to "← Back to Contests", contests_path, class: "text-indigo-600 hover:text-indigo-800" %>
+    </div>
+
+    <!-- Contest Header -->
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-8 mb-6">
+      <div class="flex items-start justify-between mb-4">
+        <div class="flex-1">
+          <div class="flex items-center gap-3 mb-3">
+            <span class="inline-block px-3 py-1 text-sm font-semibold rounded <%= @contest.party == 'Democratic' ? 'bg-blue-100 text-blue-800' : @contest.party == 'Republican' ? 'bg-red-100 text-red-800' : 'bg-gray-100 text-gray-800' %>">
+              <%= @contest.party || 'Nonpartisan' %>
+            </span>
+            <span class="text-sm font-medium text-gray-600"><%= @contest.contest_type.titleize %></span>
+          </div>
+
+          <h1 class="text-3xl font-bold text-gray-900 mb-2">
+            <%= @contest.office&.title || 'Office Not Specified' %>
+            <% if @contest.office&.seat.present? %>
+              <span class="text-gray-600">(<%= @contest.office.seat %>)</span>
+            <% end %>
+          </h1>
+
+          <p class="text-lg text-gray-600">
+            <%= @contest.ballot&.name %>
+          </p>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mt-6 pt-6 border-t border-gray-200">
+        <div>
+          <div class="text-sm text-gray-500">Date</div>
+          <div class="text-lg font-semibold text-gray-900">
+            <%= @contest.date.strftime('%B %d, %Y') if @contest.date %>
+          </div>
+        </div>
+        <div>
+          <div class="text-sm text-gray-500">State</div>
+          <div class="text-lg font-semibold text-gray-900"><%= @contest.ballot&.state %></div>
+        </div>
+        <div>
+          <div class="text-sm text-gray-500">Candidates</div>
+          <div class="text-lg font-semibold text-gray-900">
+            <%= @candidates.count %>
+          </div>
+        </div>
+        <div>
+          <div class="text-sm text-gray-500">Total Votes</div>
+          <div class="text-lg font-semibold text-gray-900">
+            <%= number_with_delimiter(@contest.total_votes) %>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Candidates List -->
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+      <h2 class="text-xl font-bold text-gray-900 mb-4">Candidates</h2>
+
+      <div class="space-y-3">
+        <% @candidates.each do |candidate| %>
+          <div class="border border-gray-200 rounded-lg p-5 <%= 'bg-green-50 border-green-300' if candidate.outcome == 'won' %>">
+            <div class="flex items-start justify-between">
+              <div class="flex-1">
+                <%= link_to person_path(candidate.person), class: "text-lg font-semibold text-gray-900 hover:text-indigo-600" do %>
+                  <%= candidate.person.full_name %>
+                <% end %>
+
+                <div class="flex items-center gap-3 mt-2 text-sm">
+                  <span class="text-gray-600"><%= candidate.party_at_time %></span>
+
+                  <% if candidate.incumbent %>
+                    <span class="inline-block px-2 py-0.5 text-xs font-semibold rounded bg-purple-100 text-purple-800">
+                      Incumbent
+                    </span>
+                  <% end %>
+
+                  <% if candidate.outcome == 'won' %>
+                    <span class="inline-block px-2 py-0.5 text-xs font-semibold rounded bg-green-100 text-green-800">
+                      Winner
+                    </span>
+                  <% elsif candidate.outcome == 'lost' %>
+                    <span class="inline-block px-2 py-0.5 text-xs font-semibold rounded bg-gray-100 text-gray-600">
+                      Lost
+                    </span>
+                  <% elsif candidate.outcome == 'pending' %>
+                    <span class="inline-block px-2 py-0.5 text-xs font-semibold rounded bg-blue-100 text-blue-600">
+                      Pending
+                    </span>
+                  <% end %>
+                </div>
+              </div>
+
+              <% if candidate.tally && candidate.tally > 0 %>
+                <div class="text-right">
+                  <div class="text-2xl font-bold text-gray-900">
+                    <%= number_with_delimiter(candidate.tally) %>
+                  </div>
+                  <% if @contest.total_votes > 0 %>
+                    <div class="text-sm text-gray-500">
+                      <%= number_to_percentage((candidate.tally.to_f / @contest.total_votes * 100), precision: 1) %>
+                    </div>
+                  <% end %>
+                </div>
+              <% end %>
+            </div>
+          </div>
+        <% end %>
+      </div>
+
+      <% if @candidates.empty? %>
+        <div class="text-center py-8 text-gray-500">
+          No candidates found for this contest.
+        </div>
+      <% end %>
+    </div>
+
+    <!-- Back to Ballot -->
+    <% if @contest.ballot %>
+      <div class="mt-6">
+        <%= link_to ballot_path(@contest.ballot), class: "inline-flex items-center px-4 py-2 bg-white border border-gray-300 rounded-md hover:bg-gray-50 text-gray-700" do %>
+          <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+          </svg>
+          View Full Ballot
+        <% end %>
+      </div>
+    <% end %>
+  </main>
+</div>
