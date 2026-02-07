@@ -9,6 +9,9 @@ class District < ApplicationRecord
   validates :chamber, inclusion: { in: CHAMBERS }, allow_nil: true
   validates :ocdid, uniqueness: true, allow_nil: true
 
+  VOTING_AT_LARGE_STATES = %w[AK DE ND SD VT WY].freeze
+  TERRITORY_DELEGATES = %w[AS DC GU MP PR VI].freeze
+
   scope :federal, -> { where(level: 'federal') }
   scope :state_level, -> { where(level: 'state') }
   scope :local, -> { where(level: 'local') }
@@ -16,7 +19,10 @@ class District < ApplicationRecord
   scope :lower_chamber, -> { where(chamber: 'lower') }
   scope :congressional, -> { federal.where(chamber: nil) }
   scope :at_large, -> { federal.where(district_number: 0) }
+  scope :at_large_voting, -> { federal.where(district_number: 0, state: VOTING_AT_LARGE_STATES) }
+  scope :at_large_territories, -> { federal.where(district_number: 0, state: TERRITORY_DELEGATES) }
   scope :numbered_congressional, -> { federal.where(chamber: nil).where('district_number > 0') }
+  scope :voting_members, -> { federal.where('district_number > 0 OR (district_number = 0 AND state IN (?))', VOTING_AT_LARGE_STATES) }
   scope :state_senate, -> { state_level.upper_chamber }
   scope :state_house, -> { state_level.lower_chamber }
 

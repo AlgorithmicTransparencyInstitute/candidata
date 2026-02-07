@@ -25,7 +25,23 @@ class DistrictsController < ApplicationController
     if params[:chamber].present?
       @districts = @districts.where(chamber: params[:chamber])
     end
-    
+
+    # Filter by district type
+    if params[:district_type].present?
+      case params[:district_type]
+      when 'numbered'
+        @districts = @districts.where('district_number > 0')
+      when 'at_large_voting'
+        # At-large voting states (6 states with 1 House member each)
+        voting_states = %w[AK DE ND SD VT WY]
+        @districts = @districts.where(level: 'federal', district_number: 0, state: voting_states)
+      when 'at_large_territory'
+        # At-large territories (6 non-voting delegates)
+        territories = %w[AS DC GU MP PR VI]
+        @districts = @districts.where(level: 'federal', district_number: 0, state: territories)
+      end
+    end
+
     # Sort
     @districts = case params[:sort]
                  when 'state'
