@@ -26,7 +26,7 @@
     <div class="divide-y divide-gray-200">
       <% if @assignments.any? %>
         <% @assignments.each do |assignment| %>
-          <div class="px-6 py-4 hover:bg-gray-50">
+          <%= link_to verification_assignment_path(assignment), class: "block px-6 py-4 hover:bg-gray-50 transition-colors" do %>
             <div class="flex justify-between items-center">
               <div>
                 <div class="font-medium text-gray-900"><%= assignment.person.full_name %></div>
@@ -34,12 +34,16 @@
                   <%= assignment.person.social_media_accounts.campaign.needs_verification.count %> accounts to verify
                 </div>
               </div>
-              <div class="flex items-center gap-2">
+              <div class="flex items-center gap-2" onclick="event.stopPropagation()">
                 <%= assignment_status_badge(assignment.status) %>
-                <%= link_to "Verify", verification_assignment_path(assignment), class: "px-3 py-1 bg-purple-600 text-white text-sm rounded hover:bg-purple-700" %>
+                <% if assignment.pending? %>
+                  <%= button_to "Start Verify", start_verification_assignment_path(assignment), method: :patch, class: "px-3 py-1 bg-purple-600 text-white text-sm rounded hover:bg-purple-700" %>
+                <% else %>
+                  <span class="px-3 py-1 bg-purple-600 text-white text-sm rounded">Continue →</span>
+                <% end %>
               </div>
             </div>
-          </div>
+          <% end %>
         <% end %>
       <% else %>
         <div class="px-6 py-8 text-center text-gray-500">

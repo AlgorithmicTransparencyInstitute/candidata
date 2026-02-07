@@ -35,7 +35,7 @@
       <div class="divide-y divide-gray-200">
         <% if @research_assignments.any? %>
           <% @research_assignments.each do |assignment| %>
-            <div class="px-6 py-4 hover:bg-gray-50">
+            <%= link_to researcher_assignment_path(assignment), class: "block px-6 py-4 hover:bg-gray-50 transition-colors" do %>
               <div class="flex justify-between items-center">
                 <div>
                   <div class="font-medium text-gray-900"><%= assignment.person.full_name %></div>
@@ -47,10 +47,14 @@
                   <span class="px-2 py-1 text-xs rounded-full <%= assignment.pending? ? 'bg-blue-100 text-blue-800' : 'bg-yellow-100 text-yellow-800' %>">
                     <%= assignment.status.humanize %>
                   </span>
-                  <%= link_to "Work", researcher_assignment_path(assignment), class: "px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700" %>
+                  <% if assignment.pending? %>
+                    <%= button_to "Start Work", start_researcher_assignment_path(assignment), method: :patch, class: "px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700", onclick: "event.stopPropagation()" %>
+                  <% else %>
+                    <span class="px-3 py-1 bg-blue-600 text-white text-sm rounded">Continue →</span>
+                  <% end %>
                 </div>
               </div>
-            </div>
+            <% end %>
           <% end %>
         <% else %>
           <div class="px-6 py-8 text-center text-gray-500">
@@ -69,7 +73,7 @@
       <div class="divide-y divide-gray-200">
         <% if @verification_assignments.any? %>
           <% @verification_assignments.each do |assignment| %>
-            <div class="px-6 py-4 hover:bg-gray-50">
+            <%= link_to verification_assignment_path(assignment), class: "block px-6 py-4 hover:bg-gray-50 transition-colors" do %>
               <div class="flex justify-between items-center">
                 <div>
                   <div class="font-medium text-gray-900"><%= assignment.person.full_name %></div>
@@ -81,10 +85,14 @@
                   <span class="px-2 py-1 text-xs rounded-full <%= assignment.pending? ? 'bg-purple-100 text-purple-800' : 'bg-orange-100 text-orange-800' %>">
                     <%= assignment.status.humanize %>
                   </span>
-                  <%= link_to "Verify", verification_assignment_path(assignment), class: "px-3 py-1 bg-purple-600 text-white text-sm rounded hover:bg-purple-700" %>
+                  <% if assignment.pending? %>
+                    <%= button_to "Start Verify", start_verification_assignment_path(assignment), method: :patch, class: "px-3 py-1 bg-purple-600 text-white text-sm rounded hover:bg-purple-700", onclick: "event.stopPropagation()" %>
+                  <% else %>
+                    <span class="px-3 py-1 bg-purple-600 text-white text-sm rounded">Continue →</span>
+                  <% end %>
                 </div>
               </div>
-            </div>
+            <% end %>
           <% end %>
         <% else %>
           <div class="px-6 py-8 text-center text-gray-500">
