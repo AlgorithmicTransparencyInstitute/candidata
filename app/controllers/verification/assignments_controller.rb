@@ -3,7 +3,7 @@ module Verification
     before_action :authenticate_user!
     before_action :require_researcher_or_admin
     layout 'researcher'
-    before_action :set_assignment, only: [:show, :start, :complete]
+    before_action :set_assignment, only: [:show, :start, :complete, :reopen]
 
     def index
       @assignments = current_user.assignments.data_validation.active.includes(person: :social_media_accounts).order(created_at: :asc)
@@ -11,8 +11,10 @@ module Verification
 
     def show
       @person = @assignment.person
-      @accounts = @person.social_media_accounts.campaign.core_platforms.needs_verification.order(:platform)
-      @verified_accounts = @person.social_media_accounts.campaign.where(research_status: 'verified').order(:platform)
+      # Show all core platform accounts - verifiers can handle entered, empty, or incorrect data
+      @accounts = @person.social_media_accounts.campaign.core_platforms.where.not(research_status: 'verified').order(:platform)
+      @verified_accounts = @person.social_media_accounts.campaign.core_platforms.where(research_status: 'verified').order(:platform)
+      @current_offices = @person.officeholders.current.includes(office: [:body, :district])
     end
 
     def start
@@ -28,7 +30,12 @@ module Verification
       end
 
       @assignment.complete!
-      redirect_to verification_assignments_path, notice: "Verification completed!"
+      redirect_to verification_queue_path, notice: "Verification completed!"
+    end
+
+    def reopen
+      @assignment.reopen!
+      redirect_to verification_assignment_path(@assignment), notice: "Verification reopened."
     end
 
     private

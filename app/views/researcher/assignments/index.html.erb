@@ -1,6 +1,6 @@
 <div class="max-w-7xl mx-auto px-4 py-8">
   <div class="flex justify-between items-center mb-6">
-    <h1 class="text-3xl font-bold text-gray-900">My Assignments</h1>
+    <h1 class="text-3xl font-bold text-gray-900">All Assignments</h1>
     <%= link_to "Dashboard", researcher_root_path, class: "text-blue-600 hover:text-blue-800" %>
   </div>
 
@@ -21,7 +21,10 @@
     <% if @assignments.any? %>
       <div class="divide-y divide-gray-200">
         <% @assignments.each do |assignment| %>
-          <%= link_to researcher_assignment_path(assignment), class: "block px-6 py-4 hover:bg-gray-50 transition-colors" do %>
+          <%
+            assignment_path = assignment.task_type == 'data_validation' ? verification_assignment_path(assignment) : researcher_assignment_path(assignment)
+          %>
+          <%= link_to assignment_path, class: "block px-6 py-4 hover:bg-gray-50 transition-colors" do %>
             <div class="flex justify-between items-center">
               <div>
                 <div class="font-medium text-lg text-gray-900"><%= assignment.person.full_name %></div>
@@ -56,14 +59,22 @@
                 <% if assignment.completed? %>
                   <% if assignment.has_validation_assignment? %>
                     <span class="px-3 py-1.5 text-xs text-gray-400 italic">In validation</span>
-                  <% else %>
+                  <% elsif assignment.task_type == 'data_collection' %>
                     <%= button_to "Reopen", reopen_researcher_assignment_path(assignment), method: :patch, class: "px-4 py-2 bg-yellow-600 text-white rounded hover:bg-yellow-700 text-sm" %>
                   <% end %>
-                  <%= link_to "View", researcher_assignment_path(assignment), class: "px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 text-sm" %>
+                  <%= link_to "View", assignment_path, class: "px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 text-sm" %>
                 <% elsif assignment.pending? %>
-                  <%= button_to "Start Work", start_researcher_assignment_path(assignment), method: :patch, class: "px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700" %>
+                  <% if assignment.task_type == 'data_validation' %>
+                    <%= button_to "Start Verify", start_verification_assignment_path(assignment), method: :patch, class: "px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700" %>
+                  <% else %>
+                    <%= button_to "Start Work", start_researcher_assignment_path(assignment), method: :patch, class: "px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700" %>
+                  <% end %>
                 <% else %>
-                  <span class="px-4 py-2 bg-blue-600 text-white rounded">Continue →</span>
+                  <% if assignment.task_type == 'data_validation' %>
+                    <span class="px-4 py-2 bg-purple-600 text-white rounded">Continue →</span>
+                  <% else %>
+                    <span class="px-4 py-2 bg-blue-600 text-white rounded">Continue →</span>
+                  <% end %>
                 <% end %>
               </div>
             </div>

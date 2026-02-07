@@ -36,6 +36,7 @@ Rails.application.routes.draw do
     end
     resources :districts
     resources :offices
+    resources :elections
     resources :ballots
     resources :contests
     resources :candidates
@@ -57,6 +58,7 @@ Rails.application.routes.draw do
   # Researcher workspace
   namespace :researcher do
     root "dashboard#index"
+    get "queue", to: "queue#index"
     resources :assignments, only: [:index, :show] do
       member do
         patch :start
@@ -78,15 +80,22 @@ Rails.application.routes.draw do
   # Verification workspace
   namespace :verification do
     root "dashboard#index"
+    get "queue", to: "queue#index"
     resources :assignments, only: [:index, :show] do
       member do
         patch :start
         patch :complete
+        patch :reopen
       end
     end
-    resources :accounts, only: [:show, :update] do
+    resources :accounts, only: [:show, :update, :edit] do
       member do
+        patch :mark_entered
+        patch :mark_not_found
+        patch :reset_status
         patch :verify
+        patch :unverify
+        patch :verify_with_changes
         patch :reject
       end
     end
@@ -102,6 +111,7 @@ Rails.application.routes.draw do
   resources :parties, only: [:index, :show]
   resources :states, only: [:index, :show], param: :id
   resources :districts, only: [:index, :show]
+  resources :elections, only: [:index, :show]
   resources :ballots, only: [:index, :show]
   resources :contests, only: [:index, :show]
 

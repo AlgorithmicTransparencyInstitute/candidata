@@ -82,7 +82,7 @@ module Researcher
     private
 
     def set_assignment
-      @assignment = current_user.assignments.find(params[:id])
+      @assignment = current_user.assignments.data_collection.find(params[:id])
     end
 
     def require_researcher_or_admin
