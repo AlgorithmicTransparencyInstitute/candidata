@@ -10,7 +10,7 @@ class SocialMediaAccount < ApplicationRecord
   FRINGE_PLATFORMS = %w[TruthSocial Gettr Rumble Telegram Threads].freeze
   CHANNEL_TYPES = ['Campaign', 'Official Office', 'Personal'].freeze
   STATUSES = ['Reviewed', 'To verify', 'Not reviewed', 'Inactive'].freeze
-  RESEARCH_STATUSES = %w[not_started entered not_found verified rejected].freeze
+  RESEARCH_STATUSES = %w[not_started entered not_found verified rejected revised].freeze
 
   validates :platform, presence: true, inclusion: { in: PLATFORMS, message: "%{value} is not a valid platform" }
   validates :channel_type, inclusion: { in: CHANNEL_TYPES, allow_blank: true }
@@ -27,7 +27,7 @@ class SocialMediaAccount < ApplicationRecord
   scope :personal, -> { where(channel_type: 'Personal') }
   scope :pre_populated, -> { where(pre_populated: true) }
   scope :needs_research, -> { where(research_status: 'not_started', pre_populated: true) }
-  scope :needs_verification, -> { where(research_status: %w[entered not_found]) }
+  scope :needs_verification, -> { where(research_status: %w[entered not_found revised]) }
   scope :core_platforms, -> { where(platform: CORE_PLATFORMS) }
   scope :fringe_platforms, -> { where(platform: FRINGE_PLATFORMS) }
 
@@ -84,6 +84,34 @@ class SocialMediaAccount < ApplicationRecord
       research_status: 'rejected',
       verification_notes: notes
     )
+  end
+
+  # When a verifier revises a record, it needs re-verification
+  def revise!(user, url: nil, handle: nil, notes: nil)
+    update!(
+      url: url || self.url,
+      handle: handle || self.handle,
+      verified_by: user,
+      verified_at: Time.current,
+      research_status: 'revised',
+      verification_notes: notes,
+      verified: false  # Unverify since it was revised
+    )
+  end
+
+  # Helper to check if this account needs verification
+  def needs_verification?
+    research_status.in?(%w[entered not_found revised])
+  end
+
+  # Get version count for display
+  def version_count
+    versions.count
+  end
+
+  # Check if there are multiple versions (showing edits have been made)
+  def has_revisions?
+    versions.count > 1
   end
 
   def self.prepopulate_for_person!(person, platforms: CORE_PLATFORMS, channel_type: 'Campaign')

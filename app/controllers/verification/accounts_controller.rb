@@ -11,10 +11,27 @@ module Verification
     end
 
     def update
-      if @account.update(account_params)
-        redirect_to verification_assignment_path(@assignment), notice: "Account updated."
+      # Check if this is a revision (data was changed)
+      url_changed = @account.url != account_params[:url]
+      handle_changed = @account.handle != account_params[:handle]
+
+      if url_changed || handle_changed
+        # This is a revision - mark as revised and needs re-verification
+        @account.revise!(
+          current_user,
+          url: account_params[:url],
+          handle: account_params[:handle],
+          notes: account_params[:verification_notes]
+        )
+        redirect_to verification_assignment_path(@assignment),
+                    notice: "Account revised. This record will be re-queued for verification by another user."
       else
-        render :show, status: :unprocessable_entity
+        # Just updating notes without changing data
+        if @account.update(account_params)
+          redirect_to verification_assignment_path(@assignment), notice: "Account updated."
+        else
+          render :show, status: :unprocessable_entity
+        end
       end
     end
 

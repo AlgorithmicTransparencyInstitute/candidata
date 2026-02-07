@@ -2,21 +2,58 @@ class Admin::PeopleController < Admin::BaseController
   before_action :set_person, only: [:show, :edit, :update, :destroy, :assign_researcher, :prepopulate_accounts]
 
   def index
-    @people = Person.includes(:parties, :social_media_accounts)
+    @people = Person.includes(:parties, :social_media_accounts, :current_offices, :person_parties)
 
+    # Text search
     if params[:q].present?
       search_term = "%#{params[:q].downcase}%"
       @people = @people.where("LOWER(first_name) LIKE :term OR LOWER(last_name) LIKE :term", term: search_term)
     end
 
-    if params[:needs_research].present?
-      @people = @people.left_joins(:assignments)
-                       .where(assignments: { id: nil })
-                       .or(@people.left_joins(:assignments).where.not(assignments: { task_type: 'data_collection' }))
+    # State filter
+    if params[:state].present?
+      @people = @people.where(state_of_residence: params[:state])
+    end
+
+    # Party filter
+    if params[:party_id].present?
+      @people = @people.joins(:person_parties).where(person_parties: { party_id: params[:party_id] })
+    end
+
+    # Office filter (current officeholders only)
+    if params[:office_level].present?
+      @people = @people.joins(current_offices: :office).where(offices: { level: params[:office_level] })
+    end
+
+    # Research status filter
+    if params[:research_status].present?
+      @people = @people.joins(:social_media_accounts)
+                       .where(social_media_accounts: { research_status: params[:research_status] })
+                       .distinct
+    end
+
+    # Assignment status filter
+    case params[:assignment_status]
+    when 'unassigned'
+      @people = @people.left_joins(:assignments).where(assignments: { id: nil })
+    when 'assigned'
+      @people = @people.joins(:assignments).where(assignments: { status: %w[pending in_progress] }).distinct
+    when 'completed'
+      @people = @people.joins(:assignments).where(assignments: { status: 'completed' }).distinct
+    end
+
+    # Account status filter
+    case params[:account_status]
+    when 'has_accounts'
+      @people = @people.joins(:social_media_accounts).distinct
+    when 'no_accounts'
+      @people = @people.left_joins(:social_media_accounts).where(social_media_accounts: { id: nil })
     end
 
     @people = @people.order(:last_name, :first_name).page(params[:page]).per(50)
     @researchers = User.researchers.order(:name)
+    @states = State.order(:name)
+    @parties = Party.order(:name)
   end
 
   def show
