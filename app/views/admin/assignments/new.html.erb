@@ -166,22 +166,43 @@
         <div class="divide-y divide-gray-200 max-h-[500px] overflow-y-auto">
           <% @people.each do |person| %>
             <% existing_assignments = person.assignments.select { |a| %w[pending in_progress].include?(a.status) } %>
+            <%
+              # Gather person data
+              current_oh = person.officeholders.detect { |oh| oh.end_date.nil? }
+              candidate_2026 = person.candidates.joins(:contest).where('contests.date >= ?', Date.new(2026, 1, 1)).first
+              populated_accounts = person.social_media_accounts.where.not(url: [nil, '']).count
+              total_accounts = person.social_media_accounts.count
+              has_website = person.website_campaign.present? || person.website_official.present?
+            %>
             <label class="flex items-center gap-4 px-6 py-3 hover:bg-gray-50 cursor-pointer transition-colors">
               <input type="checkbox" name="person_ids[]" value="<%= person.id %>"
                      class="person-checkbox rounded border-gray-300 text-blue-600 focus:ring-blue-500">
               <div class="flex-1 min-w-0">
-                <div class="flex items-center gap-2">
+                <div class="flex items-center gap-2 mb-1">
                   <span class="font-medium text-gray-900"><%= person.full_name %></span>
                   <% if person.primary_party %>
-                    <span class="px-1.5 py-0.5 text-xs rounded bg-gray-100 text-gray-600"><%= person.primary_party.abbreviation %></span>
+                    <span class="px-1.5 py-0.5 text-xs rounded <%= person.primary_party.abbreviation == 'D' ? 'bg-blue-100 text-blue-700' : person.primary_party.abbreviation == 'R' ? 'bg-red-100 text-red-700' : 'bg-gray-100 text-gray-600' %>"><%= person.primary_party.abbreviation %></span>
+                  <% end %>
+                  <% if has_website %>
+                    <span class="text-xs text-green-600" title="Has website">🌐</span>
                   <% end %>
                 </div>
-                <div class="text-sm text-gray-500 truncate">
-                  <%= person.state_of_residence || "Unknown state" %>
-                  <% current_oh = person.officeholders.detect { |oh| oh.end_date.nil? } %>
-                  <% if current_oh&.office %>
-                    · <%= current_oh.office.title %>
+                <div class="text-xs text-gray-500 space-y-0.5">
+                  <div>
+                    <%= person.state_of_residence || "Unknown state" %>
+                    <% if current_oh&.office %>
+                      · Current: <%= current_oh.office.title %><%= " (#{current_oh.office.seat})" if current_oh.office.seat.present? %>
+                    <% end %>
+                  </div>
+                  <% if candidate_2026 %>
+                    <div class="text-purple-600">
+                      2026 <%= candidate_2026.contest.contest_type.titleize %>: <%= candidate_2026.contest.office.title %><%= " (#{candidate_2026.contest.office.seat})" if candidate_2026.contest.office.seat.present? %>
+                      <%= " - #{candidate_2026.party_at_time}" if candidate_2026.party_at_time %>
+                    </div>
                   <% end %>
+                  <div>
+                    Accounts: <%= populated_accounts %>/<%= total_accounts %> populated
+                  </div>
                 </div>
               </div>
               <div class="flex items-center gap-2 shrink-0">

@@ -2,7 +2,7 @@ class Admin::PeopleController < Admin::BaseController
   before_action :set_person, only: [:show, :edit, :update, :destroy, :assign_researcher, :prepopulate_accounts]
 
   def index
-    @people = Person.includes(:parties, :social_media_accounts, :current_offices, :person_parties)
+    @people = Person.includes(:parties, :social_media_accounts, :officeholders, :person_parties)
 
     # Text search
     if params[:q].present?
@@ -22,7 +22,7 @@ class Admin::PeopleController < Admin::BaseController
 
     # Office filter (current officeholders only)
     if params[:office_level].present?
-      @people = @people.joins(current_offices: :office).where(offices: { level: params[:office_level] })
+      @people = @people.joins(officeholders: :office).where(officeholders: { end_date: [nil, Date.current..] }).where(offices: { level: params[:office_level] }).distinct
     end
 
     # Research status filter

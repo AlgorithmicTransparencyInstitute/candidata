@@ -36,7 +36,9 @@ module Admin
       @task_type = params[:task_type] || 'data_collection'
       @selected_researcher_id = params[:user_id]
 
-      @people = Person.includes(:parties, :assignments, officeholders: :office)
+      @people = Person.includes(:parties, :assignments, :social_media_accounts,
+                                officeholders: :office,
+                                candidates: { contest: :office })
                       .order(:last_name, :first_name)
 
       if params[:state].present?
@@ -113,8 +115,22 @@ module Admin
       @people = @people.page(params[:page]).per(50)
 
       @states = Person.where.not(state_of_residence: [nil, '']).distinct.pluck(:state_of_residence).sort
-      @parties = Party.order(:name)
-      @bodies = ::Body.order(:name)
+      # Sort parties with Republican and Democratic first
+      @parties = Party.all.sort_by do |party|
+        case party.name
+        when 'Republican' then [0, party.name]
+        when 'Democratic' then [1, party.name]
+        else [2, party.name]
+        end
+      end
+      # Sort bodies with US House and US Senate first
+      @bodies = ::Body.all.sort_by do |body|
+        case body.name
+        when 'U.S. House of Representatives' then [0, body.name]
+        when 'U.S. Senate' then [1, body.name]
+        else [2, body.name]
+        end
+      end
       @levels = Office.where.not(level: [nil, '']).distinct.pluck(:level).sort
       @years = Contest.where.not(date: nil).distinct.pluck(Arel.sql('EXTRACT(YEAR FROM date)::integer')).sort.reverse
       @ballots = Ballot.where(year: params[:year] || 2026).order(:state, :party)

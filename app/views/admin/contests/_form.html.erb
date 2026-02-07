@@ -30,26 +30,14 @@
     </div>
   </div>
 
-  <div class="grid grid-cols-2 gap-4 mb-4">
-    <div>
-      <label class="block text-sm font-medium text-gray-700 mb-1">Number Elected</label>
-      <%= f.number_field :number_elected, class: "w-full px-3 py-2 border border-gray-300 rounded-md", min: 1, value: contest.number_elected || 1 %>
-    </div>
-    <div>
-      <label class="block text-sm font-medium text-gray-700 mb-1">Vote Type</label>
-      <%= f.text_field :vote_type, class: "w-full px-3 py-2 border border-gray-300 rounded-md", placeholder: "e.g., plurality" %>
-    </div>
+  <div class="mb-4">
+    <label class="block text-sm font-medium text-gray-700 mb-1">Party</label>
+    <%= f.text_field :party, class: "w-full px-3 py-2 border border-gray-300 rounded-md", placeholder: "e.g., Democratic, Republican" %>
   </div>
 
-  <div class="mb-6 flex gap-6">
-    <label class="flex items-center gap-2">
-      <%= f.check_box :partisan, class: "rounded border-gray-300 text-blue-600" %>
-      <span class="text-sm font-medium text-gray-700">Partisan</span>
-    </label>
-    <label class="flex items-center gap-2">
-      <%= f.check_box :retention, class: "rounded border-gray-300 text-blue-600" %>
-      <span class="text-sm font-medium text-gray-700">Retention</span>
-    </label>
+  <div class="mb-4">
+    <label class="block text-sm font-medium text-gray-700 mb-1">Location</label>
+    <%= f.text_field :location, class: "w-full px-3 py-2 border border-gray-300 rounded-md", placeholder: "State or jurisdiction" %>
   </div>
 
   <div class="flex justify-end gap-3">
