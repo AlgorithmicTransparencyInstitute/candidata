@@ -112,8 +112,8 @@
             <td class="px-6 py-4 text-sm text-gray-600">
               <% current_offices = person.current_offices.limit(2) %>
               <% if current_offices.any? %>
-                <% current_offices.each do |oh| %>
-                  <div class="text-xs"><%= oh.office.title %></div>
+                <% current_offices.each do |office| %>
+                  <div class="text-xs"><%= office.title %></div>
                 <% end %>
                 <% if person.current_offices.count > 2 %>
                   <div class="text-xs text-gray-400">+<%= person.current_offices.count - 2 %> more</div>
