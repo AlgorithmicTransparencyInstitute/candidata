@@ -88,42 +88,42 @@
           <div>
             <label class="block text-xs font-medium text-gray-600 mb-1">Search</label>
             <input type="text" name="q" value="<%= params[:q] %>" placeholder="Name..."
-                   class="px-3 py-1.5 text-sm border border-gray-300 rounded-md w-40 focus:ring-blue-500 focus:border-blue-500">
+                   class="block text-sm w-40 rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500">
           </div>
           <div>
             <label class="block text-xs font-medium text-gray-600 mb-1">State</label>
             <%= select_tag :state, options_for_select([['All States', '']] + @states.map { |s| [s, s] }, params[:state]),
-                class: "px-3 py-1.5 text-sm border border-gray-300 rounded-md" %>
+                class: "block text-sm rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500" %>
           </div>
           <div>
             <label class="block text-xs font-medium text-gray-600 mb-1">Party</label>
             <%= select_tag :party_id, options_for_select([['All Parties', '']] + @parties.map { |p| [p.name, p.id] }, params[:party_id]),
-                class: "px-3 py-1.5 text-sm border border-gray-300 rounded-md" %>
+                class: "block text-sm rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500" %>
           </div>
           <div>
             <label class="block text-xs font-medium text-gray-600 mb-1">Body</label>
             <%= select_tag :body_id, options_for_select([['All Bodies', '']] + @bodies.map { |b| [b.name, b.id] }, params[:body_id]),
-                class: "px-3 py-1.5 text-sm border border-gray-300 rounded-md" %>
+                class: "block text-sm rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500" %>
           </div>
           <div>
             <label class="block text-xs font-medium text-gray-600 mb-1">Level</label>
             <%= select_tag :level, options_for_select([['All Levels', '']] + @levels.map { |l| [l.titleize, l] }, params[:level]),
-                class: "px-3 py-1.5 text-sm border border-gray-300 rounded-md" %>
+                class: "block text-sm rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500" %>
           </div>
           <div>
             <label class="block text-xs font-medium text-gray-600 mb-1">Year</label>
             <%= select_tag :year, options_for_select([['All Years', '']] + @years.map { |y| [y, y] }, params[:year]),
-                class: "px-3 py-1.5 text-sm border border-gray-300 rounded-md", id: "year_filter" %>
+                class: "block text-sm rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500", id: "year_filter" %>
           </div>
           <div>
             <label class="block text-xs font-medium text-gray-600 mb-1">Ballot</label>
             <%= select_tag :ballot_id, options_for_select([['All Ballots', '']] + @ballots.map { |b| [b.full_name, b.id] }, params[:ballot_id]),
-                class: "px-3 py-1.5 text-sm border border-gray-300 rounded-md", id: "ballot_filter" %>
+                class: "block text-sm rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500", id: "ballot_filter" %>
           </div>
           <div>
             <label class="block text-xs font-medium text-gray-600 mb-1">Contest</label>
             <%= select_tag :contest_id, options_for_select([['All Contests', '']] + @contests.map { |c| [c.full_name, c.id] }, params[:contest_id]),
-                class: "px-3 py-1.5 text-sm border border-gray-300 rounded-md", id: "contest_filter" %>
+                class: "block text-sm rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500", id: "contest_filter" %>
           </div>
           <div>
             <label class="block text-xs font-medium text-gray-600 mb-1">Assignment</label>
@@ -133,7 +133,7 @@
               ['No Data Collection', 'no_collection'],
               ['No Data Validation', 'no_validation']
             ], params[:assignment_filter]),
-                class: "px-3 py-1.5 text-sm border border-gray-300 rounded-md" %>
+                class: "block text-sm rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500" %>
           </div>
           <div class="flex gap-2">
             <button type="submit" formaction="<%= new_admin_assignment_path %>" formmethod="get"
