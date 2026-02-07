@@ -19,16 +19,10 @@
 
       <div class="flex items-center">
         <div class="relative" data-controller="dropdown">
-          <button type="button" 
+          <button type="button"
                   data-action="click->dropdown#toggle"
                   class="flex items-center space-x-3 px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
-            <% if current_user.avatar.attached? %>
-              <%= image_tag current_user.avatar, alt: "Avatar", class: "w-8 h-8 rounded-full object-cover ring-2 ring-white" %>
-            <% else %>
-              <div class="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center ring-2 ring-white">
-                <span class="text-indigo-600 font-medium text-sm"><%= (current_user.name || current_user.email).first.upcase %></span>
-              </div>
-            <% end %>
+            <%= user_avatar(current_user, size: "w-8 h-8", additional_classes: "ring-2 ring-white") %>
             <div class="hidden sm:block text-left">
               <p class="text-sm font-medium text-gray-900"><%= current_user.name || current_user.email.split('@').first %></p>
               <p class="text-xs text-gray-500"><%= current_user.role.titleize %></p>

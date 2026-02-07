@@ -1,8 +1,14 @@
 Rails.application.routes.draw do
   devise_for :users, controllers: {
     omniauth_callbacks: 'users/omniauth_callbacks',
-    invitations: 'users/invitations'
+    invitations: 'users/invitations',
+    registrations: 'users/registrations'
   }
+
+  # Custom user routes
+  devise_scope :user do
+    delete 'users/avatar', to: 'users/registrations#destroy_avatar', as: :destroy_user_avatar
+  end
 
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
 

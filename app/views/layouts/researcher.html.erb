@@ -78,13 +78,7 @@
         <!-- User menu at bottom -->
         <div class="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-700">
           <div class="flex items-center">
-            <% if current_user&.avatar&.attached? %>
-              <%= image_tag current_user.avatar, class: "w-8 h-8 rounded-full" %>
-            <% else %>
-              <div class="w-8 h-8 rounded-full bg-gray-600 flex items-center justify-center">
-                <span class="text-white text-sm font-medium"><%= current_user&.name&.first&.upcase || 'U' %></span>
-              </div>
-            <% end %>
+            <%= user_avatar(current_user, size: "w-8 h-8") %>
             <div class="ml-3 flex-1">
               <%= link_to edit_profile_path, class: "block" do %>
                 <p class="text-sm font-medium text-white truncate hover:text-gray-200"><%= current_user&.name || current_user&.email %></p>

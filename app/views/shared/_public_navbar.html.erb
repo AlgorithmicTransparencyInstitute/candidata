@@ -32,16 +32,10 @@
       <div class="flex items-center space-x-4">
         <% if user_signed_in? %>
           <div class="relative" data-controller="dropdown">
-            <button type="button" 
+            <button type="button"
                     data-action="click->dropdown#toggle"
                     class="flex items-center space-x-2 px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors duration-150 focus:outline-none">
-              <% if current_user.avatar.attached? %>
-                <%= image_tag current_user.avatar, class: "w-8 h-8 rounded-full object-cover" %>
-              <% else %>
-                <div class="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center">
-                  <span class="text-indigo-600 font-medium text-sm"><%= (current_user.name || current_user.email).first.upcase %></span>
-                </div>
-              <% end %>
+              <%= user_avatar(current_user, size: "w-8 h-8") %>
               <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
               </svg>

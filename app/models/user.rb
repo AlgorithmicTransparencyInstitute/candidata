@@ -53,7 +53,8 @@ class User < ApplicationRecord
       )
     end
 
-    if auth.info.image.present? && !user.avatar.attached?
+    # Always update avatar from OAuth provider if available
+    if auth.info.image.present?
       user.attach_avatar_from_url(auth.info.image)
     end
 
@@ -65,6 +66,9 @@ class User < ApplicationRecord
 
     require 'open-uri'
     begin
+      # Purge old avatar if exists to replace with new one
+      avatar.purge if avatar.attached?
+
       downloaded_image = URI.open(url)
       avatar.attach(
         io: downloaded_image,
