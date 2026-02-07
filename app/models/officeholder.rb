@@ -6,9 +6,9 @@ class Officeholder < ApplicationRecord
   validates :airtable_id, uniqueness: true, allow_nil: true
   validate :end_date_after_start_date
   
-  scope :current, -> { where('end_date IS NULL OR end_date >= ?', Date.current) }
-  scope :former, -> { where('end_date < ?', Date.current) }
-  scope :as_of, ->(date) { where('start_date <= ? AND (end_date IS NULL OR end_date >= ?)', date, date) }
+  scope :current, -> { where('officeholders.end_date IS NULL OR officeholders.end_date >= ?', Date.current) }
+  scope :former, -> { where('officeholders.end_date < ?', Date.current) }
+  scope :as_of, ->(date) { where('officeholders.start_date <= ? AND (officeholders.end_date IS NULL OR officeholders.end_date >= ?)', date, date) }
   scope :elected_in, ->(year) { where(elected_year: year) }
   scope :appointed, -> { where(appointed: true) }
   scope :elected, -> { where(appointed: [false, nil]) }
