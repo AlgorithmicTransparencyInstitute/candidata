@@ -39,6 +39,7 @@ puts '  Officeholders: ' + Officeholder.count.to_s
 puts '  Offices: ' + Office.count.to_s
 puts '  Offices with body_id: ' + Office.where.not(body_id: nil).count.to_s
 puts '  Bodies: ' + Body.count.to_s
+puts '  Districts: ' + District.count.to_s
 puts '  2026 Candidates: ' + Candidate.joins(:contest).merge(Contest.where('date > ?', Date.new(2025, 12, 31))).count.to_s
 puts '  Campaign websites: ' + Person.joins(:candidates).merge(Candidate.joins(:contest).merge(Contest.where('date > ?', Date.new(2025, 12, 31)))).where.not(website_campaign: [nil, '']).distinct.count.to_s
 "
@@ -51,6 +52,10 @@ Officeholders: ~42,780
 Offices: ~42,781
 Offices with body_id: ~30,648 (71.6%)
 Bodies: ~3,098+
+Districts: 6,428
+  - Congressional: 429
+  - State Senate: 1,933
+  - State House: 4,066
 2026 Candidates: 524
 Campaign websites: ~432 (82.4% of 2026 candidates)
 Social Media Accounts: ~49,217
@@ -104,7 +109,7 @@ Social Media Accounts: ~49,217
    heroku run "bin/rails rebuild:all" -a candidata
 
    # Option B: Automated (no prompt)
-   heroku run "bin/rails rebuild:clear_data && bin/rails rebuild:import_govproj && bin/rails rebuild:import_temp_enrichment && bin/rails rebuild:import_2026_candidates" -a candidata
+   heroku run "bin/rails rebuild:clear_data && bin/rails rebuild:import_govproj && bin/rails rebuild:extract_districts && bin/rails rebuild:import_temp_enrichment && bin/rails rebuild:import_2026_candidates" -a candidata
    ```
 
 6. **Verify production results**:
@@ -118,6 +123,7 @@ Social Media Accounts: ~49,217
    puts \"  Offices: #{Office.count}\"
    puts \"  Offices with body_id: #{Office.where.not(body_id: nil).count}\"
    puts \"  Bodies: #{Body.count}\"
+   puts \"  Districts: #{District.count}\"
    puts \"  Social Media Accounts: #{SocialMediaAccount.count}\"
    puts \"  2026 Candidates: #{Candidate.joins(:contest).merge(Contest.where(\\\"date > ?\\\", Date.new(2025, 12, 31))).count}\"
    puts \"=\" * 60
@@ -157,10 +163,13 @@ heroku run "bin/rails rebuild:clear_data" -a candidata
 # Step 2: Import GovProj data (with Body linking)
 heroku run "bin/rails rebuild:import_govproj" -a candidata
 
-# Step 3: Enrich from temp data
+# Step 3: Extract districts from GovProj data
+heroku run "bin/rails rebuild:extract_districts" -a candidata
+
+# Step 4: Enrich from temp data
 heroku run "bin/rails rebuild:import_temp_enrichment" -a candidata
 
-# Step 4: Import 2026 candidates
+# Step 5: Import 2026 candidates
 heroku run "bin/rails rebuild:import_2026_candidates" -a candidata
 ```
 
