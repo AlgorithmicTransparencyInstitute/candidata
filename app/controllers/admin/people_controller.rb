@@ -22,7 +22,10 @@ class Admin::PeopleController < Admin::BaseController
 
     # Office filter (current officeholders only)
     if params[:office_level].present?
-      @people = @people.joins(officeholders: :office).where(officeholders: { end_date: [nil, Date.current..] }).where(offices: { level: params[:office_level] }).distinct
+      @people = @people.joins(officeholders: :office)
+                       .where('officeholders.end_date IS NULL OR officeholders.end_date >= ?', Date.current)
+                       .where(offices: { level: params[:office_level] })
+                       .distinct
     end
 
     # Research status filter
