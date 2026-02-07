@@ -216,6 +216,7 @@ def import_accounts_csv(file_path, source_type)
         party_roll_up: row['Party Roll Up (from People)'],
         account_inactive: parse_boolean(row['Account Inactive']),
         verified: parse_boolean(row['Verified']),
+        person_uuid: row['person_uuid'],
         raw_data: row.to_h.to_json
       )
       count += 1

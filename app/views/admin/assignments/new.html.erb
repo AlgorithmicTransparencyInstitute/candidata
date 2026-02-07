@@ -87,43 +87,43 @@
         <div class="flex flex-wrap gap-3 items-end">
           <div>
             <label class="block text-xs font-medium text-gray-600 mb-1">Search</label>
-            <input type="text" name="q" value="<%= params[:q] %>" placeholder="Name..."
-                   class="block text-sm w-40 rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500">
+            <input type="text" name="q" id="q_filter" value="<%= params[:q] %>" placeholder="Name... (press Enter)"
+                   class="mt-1 block text-sm w-40 rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500">
           </div>
           <div>
             <label class="block text-xs font-medium text-gray-600 mb-1">State</label>
             <%= select_tag :state, options_for_select([['All States', '']] + @states.map { |s| [s, s] }, params[:state]),
-                class: "block text-sm rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500" %>
+                class: "mt-1 block text-sm rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500", id: "state_filter" %>
           </div>
           <div>
             <label class="block text-xs font-medium text-gray-600 mb-1">Party</label>
             <%= select_tag :party_id, options_for_select([['All Parties', '']] + @parties.map { |p| [p.name, p.id] }, params[:party_id]),
-                class: "block text-sm rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500" %>
+                class: "mt-1 block text-sm rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500", id: "party_filter" %>
           </div>
           <div>
             <label class="block text-xs font-medium text-gray-600 mb-1">Body</label>
             <%= select_tag :body_id, options_for_select([['All Bodies', '']] + @bodies.map { |b| [b.name, b.id] }, params[:body_id]),
-                class: "block text-sm rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500" %>
+                class: "mt-1 block text-sm rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500", id: "body_filter" %>
           </div>
           <div>
             <label class="block text-xs font-medium text-gray-600 mb-1">Level</label>
             <%= select_tag :level, options_for_select([['All Levels', '']] + @levels.map { |l| [l.titleize, l] }, params[:level]),
-                class: "block text-sm rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500" %>
+                class: "mt-1 block text-sm rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500", id: "level_filter" %>
           </div>
           <div>
             <label class="block text-xs font-medium text-gray-600 mb-1">Year</label>
             <%= select_tag :year, options_for_select([['All Years', '']] + @years.map { |y| [y, y] }, params[:year]),
-                class: "block text-sm rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500", id: "year_filter" %>
+                class: "mt-1 block text-sm rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500", id: "year_filter" %>
           </div>
           <div>
             <label class="block text-xs font-medium text-gray-600 mb-1">Ballot</label>
             <%= select_tag :ballot_id, options_for_select([['All Ballots', '']] + @ballots.map { |b| [b.full_name, b.id] }, params[:ballot_id]),
-                class: "block text-sm rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500", id: "ballot_filter" %>
+                class: "mt-1 block text-sm rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500", id: "ballot_filter" %>
           </div>
           <div>
             <label class="block text-xs font-medium text-gray-600 mb-1">Contest</label>
             <%= select_tag :contest_id, options_for_select([['All Contests', '']] + @contests.map { |c| [c.full_name, c.id] }, params[:contest_id]),
-                class: "block text-sm rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500", id: "contest_filter" %>
+                class: "mt-1 block text-sm rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500", id: "contest_filter" %>
           </div>
           <div>
             <label class="block text-xs font-medium text-gray-600 mb-1">Assignment</label>
@@ -133,75 +133,73 @@
               ['No Data Collection', 'no_collection'],
               ['No Data Validation', 'no_validation']
             ], params[:assignment_filter]),
-                class: "block text-sm rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500" %>
+                class: "mt-1 block text-sm rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500", id: "assignment_filter" %>
           </div>
           <div class="flex gap-2">
-            <button type="submit" formaction="<%= new_admin_assignment_path %>" formmethod="get"
-                    class="px-3 py-1.5 text-sm bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300">
-              Filter
-            </button>
-            <%= link_to "Clear", new_admin_assignment_path, class: "px-3 py-1.5 text-sm text-gray-600 hover:text-gray-900" %>
+            <%= link_to "Clear", new_admin_assignment_path(user_id: params[:user_id], task_type: params[:task_type]), class: "px-3 py-1.5 text-sm bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300" %>
           </div>
         </div>
       </div>
 
-      <!-- Select All / Count -->
-      <div class="px-6 py-3 border-b border-gray-200 flex justify-between items-center bg-white">
-        <label class="flex items-center gap-2 text-sm">
-          <input type="checkbox" id="selectAll" class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
-          <span class="text-gray-700">Select all on this page</span>
-        </label>
-        <div class="text-sm text-gray-500">
-          <span id="selectedCount">0</span> selected · <%= @people.total_count %> total
-        </div>
-      </div>
-
-      <!-- People List -->
-      <div class="divide-y divide-gray-200 max-h-[500px] overflow-y-auto">
-        <% @people.each do |person| %>
-          <% existing_assignments = person.assignments.select { |a| %w[pending in_progress].include?(a.status) } %>
-          <label class="flex items-center gap-4 px-6 py-3 hover:bg-gray-50 cursor-pointer transition-colors">
-            <input type="checkbox" name="person_ids[]" value="<%= person.id %>"
-                   class="person-checkbox rounded border-gray-300 text-blue-600 focus:ring-blue-500">
-            <div class="flex-1 min-w-0">
-              <div class="flex items-center gap-2">
-                <span class="font-medium text-gray-900"><%= person.full_name %></span>
-                <% if person.primary_party %>
-                  <span class="px-1.5 py-0.5 text-xs rounded bg-gray-100 text-gray-600"><%= person.primary_party.abbreviation %></span>
-                <% end %>
-              </div>
-              <div class="text-sm text-gray-500 truncate">
-                <%= person.state_of_residence || "Unknown state" %>
-                <% current_oh = person.officeholders.detect { |oh| oh.end_date.nil? } %>
-                <% if current_oh&.office %>
-                  · <%= current_oh.office.title %>
-                <% end %>
-              </div>
-            </div>
-            <div class="flex items-center gap-2 shrink-0">
-              <% existing_assignments.each do |a| %>
-                <span class="px-2 py-0.5 text-xs rounded-full
-                  <%= a.task_type == 'data_collection' ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700' %>">
-                  <%= a.task_type == 'data_collection' ? 'DC' : 'DV' %>: <%= a.user.name.presence || a.user.email.split('@').first %>
-                </span>
-              <% end %>
-              <% if existing_assignments.empty? %>
-                <span class="text-xs text-gray-400">No assignments</span>
-              <% end %>
-            </div>
+      <%= turbo_frame_tag "people_list", data: { turbo_action: "advance" } do %>
+        <!-- Select All / Count -->
+        <div class="px-6 py-3 border-b border-gray-200 flex justify-between items-center bg-white">
+          <label class="flex items-center gap-2 text-sm">
+            <input type="checkbox" id="selectAll" class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+            <span class="text-gray-700">Select all on this page</span>
           </label>
-        <% end %>
-        <% if @people.empty? %>
-          <div class="px-6 py-8 text-center text-gray-500">
-            No people match the current filters.
+          <div class="text-sm text-gray-500">
+            <span id="selectedCount">0</span> selected · <%= @people.total_count %> total
+          </div>
+        </div>
+
+        <!-- People List -->
+        <div class="divide-y divide-gray-200 max-h-[500px] overflow-y-auto">
+          <% @people.each do |person| %>
+            <% existing_assignments = person.assignments.select { |a| %w[pending in_progress].include?(a.status) } %>
+            <label class="flex items-center gap-4 px-6 py-3 hover:bg-gray-50 cursor-pointer transition-colors">
+              <input type="checkbox" name="person_ids[]" value="<%= person.id %>"
+                     class="person-checkbox rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center gap-2">
+                  <span class="font-medium text-gray-900"><%= person.full_name %></span>
+                  <% if person.primary_party %>
+                    <span class="px-1.5 py-0.5 text-xs rounded bg-gray-100 text-gray-600"><%= person.primary_party.abbreviation %></span>
+                  <% end %>
+                </div>
+                <div class="text-sm text-gray-500 truncate">
+                  <%= person.state_of_residence || "Unknown state" %>
+                  <% current_oh = person.officeholders.detect { |oh| oh.end_date.nil? } %>
+                  <% if current_oh&.office %>
+                    · <%= current_oh.office.title %>
+                  <% end %>
+                </div>
+              </div>
+              <div class="flex items-center gap-2 shrink-0">
+                <% existing_assignments.each do |a| %>
+                  <span class="px-2 py-0.5 text-xs rounded-full
+                    <%= a.task_type == 'data_collection' ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700' %>">
+                    <%= a.task_type == 'data_collection' ? 'DC' : 'DV' %>: <%= a.user.name.presence || a.user.email.split('@').first %>
+                  </span>
+                <% end %>
+                <% if existing_assignments.empty? %>
+                  <span class="text-xs text-gray-400">No assignments</span>
+                <% end %>
+              </div>
+            </label>
+          <% end %>
+          <% if @people.empty? %>
+            <div class="px-6 py-8 text-center text-gray-500">
+              No people match the current filters.
+            </div>
+          <% end %>
+        </div>
+
+        <% if @people.total_pages > 1 %>
+          <div class="border-t border-gray-200">
+            <%= paginate @people %>
           </div>
         <% end %>
-      </div>
-
-      <% if @people.total_pages > 1 %>
-        <div class="border-t border-gray-200">
-          <%= paginate @people %>
-        </div>
       <% end %>
     </div>
 
@@ -222,73 +220,227 @@
 </div>
 
 <script>
-  // Select all checkbox
-  document.getElementById('selectAll').addEventListener('change', function() {
-    document.querySelectorAll('.person-checkbox').forEach(cb => cb.checked = this.checked);
-    updateCount();
-  });
-
-  // Individual checkbox change
-  document.querySelectorAll('.person-checkbox').forEach(cb => {
-    cb.addEventListener('change', updateCount);
-  });
-
-  // Task type radio visual highlighting
-  document.querySelectorAll('input[name="task_type"]').forEach(radio => {
-    radio.addEventListener('change', function() {
-      document.querySelectorAll('.task-type-option').forEach(opt => {
-        opt.classList.remove('border-blue-500', 'bg-blue-50', 'border-purple-500', 'bg-purple-50');
-        opt.classList.add('border-gray-200');
+  // Initialize after DOM and Turbo Frame loads
+  function initializeCheckboxes() {
+    const selectAll = document.getElementById('selectAll');
+    if (selectAll) {
+      selectAll.replaceWith(selectAll.cloneNode(true)); // Remove old listeners
+      const newSelectAll = document.getElementById('selectAll');
+      newSelectAll.addEventListener('change', function() {
+        document.querySelectorAll('.person-checkbox').forEach(cb => cb.checked = this.checked);
+        updateCount();
       });
-      const label = this.closest('label');
-      label.classList.remove('border-gray-200');
-      if (this.value === 'data_collection') {
-        label.classList.add('border-blue-500', 'bg-blue-50');
-      } else {
-        label.classList.add('border-purple-500', 'bg-purple-50');
-      }
-      updateCount();
+    }
+
+    // Individual checkbox change
+    document.querySelectorAll('.person-checkbox').forEach(cb => {
+      cb.addEventListener('change', updateCount);
     });
-  });
+
+    updateCount();
+  }
+
+  // Run on initial load and after turbo frame updates
+  document.addEventListener('DOMContentLoaded', initializeCheckboxes);
+  document.addEventListener('turbo:frame-load', initializeCheckboxes);
 
   function updateCount() {
     const checked = document.querySelectorAll('.person-checkbox:checked').length;
-    document.getElementById('selectedCount').textContent = checked;
+    const countEl = document.getElementById('selectedCount');
+    if (countEl) countEl.textContent = checked;
 
     const btn = document.getElementById('submitBtn');
     const researcher = document.querySelector('input[name="user_id"]:checked');
     const taskType = document.querySelector('input[name="task_type"]:checked');
 
-    btn.disabled = !(checked > 0 && researcher);
+    if (btn) btn.disabled = !(checked > 0 && researcher);
 
     const summary = document.getElementById('submitSummary');
-    if (checked > 0 && researcher) {
-      const name = researcher.closest('label').querySelector('.font-medium').textContent.trim();
-      const type = taskType ? (taskType.value === 'data_collection' ? 'Data Collection' : 'Data Validation') : '';
-      summary.textContent = `Assign ${checked} ${checked === 1 ? 'person' : 'people'} to ${name} for ${type}`;
-    } else {
-      summary.textContent = '';
+    if (summary) {
+      if (checked > 0 && researcher) {
+        const name = researcher.closest('label').querySelector('.font-medium').textContent.trim();
+        const type = taskType ? (taskType.value === 'data_collection' ? 'Data Collection' : 'Data Validation') : '';
+        summary.textContent = `Assign ${checked} ${checked === 1 ? 'person' : 'people'} to ${name} for ${type}`;
+      } else {
+        summary.textContent = '';
+      }
     }
   }
 
-  // Researcher radio change
-  document.querySelectorAll('input[name="user_id"]').forEach(radio => {
-    radio.addEventListener('change', updateCount);
-  });
+  // Initialize task type and researcher radios
+  function initializeRadios() {
+    // Task type radio visual highlighting
+    document.querySelectorAll('input[name="task_type"]').forEach(radio => {
+      radio.addEventListener('change', function() {
+        document.querySelectorAll('.task-type-option').forEach(opt => {
+          opt.classList.remove('border-blue-500', 'bg-blue-50', 'border-purple-500', 'bg-purple-50');
+          opt.classList.add('border-gray-200');
+        });
+        const label = this.closest('label');
+        label.classList.remove('border-gray-200');
+        if (this.value === 'data_collection') {
+          label.classList.add('border-blue-500', 'bg-blue-50');
+        } else {
+          label.classList.add('border-purple-500', 'bg-purple-50');
+        }
+        updateCount();
+      });
+    });
 
-  // Initialize count
-  updateCount();
+    // Researcher radio change
+    document.querySelectorAll('input[name="user_id"]').forEach(radio => {
+      radio.addEventListener('change', updateCount);
+    });
 
-  // Auto-submit form when year or ballot changes (for cascading filters)
-  document.getElementById('year_filter').addEventListener('change', function() {
-    const form = this.closest('form');
-    const filterBtn = form.querySelector('button[formaction*="new_admin_assignment"]');
-    filterBtn.click();
-  });
+    // Initialize count
+    updateCount();
+  }
 
-  document.getElementById('ballot_filter').addEventListener('change', function() {
-    const form = this.closest('form');
-    const filterBtn = form.querySelector('button[formaction*="new_admin_assignment"]');
-    filterBtn.click();
-  });
+  document.addEventListener('DOMContentLoaded', initializeRadios);
+
+  // Helper function to get all filter values
+  function getFilterParams() {
+    const params = new URLSearchParams();
+    const userId = document.querySelector('input[name="user_id"]:checked')?.value;
+    const taskType = document.querySelector('input[name="task_type"]:checked')?.value;
+
+    if (userId) params.set('user_id', userId);
+    if (taskType) params.set('task_type', taskType);
+
+    const filters = {
+      q: 'q_filter',
+      state: 'state_filter',
+      party_id: 'party_filter',
+      body_id: 'body_filter',
+      level: 'level_filter',
+      year: 'year_filter',
+      ballot_id: 'ballot_filter',
+      contest_id: 'contest_filter',
+      assignment_filter: 'assignment_filter'
+    };
+
+    for (const [param, elementId] of Object.entries(filters)) {
+      const element = document.getElementById(elementId);
+      if (element && element.value) {
+        params.set(param, element.value);
+      }
+    }
+
+    return params;
+  }
+
+  // Instant filter function
+  function applyFilters() {
+    const params = getFilterParams();
+    const frame = document.querySelector('turbo-frame[id="people_list"]');
+    console.log('Applying filters:', params.toString());
+    console.log('Frame found:', !!frame);
+    if (frame) {
+      const url = `/admin/assignments/new?${params.toString()}`;
+      console.log('Loading URL:', url);
+      frame.src = url;
+    }
+  }
+
+  // Handle year changes - update ballot and contest dropdowns
+  function handleYearChange() {
+    const params = getFilterParams();
+
+    // Fetch updated ballots
+    fetch(`/admin/assignments/new?${params.toString()}`, {
+      headers: { 'Accept': 'application/json' }
+    })
+    .then(response => response.json())
+    .then(data => {
+      updateBallotOptions(data.ballots);
+      updateContestOptions([]);
+      applyFilters();
+    })
+    .catch(error => {
+      console.error('Error fetching ballots:', error);
+      applyFilters();
+    });
+  }
+
+  // Handle ballot changes - update contest dropdown
+  function handleBallotChange() {
+    const params = getFilterParams();
+
+    // Fetch updated contests
+    fetch(`/admin/assignments/new?${params.toString()}`, {
+      headers: { 'Accept': 'application/json' }
+    })
+    .then(response => response.json())
+    .then(data => {
+      updateContestOptions(data.contests);
+      applyFilters();
+    })
+    .catch(error => {
+      console.error('Error fetching contests:', error);
+      applyFilters();
+    });
+  }
+
+  function updateBallotOptions(ballots) {
+    const select = document.getElementById('ballot_filter');
+    select.innerHTML = '<option value="">All Ballots</option>';
+    ballots.forEach(ballot => {
+      const option = document.createElement('option');
+      option.value = ballot.id;
+      option.textContent = ballot.full_name;
+      select.appendChild(option);
+    });
+  }
+
+  function updateContestOptions(contests) {
+    const select = document.getElementById('contest_filter');
+    select.innerHTML = '<option value="">All Contests</option>';
+    contests.forEach(contest => {
+      const option = document.createElement('option');
+      option.value = contest.id;
+      option.textContent = contest.full_name;
+      select.appendChild(option);
+    });
+  }
+
+  // Initialize filter event listeners
+  function initializeFilters() {
+    // Attach filter event listeners for simple filters
+    ['state_filter', 'party_filter', 'body_filter', 'level_filter', 'assignment_filter'].forEach(id => {
+      const element = document.getElementById(id);
+      if (element) {
+        element.addEventListener('change', applyFilters);
+      }
+    });
+
+    // Year and ballot need special handling
+    const yearFilter = document.getElementById('year_filter');
+    if (yearFilter) {
+      yearFilter.addEventListener('change', handleYearChange);
+    }
+
+    const ballotFilter = document.getElementById('ballot_filter');
+    if (ballotFilter) {
+      ballotFilter.addEventListener('change', handleBallotChange);
+    }
+
+    const contestFilter = document.getElementById('contest_filter');
+    if (contestFilter) {
+      contestFilter.addEventListener('change', applyFilters);
+    }
+
+    // Search triggers on Enter key
+    const searchInput = document.getElementById('q_filter');
+    if (searchInput) {
+      searchInput.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          applyFilters();
+        }
+      });
+    }
+  }
+
+  // Run filter initialization on page load
+  document.addEventListener('DOMContentLoaded', initializeFilters);
 </script>

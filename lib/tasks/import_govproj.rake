@@ -727,6 +727,15 @@ namespace :govproj do
         # 1. Find or create Office
         office = Office.find_by(airtable_id: office_uuid)
         unless office
+          # Find or create the Body if body_name is present
+          body = nil
+          if row.body_name.present?
+            body = Body.find_or_create_by!(name: row.body_name) do |b|
+              b.country = row.state # Assume state-level or local
+              b.classification = 'legislature' # Default, could be refined
+            end
+          end
+
           office = Office.create!(
             airtable_id: office_uuid,
             title: row.office_name || 'Unknown Office',
@@ -736,6 +745,7 @@ namespace :govproj do
             state: row.state,
             office_category: row.office_category,
             body_name: row.body_name,
+            body_id: body&.id, # Link to the Body record
             seat: row.seat.presence,
             jurisdiction: row.jurisdiction,
             jurisdiction_ocdid: row.jurisdiction_ocdid,

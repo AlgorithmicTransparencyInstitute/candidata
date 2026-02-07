@@ -138,11 +138,23 @@ namespace :rebuild do
         next if existing
 
         begin
+          # Extract handle from URL
+          handle = case temp_account.platform
+                   when 'Twitter'
+                     temp_account.url.match(/@([\w]+)/)&.captures&.first || temp_account.url.split('/').last
+                   when 'Facebook'
+                     temp_account.url.split('/').last
+                   when 'Instagram'
+                     temp_account.url.match(/instagram\.com\/([\w.]+)/)&.captures&.first
+                   else
+                     temp_account.url.split('/').last
+                   end
+
           SocialMediaAccount.create!(
             person: person,
             platform: temp_account.platform,
             url: temp_account.url,
-            handle: temp_account.handle,
+            handle: handle,
             channel_type: 'Campaign',
             research_status: 'entered',
             verified: temp_account.verified || false

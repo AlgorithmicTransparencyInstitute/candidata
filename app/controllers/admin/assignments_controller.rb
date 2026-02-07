@@ -48,11 +48,11 @@ module Admin
       end
 
       if params[:body_id].present?
-        @people = @people.joins(offices: :body).where(bodies: { id: params[:body_id] }).distinct
+        @people = @people.joins(officeholders: { office: :body }).where(bodies: { id: params[:body_id] }).distinct
       end
 
       if params[:level].present?
-        @people = @people.joins(:offices).where(offices: { level: params[:level] }).distinct
+        @people = @people.joins(officeholders: :office).where(offices: { level: params[:level] }).distinct
       end
 
       if params[:q].present?
@@ -103,6 +103,16 @@ module Admin
                   else
                     []
                   end
+
+      respond_to do |format|
+        format.html
+        format.json do
+          render json: {
+            ballots: @ballots.map { |b| { id: b.id, full_name: b.full_name } },
+            contests: @contests.map { |c| { id: c.id, full_name: c.full_name } }
+          }
+        end
+      end
     end
 
     def create

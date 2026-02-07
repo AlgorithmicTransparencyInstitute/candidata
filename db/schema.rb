@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_02_07_010449) do
+ActiveRecord::Schema[8.0].define(version: 2026_02_07_152215) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -313,7 +313,9 @@ ActiveRecord::Schema[8.0].define(version: 2026_02_07_010449) do
     t.text "raw_data"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "person_uuid"
     t.index ["channel_type"], name: "index_temp_accounts_on_channel_type"
+    t.index ["person_uuid"], name: "index_temp_accounts_on_person_uuid"
     t.index ["platform"], name: "index_temp_accounts_on_platform"
     t.index ["source_type"], name: "index_temp_accounts_on_source_type"
     t.index ["state"], name: "index_temp_accounts_on_state"
