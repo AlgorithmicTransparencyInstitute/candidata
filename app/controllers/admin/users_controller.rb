@@ -49,7 +49,17 @@ module Admin
 
     def resend_invitation
       if @user.invitation_token.present? && !@user.invitation_accepted?
-        @user.invite!(current_user)
+        custom_subject = params[:subject].presence
+
+        # Send invitation email (token already exists, just resend the email)
+        if custom_subject
+          # Send with custom subject
+          CustomDeviseMailer.invitation_instructions(@user, @user.invitation_token, subject: custom_subject).deliver_now
+        else
+          # Send with default subject
+          @user.deliver_invitation
+        end
+
         redirect_to admin_user_path(@user), notice: "Invitation resent to #{@user.email}."
       else
         redirect_to admin_user_path(@user), alert: "This user has already accepted their invitation."

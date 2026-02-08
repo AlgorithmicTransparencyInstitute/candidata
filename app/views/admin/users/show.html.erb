@@ -49,12 +49,12 @@
     </div>
     <div class="px-6 py-4 flex flex-wrap gap-3">
       <% if @user.invitation_token.present? && !@user.invitation_accepted? %>
-        <%= button_to resend_invitation_admin_user_path(@user), method: :post, class: "inline-flex items-center px-4 py-2 text-sm font-medium text-indigo-700 bg-indigo-50 border border-indigo-200 rounded-lg hover:bg-indigo-100 cursor-pointer" do %>
+        <button type="button" onclick="openInvitationModal()" class="inline-flex items-center px-4 py-2 text-sm font-medium text-indigo-700 bg-indigo-50 border border-indigo-200 rounded-lg hover:bg-indigo-100 cursor-pointer">
           <svg class="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
           </svg>
           Resend Invitation
-        <% end %>
+        </button>
       <% end %>
       <%= button_to send_reset_password_admin_user_path(@user), method: :post, data: { confirm: "Send a password reset email to #{@user.email}?" }, class: "inline-flex items-center px-4 py-2 text-sm font-medium text-amber-700 bg-amber-50 border border-amber-200 rounded-lg hover:bg-amber-100 cursor-pointer" do %>
         <svg class="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
@@ -100,3 +100,75 @@
     </div>
   </div>
 </div>
+
+<!-- Resend Invitation Modal -->
+<% if @user.invitation_token.present? && !@user.invitation_accepted? %>
+  <div id="invitationModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+    <div class="relative top-20 mx-auto p-5 border w-full max-w-md shadow-lg rounded-lg bg-white">
+      <div class="mt-3">
+        <div class="flex items-start justify-between mb-4">
+          <h3 class="text-lg font-semibold text-gray-900">Resend Invitation</h3>
+          <button type="button" onclick="closeInvitationModal()" class="text-gray-400 hover:text-gray-600">
+            <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        <%= form_with url: resend_invitation_admin_user_path(@user), method: :post, id: "resendInvitationForm" do |f| %>
+          <div class="mb-4">
+            <label class="block text-sm font-medium text-gray-700 mb-2">
+              Email Subject Line
+            </label>
+            <%= f.text_field :subject,
+                value: "Your CandiData Account Access",
+                class: "w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500",
+                placeholder: "Enter email subject line" %>
+            <p class="mt-1 text-xs text-gray-500">Customize the subject line for better deliverability</p>
+          </div>
+
+          <div class="bg-gray-50 rounded-lg p-3 mb-4">
+            <div class="text-xs text-gray-600">
+              <strong>To:</strong> <%= @user.email %><br>
+              <% if @user.name.present? %>
+                <strong>Name:</strong> <%= @user.name %><br>
+              <% end %>
+              <strong>Role:</strong> <%= @user.role.titleize %>
+            </div>
+          </div>
+
+          <div class="flex gap-2 justify-end">
+            <button type="button" onclick="closeInvitationModal()" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300">
+              Cancel
+            </button>
+            <%= f.submit "Send Invitation", class: "px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700" %>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function openInvitationModal() {
+      document.getElementById('invitationModal').classList.remove('hidden');
+    }
+
+    function closeInvitationModal() {
+      document.getElementById('invitationModal').classList.add('hidden');
+    }
+
+    // Close modal when clicking outside
+    document.getElementById('invitationModal')?.addEventListener('click', function(e) {
+      if (e.target === this) {
+        closeInvitationModal();
+      }
+    });
+
+    // Close modal on Escape key
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') {
+        closeInvitationModal();
+      }
+    });
+  </script>
+<% end %>
