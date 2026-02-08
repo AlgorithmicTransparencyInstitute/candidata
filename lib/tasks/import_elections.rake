@@ -20,7 +20,7 @@ namespace :import do
 
     CSV.foreach(csv_path, headers: true) do |row|
       state_name = row['State']&.strip
-      election_date = row['Election Date']&.strip
+      election_date = row['Primary Date']&.strip
       filing_deadline = row['Filing Deadline']&.strip
 
       # Skip if missing critical data
