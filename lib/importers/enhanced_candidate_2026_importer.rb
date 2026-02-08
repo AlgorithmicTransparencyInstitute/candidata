@@ -342,6 +342,14 @@ module Importers
       when 'U.S. House'
         # Find U.S. Representative with matching state and district
         seat = "District #{district}"
+
+        # Find matching district
+        district_record = District.find_by(
+          state: state,
+          level: 'federal',
+          district_number: district.to_i
+        )
+
         Office.find_or_create_by!(
           title: 'U.S. Representative',
           state: state,
@@ -352,6 +360,7 @@ module Importers
           o.role = 'legislatorLowerBody'
           o.office_category = 'U.S. Representative'
           o.body_name = 'U.S. House of Representatives'
+          o.district_id = district_record&.id
         end
       when 'U.S. Senate'
         # Find U.S. Senator for this state
