@@ -19,6 +19,7 @@ class HomeController < ApplicationController
     @ballots_2026 = Ballot.where(year: 2026).includes(contests: :candidates).order(:state, :party)
     @total_2026_candidates = Candidate.joins(contest: :ballot).where(ballots: { year: 2026 }).count
     @total_2026_contests = Contest.joins(:ballot).where(ballots: { year: 2026 }).count
+    @states_2026_count = Ballot.where(year: 2026).distinct.count(:state)
 
     # Preload state names for display
     @states_by_abbr = State.all.index_by(&:abbreviation)
