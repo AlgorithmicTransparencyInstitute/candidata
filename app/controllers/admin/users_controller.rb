@@ -1,6 +1,6 @@
 module Admin
   class UsersController < Admin::BaseController
-    before_action :set_user, only: [:show, :edit, :update, :destroy, :resend_invitation, :send_reset_password, :impersonate]
+    before_action :set_user, only: [:show, :edit, :update, :destroy, :resend_invitation, :send_reset_password, :impersonate, :generate_invitation_link]
 
     def index
       @users = User.order(:name)
@@ -93,6 +93,31 @@ module Admin
       redirect_to admin_users_path, notice: "Stopped impersonating. Back to admin view."
     end
 
+    def generate_invitation_link
+      unless current_user.admin?
+        render json: { error: "Not authorized" }, status: :forbidden
+        return
+      end
+
+      # Regenerate the invitation token to get a fresh raw token
+      @user.invite!(current_user, skip_invitation: true)
+
+      # Determine the proper host
+      host = request.host_with_port
+      if Rails.env.production? && host.include?('herokuapp.com')
+        host = 'candidata.space'
+      end
+
+      # Generate the invitation URL with the raw token
+      invitation_url = accept_user_invitation_url(
+        invitation_token: @user.raw_invitation_token,
+        host: host,
+        protocol: request.ssl? || Rails.env.production? ? 'https' : 'http'
+      )
+
+      render json: { invitation_url: invitation_url }
+    end
+
     def export_invitations
       require 'csv'
 
@@ -110,15 +135,15 @@ module Admin
 
       # Generate CSV
       csv_data = CSV.generate(headers: true) do |csv|
-        csv << ["Email", "Name", "Role", "Invitation URL", "Invited At", "Days Pending"]
+        csv << ["Email", "Name", "Role", "Invitation Status", "Invited At", "Days Pending"]
+        csv << ["", "", "", "IMPORTANT: Invitation links must be generated from each user's admin page", "", ""]
+        csv << ["", "", "", "The encrypted tokens in the database cannot be used directly in URLs", "", ""]
+        csv << ["", "", "", "", "", ""]
 
         pending_users.each do |user|
-          # Generate the invitation acceptance URL
-          invitation_url = accept_user_invitation_url(
-            invitation_token: user.invitation_token,
-            host: host,
-            protocol: request.ssl? ? 'https' : 'http'
-          )
+          # Note: We can't generate working invitation URLs from encrypted tokens
+          # The admin must use the "Generate Invitation Link" button on each user's page
+          invitation_status = "Pending - Generate link from user page"
 
           days_pending = if user.invitation_created_at
                           ((Time.current - user.invitation_created_at) / 1.day).round(1)
@@ -130,7 +155,7 @@ module Admin
             user.email,
             user.name || "",
             user.role,
-            invitation_url,
+            invitation_status,
             user.invitation_created_at&.strftime("%Y-%m-%d %H:%M"),
             days_pending
           ]

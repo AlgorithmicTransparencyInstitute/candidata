@@ -42,6 +42,72 @@
     </div>
   </div>
 
+  <!-- Invitation Link (for pending invitations) -->
+  <% if @user.invitation_token.present? && !@user.invitation_accepted? %>
+    <div class="bg-blue-50 border border-blue-200 rounded-lg shadow mb-6">
+      <div class="px-6 py-4 border-b border-blue-200">
+        <h2 class="text-lg font-semibold text-blue-900">Invitation Link</h2>
+      </div>
+      <div class="px-6 py-4">
+        <p class="text-sm text-blue-700 mb-3">
+          This user has a pending invitation. Generate a fresh invitation link to share manually:
+        </p>
+        <div class="flex gap-2">
+          <input type="text" readonly id="invitationLinkInput"
+                 class="flex-1 px-3 py-2 border border-blue-300 rounded bg-white text-sm font-mono"
+                 value="Click 'Generate Link' to create a shareable invitation URL">
+          <button type="button" onclick="generateInvitationLink()"
+                  class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 font-medium">
+            Generate Link
+          </button>
+          <button type="button" onclick="copyInvitationLink()" id="copyButton" disabled
+                  class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 font-medium disabled:opacity-50 disabled:cursor-not-allowed">
+            Copy
+          </button>
+        </div>
+        <p class="text-xs text-blue-600 mt-2">
+          Note: Generating a new link will invalidate any previous invitation links for this user.
+        </p>
+      </div>
+    </div>
+
+    <script>
+      async function generateInvitationLink() {
+        const response = await fetch('<%= generate_invitation_link_admin_user_path(@user) %>', {
+          method: 'POST',
+          headers: {
+            'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').content,
+            'Accept': 'application/json'
+          }
+        });
+
+        const data = await response.json();
+        if (data.invitation_url) {
+          document.getElementById('invitationLinkInput').value = data.invitation_url;
+          document.getElementById('copyButton').disabled = false;
+        } else {
+          alert('Error generating invitation link');
+        }
+      }
+
+      function copyInvitationLink() {
+        const input = document.getElementById('invitationLinkInput');
+        input.select();
+        document.execCommand('copy');
+
+        const button = document.getElementById('copyButton');
+        const originalText = button.textContent;
+        button.textContent = 'Copied!';
+        button.classList.add('bg-green-700');
+
+        setTimeout(() => {
+          button.textContent = originalText;
+          button.classList.remove('bg-green-700');
+        }, 2000);
+      }
+    </script>
+  <% end %>
+
   <!-- Admin Actions -->
   <div class="bg-white rounded-lg shadow mb-6">
     <div class="px-6 py-4 border-b border-gray-200">

@@ -59,6 +59,7 @@ Rails.application.routes.draw do
         post :resend_invitation
         post :send_reset_password
         post :impersonate
+        post :generate_invitation_link
       end
     end
     resources :researchers, only: [:index]
