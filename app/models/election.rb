@@ -1,4 +1,6 @@
 class Election < ApplicationRecord
+  has_paper_trail
+
   has_many :ballots, dependent: :nullify
 
   validates :state, presence: true

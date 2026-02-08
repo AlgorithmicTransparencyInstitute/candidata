@@ -1,4 +1,6 @@
 class Party < ApplicationRecord
+  has_paper_trail
+
   # Legacy direct link (kept for backwards compatibility)
   has_many :affiliated_people, class_name: 'Person', foreign_key: 'party_affiliation_id'
   

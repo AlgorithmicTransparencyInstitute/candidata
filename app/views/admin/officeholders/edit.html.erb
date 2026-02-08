@@ -1,0 +1,94 @@
+<div class="max-w-2xl mx-auto px-4 py-8">
+  <div class="mb-6">
+    <%= link_to "← Back to #{@officeholder.person.full_name}", admin_person_path(@officeholder.person), class: "text-blue-600 hover:text-blue-800" %>
+  </div>
+
+  <div class="bg-white rounded-lg shadow">
+    <div class="px-6 py-4 border-b border-gray-200">
+      <h1 class="text-2xl font-bold text-gray-900">Edit Officeholder</h1>
+      <p class="text-gray-600"><%= @officeholder.person.full_name %> - <%= @officeholder.office.title %></p>
+    </div>
+
+    <div class="p-6">
+      <%= form_with model: @officeholder, url: admin_officeholder_path(@officeholder), method: :patch, class: "space-y-6" do |f| %>
+        <% if @officeholder.errors.any? %>
+          <div class="bg-red-50 border border-red-200 rounded p-4">
+            <h3 class="text-red-800 font-medium">Errors:</h3>
+            <ul class="list-disc list-inside text-red-700">
+              <% @officeholder.errors.full_messages.each do |message| %>
+                <li><%= message %></li>
+              <% end %>
+            </ul>
+          </div>
+        <% end %>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Person</label>
+          <p class="text-gray-900"><%= @officeholder.person.full_name %></p>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Office</label>
+          <p class="text-gray-900"><%= @officeholder.office.title %></p>
+        </div>
+
+        <div>
+          <%= f.label :start_date, class: "block text-sm font-medium text-gray-700 mb-1" %>
+          <%= f.date_field :start_date, class: "w-full px-3 py-2 border border-gray-300 rounded-md" %>
+        </div>
+
+        <div>
+          <%= f.label :end_date, class: "block text-sm font-medium text-gray-700 mb-1" %>
+          <%= f.date_field :end_date, class: "w-full px-3 py-2 border border-gray-300 rounded-md" %>
+          <p class="text-sm text-gray-500 mt-1">Leave blank if currently in office</p>
+        </div>
+
+        <div>
+          <%= f.label :elected_year, class: "block text-sm font-medium text-gray-700 mb-1" %>
+          <%= f.number_field :elected_year, class: "w-full px-3 py-2 border border-gray-300 rounded-md" %>
+        </div>
+
+        <div>
+          <%= f.label :term_end_date, "Term End Date", class: "block text-sm font-medium text-gray-700 mb-1" %>
+          <%= f.date_field :term_end_date, class: "w-full px-3 py-2 border border-gray-300 rounded-md" %>
+          <p class="text-sm text-gray-500 mt-1">Official term end date (may differ from actual end date)</p>
+        </div>
+
+        <div>
+          <%= f.label :next_election_date, class: "block text-sm font-medium text-gray-700 mb-1" %>
+          <%= f.date_field :next_election_date, class: "w-full px-3 py-2 border border-gray-300 rounded-md" %>
+        </div>
+
+        <div>
+          <%= f.label :appointed, "Appointed (not elected)", class: "inline-flex items-center" %>
+          <%= f.check_box :appointed, class: "ml-2 rounded border-gray-300" %>
+        </div>
+
+        <div>
+          <%= f.label :official_email, class: "block text-sm font-medium text-gray-700 mb-1" %>
+          <%= f.email_field :official_email, class: "w-full px-3 py-2 border border-gray-300 rounded-md" %>
+        </div>
+
+        <div>
+          <%= f.label :official_phone, class: "block text-sm font-medium text-gray-700 mb-1" %>
+          <%= f.telephone_field :official_phone, class: "w-full px-3 py-2 border border-gray-300 rounded-md" %>
+        </div>
+
+        <div>
+          <%= f.label :official_address, class: "block text-sm font-medium text-gray-700 mb-1" %>
+          <%= f.text_area :official_address, rows: 2, class: "w-full px-3 py-2 border border-gray-300 rounded-md" %>
+        </div>
+
+        <div>
+          <%= f.label :contact_form_url, class: "block text-sm font-medium text-gray-700 mb-1" %>
+          <%= f.url_field :contact_form_url, class: "w-full px-3 py-2 border border-gray-300 rounded-md" %>
+        </div>
+
+        <div class="flex gap-3">
+          <%= f.submit "Update Officeholder", class: "px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 cursor-pointer" %>
+          <%= link_to "Cancel", admin_person_path(@officeholder.person), class: "px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300" %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</div>

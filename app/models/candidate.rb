@@ -1,4 +1,6 @@
 class Candidate < ApplicationRecord
+  has_paper_trail
+
   belongs_to :person
   belongs_to :contest
 

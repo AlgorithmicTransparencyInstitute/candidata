@@ -62,6 +62,9 @@ class Admin::PeopleController < Admin::BaseController
   def show
     @accounts = @person.social_media_accounts.order(:platform)
     @assignments = @person.assignments.includes(:user, :assigned_by).order(created_at: :desc)
+    @officeholders = @person.officeholders.includes(:office).order(start_date: :desc)
+    @candidates = @person.candidates.includes(contest: [:ballot, :office]).order('ballots.date DESC')
+    @person_parties = @person.person_parties.includes(:party).order(created_at: :desc)
   end
 
   def new
@@ -211,9 +214,9 @@ class Admin::PeopleController < Admin::BaseController
   end
 
   def person_params
-    params.require(:person).permit(:first_name, :middle_name, :last_name, :suffix, :gender,
-                                   :date_of_birth, :photo_url, :website_official, :website_campaign,
-                                   :state_of_residence, :person_uuid)
+    params.require(:person).permit(:first_name, :middle_name, :last_name, :suffix, :gender, :race,
+                                   :birth_date, :death_date, :photo_url, :website_official, :website_campaign,
+                                   :website_personal, :wikipedia_id, :state_of_residence, :person_uuid)
   end
 
 end

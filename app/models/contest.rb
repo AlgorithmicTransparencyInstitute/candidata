@@ -1,4 +1,6 @@
 class Contest < ApplicationRecord
+  has_paper_trail
+
   belongs_to :office
   belongs_to :ballot
   has_many :candidates, dependent: :destroy

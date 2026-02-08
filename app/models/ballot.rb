@@ -1,4 +1,6 @@
 class Ballot < ApplicationRecord
+  has_paper_trail
+
   belongs_to :election, optional: true
   has_many :contests, dependent: :destroy
   has_many :offices, through: :contests

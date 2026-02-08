@@ -1,4 +1,6 @@
 class Office < ApplicationRecord
+  has_paper_trail
+
   belongs_to :district, optional: true
   belongs_to :body, optional: true
   has_many :contests

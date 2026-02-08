@@ -1,4 +1,6 @@
 class District < ApplicationRecord
+  has_paper_trail
+
   has_many :offices
 
   CHAMBERS = %w[upper lower].freeze

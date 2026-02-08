@@ -1,4 +1,4 @@
-<div class="max-w-4xl mx-auto px-4 py-8">
+<div class="max-w-6xl mx-auto px-4 py-8">
   <div class="mb-6">
     <%= link_to "← Back to People", admin_people_path, class: "text-blue-600 hover:text-blue-800" %>
   </div>
@@ -9,16 +9,294 @@
       <div>
         <h1 class="text-2xl font-bold text-gray-900"><%= @person.full_name %></h1>
         <p class="text-gray-600">
-          <%= @person.primary_party&.name || "No party" %> · 
+          <%= @person.primary_party&.name || "No party" %> ·
           <%= @person.state_of_residence || "Unknown state" %>
         </p>
       </div>
       <div class="flex items-center gap-2">
-        <%= link_to "Edit", edit_admin_person_path(@person), class: "px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300" %>
-        <%= button_to "Prepopulate Accounts", prepopulate_accounts_admin_person_path(@person), method: :post, class: "px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700" %>
+        <%= link_to "Edit Person", edit_admin_person_path(@person), class: "px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300" %>
       </div>
     </div>
+
+    <!-- Person Details -->
+    <div class="px-6 py-4 grid grid-cols-2 gap-4 text-sm">
+      <div>
+        <span class="font-medium text-gray-700">First Name:</span>
+        <span class="text-gray-900"><%= @person.first_name %></span>
+      </div>
+      <% if @person.middle_name.present? %>
+        <div>
+          <span class="font-medium text-gray-700">Middle Name:</span>
+          <span class="text-gray-900"><%= @person.middle_name %></span>
+        </div>
+      <% end %>
+      <div>
+        <span class="font-medium text-gray-700">Last Name:</span>
+        <span class="text-gray-900"><%= @person.last_name %></span>
+      </div>
+      <% if @person.suffix.present? %>
+        <div>
+          <span class="font-medium text-gray-700">Suffix:</span>
+          <span class="text-gray-900"><%= @person.suffix %></span>
+        </div>
+      <% end %>
+      <% if @person.gender.present? %>
+        <div>
+          <span class="font-medium text-gray-700">Gender:</span>
+          <span class="text-gray-900"><%= @person.gender %></span>
+        </div>
+      <% end %>
+      <% if @person.birth_date.present? %>
+        <div>
+          <span class="font-medium text-gray-700">Birth Date:</span>
+          <span class="text-gray-900"><%= @person.birth_date %></span>
+        </div>
+      <% end %>
+      <% if @person.death_date.present? %>
+        <div>
+          <span class="font-medium text-gray-700">Death Date:</span>
+          <span class="text-gray-900"><%= @person.death_date %></span>
+        </div>
+      <% end %>
+      <% if @person.website_official.present? %>
+        <div>
+          <span class="font-medium text-gray-700">Official Website:</span>
+          <a href="<%= @person.website_official %>" target="_blank" class="text-blue-600 hover:text-blue-800"><%= @person.website_official %></a>
+        </div>
+      <% end %>
+      <% if @person.website_campaign.present? %>
+        <div>
+          <span class="font-medium text-gray-700">Campaign Website:</span>
+          <a href="<%= @person.website_campaign %>" target="_blank" class="text-blue-600 hover:text-blue-800"><%= @person.website_campaign %></a>
+        </div>
+      <% end %>
+    </div>
   </div>
+
+  <!-- Party Affiliations -->
+  <div class="bg-white rounded-lg shadow mb-6">
+    <div class="px-6 py-4 border-b border-gray-200">
+      <h2 class="text-xl font-semibold text-gray-900">Party Affiliations</h2>
+    </div>
+    <div class="overflow-x-auto">
+      <table class="min-w-full divide-y divide-gray-200">
+        <thead class="bg-gray-50">
+          <tr>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Party</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Primary</th>
+            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
+          </tr>
+        </thead>
+        <tbody class="bg-white divide-y divide-gray-200">
+          <% if @person_parties.any? %>
+            <% @person_parties.each do |pp| %>
+              <tr>
+                <td class="px-6 py-4">
+                  <%= link_to pp.party.name, admin_party_path(pp.party), class: "text-blue-600 hover:text-blue-800" %>
+                </td>
+                <td class="px-6 py-4">
+                  <%= pp.is_primary ? "✓" : "" %>
+                </td>
+                <td class="px-6 py-4 text-right">
+                  <span class="text-gray-400">—</span>
+                </td>
+              </tr>
+            <% end %>
+          <% else %>
+            <tr>
+              <td colspan="3" class="px-6 py-4 text-center text-gray-500">No party affiliations</td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Officeholders -->
+  <div class="bg-white rounded-lg shadow mb-6">
+    <div class="px-6 py-4 border-b border-gray-200">
+      <h2 class="text-xl font-semibold text-gray-900">Offices Held</h2>
+    </div>
+    <div class="overflow-x-auto">
+      <table class="min-w-full divide-y divide-gray-200">
+        <thead class="bg-gray-50">
+          <tr>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Office</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Start Date</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">End Date</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
+          </tr>
+        </thead>
+        <tbody class="bg-white divide-y divide-gray-200">
+          <% if @officeholders.any? %>
+            <% @officeholders.each do |oh| %>
+              <tr>
+                <td class="px-6 py-4">
+                  <%= link_to oh.office.title, admin_office_path(oh.office), class: "text-blue-600 hover:text-blue-800" %>
+                </td>
+                <td class="px-6 py-4 text-sm text-gray-900"><%= oh.start_date %></td>
+                <td class="px-6 py-4 text-sm text-gray-900"><%= oh.end_date || "Present" %></td>
+                <td class="px-6 py-4">
+                  <% if oh.current? %>
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">Current</span>
+                  <% else %>
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">Former</span>
+                  <% end %>
+                </td>
+                <td class="px-6 py-4 text-right">
+                  <%= link_to "Edit", edit_admin_officeholder_path(oh), class: "text-blue-600 hover:text-blue-800 text-sm" %>
+                </td>
+              </tr>
+            <% end %>
+          <% else %>
+            <tr>
+              <td colspan="5" class="px-6 py-4 text-center text-gray-500">No offices held</td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Candidacies -->
+  <div class="bg-white rounded-lg shadow mb-6">
+    <div class="px-6 py-4 border-b border-gray-200">
+      <h2 class="text-xl font-semibold text-gray-900">Candidacies</h2>
+    </div>
+    <div class="overflow-x-auto">
+      <table class="min-w-full divide-y divide-gray-200">
+        <thead class="bg-gray-50">
+          <tr>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Office</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Election</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Outcome</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Votes</th>
+            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
+          </tr>
+        </thead>
+        <tbody class="bg-white divide-y divide-gray-200">
+          <% if @candidates.any? %>
+            <% @candidates.each do |candidate| %>
+              <tr>
+                <td class="px-6 py-4">
+                  <%= link_to candidate.contest.office.title, admin_office_path(candidate.contest.office), class: "text-blue-600 hover:text-blue-800" %>
+                </td>
+                <td class="px-6 py-4 text-sm">
+                  <%= link_to candidate.contest.ballot.full_name, admin_ballot_path(candidate.contest.ballot), class: "text-blue-600 hover:text-blue-800" %>
+                </td>
+                <td class="px-6 py-4">
+                  <% if candidate.outcome == 'won' %>
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">Won</span>
+                  <% elsif candidate.outcome == 'lost' %>
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">Lost</span>
+                  <% else %>
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">Pending</span>
+                  <% end %>
+                </td>
+                <td class="px-6 py-4 text-sm text-gray-900">
+                  <%= candidate.tally ? number_with_delimiter(candidate.tally) : "—" %>
+                  <%= candidate.vote_percentage ? "(#{candidate.vote_percentage}%)" : "" %>
+                </td>
+                <td class="px-6 py-4 text-right">
+                  <%= link_to "Edit", edit_admin_candidate_path(candidate), class: "text-blue-600 hover:text-blue-800 text-sm" %>
+                </td>
+              </tr>
+            <% end %>
+          <% else %>
+            <tr>
+              <td colspan="5" class="px-6 py-4 text-center text-gray-500">No candidacies</td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Social Media Accounts -->
+  <div class="bg-white rounded-lg shadow mb-6">
+    <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+      <h2 class="text-xl font-semibold text-gray-900">Social Media Accounts</h2>
+      <div class="flex gap-2">
+        <%= button_to "Prepopulate", prepopulate_accounts_admin_person_path(@person), method: :post, class: "px-3 py-1.5 bg-gray-600 text-white text-sm rounded hover:bg-gray-700" %>
+        <%= link_to "Add Account", new_admin_social_media_account_path(person_id: @person.id), class: "px-3 py-1.5 bg-blue-600 text-white text-sm rounded hover:bg-blue-700" %>
+      </div>
+    </div>
+    <div class="overflow-x-auto">
+      <table class="min-w-full divide-y divide-gray-200">
+        <thead class="bg-gray-50">
+          <tr>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Platform</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Channel</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">URL / Handle</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Research</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Verified</th>
+            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
+          </tr>
+        </thead>
+        <tbody class="bg-white divide-y divide-gray-200">
+          <% if @accounts.any? %>
+            <% @accounts.each do |account| %>
+              <tr class="hover:bg-gray-50">
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <div class="flex items-center gap-2">
+                    <%= platform_icon(account.platform, size: 20) %>
+                    <span class="text-sm font-medium text-gray-900"><%= account.platform %></span>
+                  </div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <span class="text-sm text-gray-900"><%= account.channel_type.humanize %></span>
+                </td>
+                <td class="px-6 py-4">
+                  <% if account.url.present? %>
+                    <a href="<%= account.url %>" target="_blank" class="text-sm text-blue-600 hover:text-blue-800 break-all"><%= account.url %></a>
+                  <% elsif account.handle.present? %>
+                    <span class="text-sm text-gray-900">@<%= account.handle %></span>
+                  <% else %>
+                    <span class="text-sm text-gray-400">—</span>
+                  <% end %>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <% if account.account_inactive %>
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">Inactive</span>
+                  <% else %>
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">Active</span>
+                  <% end %>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <%= research_status_badge(account.research_status) %>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <% if account.verified %>
+                    <span class="text-green-600 text-sm">✓ Yes</span>
+                  <% else %>
+                    <span class="text-gray-400 text-sm">No</span>
+                  <% end %>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-right text-sm">
+                  <%= link_to "Edit", edit_admin_social_media_account_path(account), class: "text-blue-600 hover:text-blue-800 mr-3" %>
+                  <%= button_to "Delete", admin_social_media_account_path(account), method: :delete, class: "text-red-600 hover:text-red-800", data: { confirm: "Are you sure you want to delete this account?" } %>
+                </td>
+              </tr>
+            <% end %>
+          <% else %>
+            <tr>
+              <td colspan="7" class="px-6 py-8 text-center text-gray-500">
+                No accounts yet.
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Divider -->
+  <div class="border-t-4 border-gray-300 my-8"></div>
+
+  <!-- Assignment Management Section -->
+  <h2 class="text-2xl font-bold text-gray-900 mb-6">Assignment Management</h2>
 
   <div class="grid md:grid-cols-2 gap-6">
     <!-- Assign Researcher -->
@@ -68,51 +346,6 @@
           <div class="px-6 py-4 text-gray-500 text-center">No assignments yet</div>
         <% end %>
       </div>
-    </div>
-  </div>
-
-  <!-- Social Media Accounts -->
-  <div class="bg-white rounded-lg shadow mt-6">
-    <div class="px-6 py-4 border-b border-gray-200">
-      <h2 class="text-xl font-semibold text-gray-900">Social Media Accounts</h2>
-    </div>
-    <div class="divide-y divide-gray-200">
-      <% if @accounts.any? %>
-        <% @accounts.group_by(&:channel_type).each do |channel_type, accounts| %>
-          <div class="px-6 py-3 bg-gray-50">
-            <span class="font-medium text-gray-700"><%= channel_type.humanize %> Accounts</span>
-          </div>
-          <% accounts.each do |account| %>
-            <div class="px-6 py-4 flex justify-between items-center">
-              <div class="flex items-center gap-3">
-                <%= platform_icon(account.platform, size: 20) %>
-                <div>
-                  <div class="font-medium"><%= account.platform %></div>
-                  <% if account.url.present? || account.handle.present? %>
-                    <div class="text-sm text-gray-600"><%= account.url.presence || "@#{account.handle}" %></div>
-                  <% elsif account.pre_populated? %>
-                    <div class="text-sm text-gray-400 italic">Awaiting research</div>
-                  <% end %>
-                </div>
-              </div>
-              <div class="flex items-center gap-2">
-                <%= research_status_badge(account.research_status) %>
-                <% if account.entered_by %>
-                  <span class="text-xs text-gray-500">by <%= account.entered_by.name %></span>
-                <% end %>
-                <% if account.verified_by %>
-                  <span class="text-xs text-green-600">✓ <%= account.verified_by.name %></span>
-                <% end %>
-              </div>
-            </div>
-          <% end %>
-        <% end %>
-      <% else %>
-        <div class="px-6 py-8 text-center text-gray-500">
-          No accounts yet. 
-          <%= button_to "Prepopulate accounts", prepopulate_accounts_admin_person_path(@person), method: :post, class: "text-blue-600 hover:text-blue-800" %>
-        </div>
-      <% end %>
     </div>
   </div>
 </div>

@@ -34,9 +34,12 @@ class PeopleController < ApplicationController
       @people = @people.joins(:offices).where(offices: { branch: params[:branch] }).distinct
     end
     
-    # Filter by specific office title
+    # Filter by office (category or title)
     if params[:office_title].present?
-      @people = @people.joins(:offices).where(offices: { title: params[:office_title] }).distinct
+      # For statewide offices, filter by office_category; for others, use title
+      @people = @people.joins(:offices).where(offices: { office_category: params[:office_title] }).or(
+        @people.joins(:offices).where(offices: { title: params[:office_title] })
+      ).distinct
     end
 
     # Filter by current officeholders only
@@ -80,46 +83,42 @@ class PeopleController < ApplicationController
   private
 
   def grouped_offices_for_filter
-    # Get distinct office titles that have current officeholders
+    # Get distinct office data that have current officeholders
     all_offices = Office.joins(:officeholders)
                         .merge(Officeholder.current)
                         .distinct
-                        .pluck(:title, :level, :branch)
+                        .pluck(:title, :office_category, :level, :branch)
                         .uniq
 
     {
-      'Federal' => all_offices.select { |title, level, _| level == 'federal' }
+      'Federal' => all_offices.select { |_, _, level, _| level == 'federal' }
                                .map(&:first)
+                               .uniq
                                .sort,
-      'Statewide Executive' => all_offices.select { |title, level, branch|
+      'Statewide Executive' => all_offices.select { |_, category, level, branch|
                                              level == 'state' &&
                                              branch == 'executive' &&
-                                             (title.start_with?('Governor', 'Lieutenant Governor') ||
-                                              title.include?('Secretary') ||
-                                              title.include?('Attorney General') ||
-                                              title.include?('Treasurer') ||
-                                              title.include?('Auditor') ||
-                                              title.include?('Comptroller') ||
-                                              title.include?('Controller'))
+                                             category.present?
                                            }
-                                           .map(&:first)
+                                           .map { |_, category, _, _| category }
                                            .uniq
                                            .sort,
-      'Statewide Judicial' => all_offices.select { |title, level, branch|
+      'Statewide Judicial' => all_offices.select { |_, category, level, branch|
                                             level == 'state' &&
-                                            branch == 'judicial'
+                                            branch == 'judicial' &&
+                                            category.present?
                                           }
-                                          .map(&:first)
+                                          .map { |_, category, _, _| category }
                                           .uniq
                                           .sort,
-      'State Legislative' => all_offices.select { |title, level, branch|
+      'State Legislative' => all_offices.select { |_, _, level, branch|
                                            level == 'state' &&
                                            branch == 'legislative'
                                          }
                                          .map(&:first)
                                          .uniq
                                          .sort,
-      'Local' => all_offices.select { |_, level, _| level == 'local' }
+      'Local' => all_offices.select { |_, _, level, _| level == 'local' }
                             .map(&:first)
                             .uniq
                             .sort

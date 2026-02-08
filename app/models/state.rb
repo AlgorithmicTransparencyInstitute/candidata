@@ -1,4 +1,6 @@
 class State < ApplicationRecord
+  has_paper_trail
+
   has_many :districts
   has_many :offices
   has_many :ballots

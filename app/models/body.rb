@@ -1,4 +1,6 @@
 class Body < ApplicationRecord
+  has_paper_trail
+
   has_many :offices
   belongs_to :parent_body, class_name: 'Body', optional: true
   has_many :sub_bodies, class_name: 'Body', foreign_key: 'parent_body_id'
