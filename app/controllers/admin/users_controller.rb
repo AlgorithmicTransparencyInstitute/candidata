@@ -61,6 +61,57 @@ module Admin
       redirect_to admin_user_path(@user), notice: "Password reset email sent to #{@user.email}."
     end
 
+    def export_invitations
+      require 'csv'
+
+      # Find all users with pending invitations
+      pending_users = User.where.not(invitation_token: nil)
+                         .where(invitation_accepted_at: nil)
+                         .order(:created_at)
+
+      # Determine the proper host to use
+      host = request.host_with_port
+      # In production, use candidata.space instead of herokuapp.com
+      if Rails.env.production? && host.include?('herokuapp.com')
+        host = 'candidata.space'
+      end
+
+      # Generate CSV
+      csv_data = CSV.generate(headers: true) do |csv|
+        csv << ["Email", "Name", "Role", "Invitation URL", "Invited At", "Days Pending"]
+
+        pending_users.each do |user|
+          # Generate the invitation acceptance URL
+          invitation_url = accept_user_invitation_url(
+            invitation_token: user.invitation_token,
+            host: host,
+            protocol: request.ssl? ? 'https' : 'http'
+          )
+
+          days_pending = if user.invitation_created_at
+                          ((Time.current - user.invitation_created_at) / 1.day).round(1)
+                        else
+                          "N/A"
+                        end
+
+          csv << [
+            user.email,
+            user.name || "",
+            user.role,
+            invitation_url,
+            user.invitation_created_at&.strftime("%Y-%m-%d %H:%M"),
+            days_pending
+          ]
+        end
+      end
+
+      # Send CSV file
+      send_data csv_data,
+                filename: "pending_invitations_#{Time.current.strftime('%Y%m%d_%H%M%S')}.csv",
+                type: 'text/csv',
+                disposition: 'attachment'
+    end
+
     private
 
     def set_user

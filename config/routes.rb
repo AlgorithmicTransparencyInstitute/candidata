@@ -51,6 +51,9 @@ Rails.application.routes.draw do
     end
     resources :social_media_accounts
     resources :users do
+      collection do
+        get :export_invitations
+      end
       member do
         post :resend_invitation
         post :send_reset_password
