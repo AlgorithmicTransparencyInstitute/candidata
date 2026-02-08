@@ -24,28 +24,38 @@
     </div>
 
     <!-- Stats Row -->
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-12">
+    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-12">
+      <%= link_to people_path, class: "bg-white rounded-lg shadow-sm border border-gray-200 p-6 text-center hover:shadow-md hover:border-indigo-300 transition-all group" do %>
+        <div class="text-3xl font-bold text-indigo-600 group-hover:text-indigo-700"><%= number_with_delimiter(@people_count) %></div>
+        <div class="text-sm text-gray-500 mt-1 group-hover:text-gray-700">Politicians</div>
+      <% end %>
+
+      <%= link_to people_path, class: "bg-white rounded-lg shadow-sm border border-gray-200 p-6 text-center hover:shadow-md hover:border-green-300 transition-all group" do %>
+        <div class="text-3xl font-bold text-green-600 group-hover:text-green-700"><%= number_with_delimiter(@current_officeholders_count) %></div>
+        <div class="text-sm text-gray-500 mt-1 group-hover:text-gray-700">Current Officeholders</div>
+      <% end %>
+
+      <%= link_to offices_path, class: "bg-white rounded-lg shadow-sm border border-gray-200 p-6 text-center hover:shadow-md hover:border-purple-300 transition-all group" do %>
+        <div class="text-3xl font-bold text-purple-600 group-hover:text-purple-700"><%= number_with_delimiter(@offices_count) %></div>
+        <div class="text-sm text-gray-500 mt-1 group-hover:text-gray-700">Offices</div>
+      <% end %>
+
+      <%= link_to districts_path, class: "bg-white rounded-lg shadow-sm border border-gray-200 p-6 text-center hover:shadow-md hover:border-blue-300 transition-all group" do %>
+        <div class="text-3xl font-bold text-blue-600 group-hover:text-blue-700"><%= number_with_delimiter(@districts_count) %></div>
+        <div class="text-sm text-gray-500 mt-1 group-hover:text-gray-700">Districts</div>
+      <% end %>
+
       <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 text-center">
-        <div class="text-3xl font-bold text-indigo-600"><%= number_with_delimiter(@people_count) %></div>
-        <div class="text-sm text-gray-500 mt-1">Politicians</div>
-      </div>
-      <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 text-center">
-        <div class="text-3xl font-bold text-green-600"><%= number_with_delimiter(@current_officeholders_count) %></div>
-        <div class="text-sm text-gray-500 mt-1">Current Officeholders</div>
-      </div>
-      <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 text-center">
-        <div class="text-3xl font-bold text-indigo-600"><%= number_with_delimiter(@offices_count) %></div>
-        <div class="text-sm text-gray-500 mt-1">Offices</div>
-      </div>
-      <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 text-center">
-        <div class="text-3xl font-bold text-indigo-600"><%= number_with_delimiter(@districts_count) %></div>
-        <div class="text-sm text-gray-500 mt-1">Districts</div>
+        <div class="text-3xl font-bold text-orange-600"><%= number_with_delimiter(@accounts_count) %></div>
+        <div class="text-sm text-gray-500 mt-1">Social Media Accounts</div>
       </div>
     </div>
 
     <% if @ballots_2026.any? %>
-      <!-- 2026 Primaries Spotlight -->
-      <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-8 mb-12">
+      <!-- 2026 Primaries and Upcoming Elections -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-12">
+        <!-- 2026 Primaries Spotlight (2/3 width) -->
+        <div class="lg:col-span-2 bg-white rounded-lg shadow-sm border border-gray-200 p-8">
         <div class="flex items-start justify-between mb-6">
           <div>
             <div class="flex items-center gap-3 mb-2">
@@ -86,21 +96,61 @@
           <% end %>
         </div>
 
-        <!-- Action Buttons -->
-        <div class="flex flex-wrap gap-3 pt-4 border-t border-gray-200">
-          <%= link_to ballots_path(year: 2026), class: "inline-flex items-center px-5 py-2.5 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 transition-colors shadow-sm" do %>
-            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
-            </svg>
-            View All 2026 Ballots
-          <% end %>
-          <%= link_to contests_path(year: 2026), class: "inline-flex items-center px-5 py-2.5 bg-white text-indigo-600 font-semibold rounded-lg hover:bg-gray-50 transition-colors border border-gray-300" do %>
-            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
-            </svg>
-            Browse Contests
-          <% end %>
+          <!-- Action Buttons -->
+          <div class="flex flex-wrap gap-3 pt-4 border-t border-gray-200">
+            <%= link_to ballots_path(year: 2026), class: "inline-flex items-center px-5 py-2.5 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 transition-colors shadow-sm" do %>
+              <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+              </svg>
+              View All 2026 Ballots
+            <% end %>
+            <%= link_to contests_path(year: 2026), class: "inline-flex items-center px-5 py-2.5 bg-white text-indigo-600 font-semibold rounded-lg hover:bg-gray-50 transition-colors border border-gray-300" do %>
+              <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+              </svg>
+              Browse Contests
+            <% end %>
+          </div>
         </div>
+
+        <!-- Upcoming Elections Sidebar (1/3 width) -->
+        <% if @upcoming_elections.any? %>
+          <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <div class="flex items-center justify-between mb-4">
+              <h2 class="text-lg font-bold text-gray-900">Upcoming Elections</h2>
+              <%= link_to "View All", elections_path, class: "text-indigo-600 hover:text-indigo-700 font-medium text-xs" %>
+            </div>
+
+            <div class="space-y-3">
+              <% @upcoming_elections.each do |election| %>
+                <%= link_to election_path(election), class: "block p-3 rounded-lg border border-gray-200 hover:border-indigo-300 hover:bg-indigo-50 transition-all group" do %>
+                  <div class="flex items-start gap-3">
+                    <!-- Date Badge -->
+                    <div class="flex-shrink-0 w-12 h-12 bg-indigo-100 rounded-lg flex flex-col items-center justify-center group-hover:bg-indigo-200 transition-colors">
+                      <div class="text-xs font-semibold text-indigo-700 uppercase leading-tight"><%= election.date.strftime('%b') %></div>
+                      <div class="text-lg font-bold text-indigo-900 leading-tight"><%= election.date.strftime('%d') %></div>
+                    </div>
+
+                    <!-- Election Info -->
+                    <div class="flex-1 min-w-0">
+                      <div class="text-sm font-semibold text-gray-900 group-hover:text-indigo-600 mb-0.5 line-clamp-2">
+                        <%= election.state %> <%= election.election_type.titleize %>
+                      </div>
+                      <div class="text-xs text-gray-600">
+                        <%= election.date.strftime('%b %d, %Y') %>
+                      </div>
+                      <% if election.ballots.any? %>
+                        <div class="text-xs text-gray-500 mt-1">
+                          <%= pluralize(election.ballots.count, 'ballot') %>
+                        </div>
+                      <% end %>
+                    </div>
+                  </div>
+                <% end %>
+              <% end %>
+            </div>
+          </div>
+        <% end %>
       </div>
     <% end %>
 

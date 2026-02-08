@@ -1,8 +1,4 @@
 <div class="max-w-7xl mx-auto px-4 py-8">
-  <div class="mb-6">
-    <%= link_to "← Back to Assignments", admin_assignments_path, class: "text-blue-600 hover:text-blue-800" %>
-  </div>
-
   <h1 class="text-3xl font-bold text-gray-900 mb-6">Create Assignments</h1>
 
   <% if flash[:alert].present? %>
@@ -84,81 +80,174 @@
 
       <!-- Filters -->
       <div class="px-6 py-4 bg-gray-50 border-b border-gray-200">
-        <div class="flex flex-wrap gap-3 items-end">
-          <div>
-            <label class="block text-xs font-medium text-gray-600 mb-1">Search</label>
-            <input type="text" name="q" id="q_filter" value="<%= params[:q] %>" placeholder="Name... (press Enter)"
-                   class="mt-1 block text-sm w-40 rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-sm font-semibold text-gray-900">Filter People</h3>
+          <% if params[:q].present? || params[:state].present? || params[:party_id].present? || params[:body_id].present? || params[:level].present? || params[:role_filter].present? || params[:year].present? || params[:ballot_id].present? || params[:contest_id].present? || params[:assignment_filter].present? %>
+            <%= link_to "Clear all filters", new_admin_assignment_path(user_id: params[:user_id], task_type: params[:task_type]), class: "text-sm text-blue-600 hover:text-blue-800" %>
+          <% end %>
+        </div>
+
+        <!-- Filter Controls in One Row -->
+        <div class="flex flex-wrap gap-2 mb-4">
+          <!-- Search -->
+          <div class="relative flex-1 min-w-[200px]">
+            <input type="text" name="q" id="q_filter" value="<%= params[:q] %>" placeholder="Search by name..."
+                   class="w-full rounded-lg border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 pr-8"
+                   onkeydown="if(event.key==='Enter'){event.preventDefault();applyFilters();}">
+            <button type="button" onclick="applyFilters();"
+                    class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+              🔍
+            </button>
           </div>
-          <div>
-            <label class="block text-xs font-medium text-gray-600 mb-1">State</label>
-            <%= select_tag :state, options_for_select([['All States', '']] + @states.map { |s| [s, s] }, params[:state]),
-                class: "mt-1 block text-sm rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500", id: "state_filter" %>
+
+          <!-- Demographics Dropdown -->
+          <div class="relative inline-block">
+            <button type="button" onclick="toggleAssignmentDropdown('demographics')" class="px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 flex items-center gap-2">
+              Demographics
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+              </svg>
+            </button>
+            <div id="demographics-assignment-dropdown" class="hidden absolute z-10 mt-1 w-64 bg-white rounded-lg shadow-lg border border-gray-200 p-4">
+              <div class="space-y-3">
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">State</label>
+                  <%= select_tag :state, options_for_select([['All States', '']] + @states.map { |s| [s, s] }, params[:state]),
+                      class: "w-full rounded border-gray-300 text-sm", id: "state_filter", onchange: "applyFilters()" %>
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">Party</label>
+                  <%= select_tag :party_id, options_for_select([['All Parties', '']] + @parties.map { |p| [p.name, p.id] }, params[:party_id]),
+                      class: "w-full rounded border-gray-300 text-sm", id: "party_filter", onchange: "applyFilters()" %>
+                </div>
+              </div>
+            </div>
           </div>
-          <div>
-            <label class="block text-xs font-medium text-gray-600 mb-1">Party</label>
-            <%= select_tag :party_id, options_for_select([['All Parties', '']] + @parties.map { |p| [p.name, p.id] }, params[:party_id]),
-                class: "mt-1 block text-sm rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500", id: "party_filter" %>
+
+          <!-- Office Dropdown -->
+          <div class="relative inline-block">
+            <button type="button" onclick="toggleAssignmentDropdown('office')" class="px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 flex items-center gap-2">
+              Office
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+              </svg>
+            </button>
+            <div id="office-assignment-dropdown" class="hidden absolute z-10 mt-1 w-56 bg-white rounded-lg shadow-lg border border-gray-200 p-4">
+              <div class="space-y-3">
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">Body</label>
+                  <%= select_tag :body_id, options_for_select([['All Bodies', '']] + @bodies.map { |b| [b.name, b.id] }, params[:body_id]),
+                      class: "w-full rounded border-gray-300 text-sm", id: "body_filter", onchange: "applyFilters()" %>
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">Level</label>
+                  <%= select_tag :level, options_for_select([['All Levels', '']] + @levels.map { |l| [l.titleize, l] }, params[:level]),
+                      class: "w-full rounded border-gray-300 text-sm", id: "level_filter", onchange: "applyFilters()" %>
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">Role</label>
+                  <%= select_tag :role_filter, options_for_select([['All', ''], ['Current Officeholders', 'officeholders'], ['Candidates', 'candidates']], params[:role_filter]),
+                      class: "w-full rounded border-gray-300 text-sm", id: "role_filter", onchange: "applyFilters()" %>
+                </div>
+              </div>
+            </div>
           </div>
-          <div>
-            <label class="block text-xs font-medium text-gray-600 mb-1">Body</label>
-            <%= select_tag :body_id, options_for_select([['All Bodies', '']] + @bodies.map { |b| [b.name, b.id] }, params[:body_id]),
-                class: "mt-1 block text-sm rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500", id: "body_filter" %>
+
+          <!-- Election Dropdown -->
+          <div class="relative inline-block">
+            <button type="button" onclick="toggleAssignmentDropdown('election')" class="px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 flex items-center gap-2">
+              Election
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+              </svg>
+            </button>
+            <div id="election-assignment-dropdown" class="hidden absolute z-10 mt-1 w-64 bg-white rounded-lg shadow-lg border border-gray-200 p-4">
+              <div class="space-y-3">
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">Year</label>
+                  <%= select_tag :year, options_for_select([['All Years', '']] + @years.map { |y| [y, y] }, params[:year]),
+                      class: "w-full rounded border-gray-300 text-sm", id: "year_filter", onchange: "handleYearChange()" %>
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">Ballot</label>
+                  <%= select_tag :ballot_id, options_for_select([['All Ballots', '']] + @ballots.map { |b| [b.full_name, b.id] }, params[:ballot_id]),
+                      class: "w-full rounded border-gray-300 text-sm", id: "ballot_filter", onchange: "handleBallotChange()" %>
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">Contest</label>
+                  <%= select_tag :contest_id, options_for_select([['All Contests', '']] + @contests.map { |c| [c.full_name, c.id] }, params[:contest_id]),
+                      class: "w-full rounded border-gray-300 text-sm", id: "contest_filter", onchange: "applyFilters()" %>
+                </div>
+              </div>
+            </div>
           </div>
-          <div>
-            <label class="block text-xs font-medium text-gray-600 mb-1">Level</label>
-            <%= select_tag :level, options_for_select([['All Levels', '']] + @levels.map { |l| [l.titleize, l] }, params[:level]),
-                class: "mt-1 block text-sm rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500", id: "level_filter" %>
-          </div>
-          <div>
-            <label class="block text-xs font-medium text-gray-600 mb-1">Role</label>
-            <%= select_tag :role_filter, options_for_select([
-              ['All', ''],
-              ['Current Officeholders', 'officeholders'],
-              ['Candidates', 'candidates']
-            ], params[:role_filter]),
-                class: "mt-1 block text-sm rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500", id: "role_filter" %>
-          </div>
-          <div>
-            <label class="block text-xs font-medium text-gray-600 mb-1">Year</label>
-            <%= select_tag :year, options_for_select([['All Years', '']] + @years.map { |y| [y, y] }, params[:year]),
-                class: "mt-1 block text-sm rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500", id: "year_filter" %>
-          </div>
-          <div>
-            <label class="block text-xs font-medium text-gray-600 mb-1">Ballot</label>
-            <%= select_tag :ballot_id, options_for_select([['All Ballots', '']] + @ballots.map { |b| [b.full_name, b.id] }, params[:ballot_id]),
-                class: "mt-1 block text-sm rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500", id: "ballot_filter" %>
-          </div>
-          <div>
-            <label class="block text-xs font-medium text-gray-600 mb-1">Contest</label>
-            <%= select_tag :contest_id, options_for_select([['All Contests', '']] + @contests.map { |c| [c.full_name, c.id] }, params[:contest_id]),
-                class: "mt-1 block text-sm rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500", id: "contest_filter" %>
-          </div>
-          <div>
-            <label class="block text-xs font-medium text-gray-600 mb-1">Assignment</label>
-            <%= select_tag :assignment_filter, options_for_select([
-              ['All People', ''],
-              ['Unassigned (no tasks)', 'unassigned'],
-              ['No Data Collection', 'no_collection'],
-              ['No Data Validation', 'no_validation']
-            ], params[:assignment_filter]),
-                class: "mt-1 block text-sm rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500", id: "assignment_filter" %>
-          </div>
-          <div class="flex gap-2">
-            <%= link_to "Clear", new_admin_assignment_path(user_id: params[:user_id], task_type: params[:task_type]), class: "px-3 py-1.5 text-sm bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300" %>
+
+          <!-- Assignment Status Dropdown -->
+          <div class="relative inline-block">
+            <button type="button" onclick="toggleAssignmentDropdown('assignment_status')" class="px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 flex items-center gap-2">
+              Assignments
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+              </svg>
+            </button>
+            <div id="assignment_status-assignment-dropdown" class="hidden absolute z-10 mt-1 w-56 bg-white rounded-lg shadow-lg border border-gray-200 p-4">
+              <label class="block text-sm font-medium text-gray-700 mb-1">Assignment Status</label>
+              <%= select_tag :assignment_filter, options_for_select([
+                    ['All People', ''],
+                    ['Unassigned (no tasks)', 'unassigned'],
+                    ['No Data Collection', 'no_collection'],
+                    ['No Data Validation', 'no_validation']
+                  ], params[:assignment_filter]),
+                  class: "w-full rounded border-gray-300 text-sm", id: "assignment_filter", onchange: "applyFilters()" %>
+            </div>
           </div>
         </div>
+
       </div>
 
       <%= turbo_frame_tag "people_list", data: { turbo_action: "advance" } do %>
+        <!-- Active Filters Status Line (inside turbo frame so it updates) -->
+        <div class="px-6 py-4 bg-gray-50 border-b border-gray-200">
+          <% active_filters = [] %>
+          <% active_filters << "Name: \"#{params[:q]}\"" if params[:q].present? %>
+          <% active_filters << "State: #{params[:state]}" if params[:state].present? %>
+          <% active_filters << "Party: #{@parties.find { |p| p.id.to_s == params[:party_id].to_s }&.name}" if params[:party_id].present? %>
+          <% active_filters << "Body: #{@bodies.find { |b| b.id.to_s == params[:body_id].to_s }&.name}" if params[:body_id].present? %>
+          <% active_filters << "Level: #{params[:level].titleize}" if params[:level].present? %>
+          <% active_filters << "Role: #{params[:role_filter].humanize}" if params[:role_filter].present? %>
+          <% active_filters << "Year: #{params[:year]}" if params[:year].present? %>
+          <% active_filters << "Ballot: #{@ballots.find { |b| b.id.to_s == params[:ballot_id].to_s }&.full_name}" if params[:ballot_id].present? %>
+          <% active_filters << "Contest: #{@contests.find { |c| c.id.to_s == params[:contest_id].to_s }&.full_name}" if params[:contest_id].present? %>
+          <% active_filters << "Assignment: #{params[:assignment_filter].humanize}" if params[:assignment_filter].present? %>
+
+          <% if active_filters.any? %>
+            <div class="bg-blue-50 border-l-4 border-blue-500 p-4">
+              <div class="flex items-start gap-3">
+                <svg class="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path>
+                </svg>
+                <div class="flex-1">
+                  <div class="text-sm font-semibold text-blue-900 mb-1">Active Filters:</div>
+                  <div class="text-sm text-blue-800"><%= active_filters.join(" • ") %></div>
+                </div>
+              </div>
+            </div>
+          <% else %>
+            <div class="bg-gray-50 border border-gray-200 rounded-lg p-3 text-center">
+              <span class="text-sm text-gray-500">No filters applied - showing all people</span>
+            </div>
+          <% end %>
+        </div>
         <!-- Select All / Count -->
-        <div class="px-6 py-3 border-b border-gray-200 flex justify-between items-center bg-white">
-          <label class="flex items-center gap-2 text-sm">
-            <input type="checkbox" id="selectAll" class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
-            <span class="text-gray-700">Select all on this page</span>
-          </label>
-          <div class="text-sm text-gray-500">
-            <span id="selectedCount">0</span> selected · <%= @people.total_count %> total
+        <div class="px-6 py-3 border-b border-gray-200 bg-white">
+          <div class="flex flex-col gap-2">
+            <div class="text-sm font-medium text-gray-700">
+              <span id="selectedCount">0</span> selected · <%= @people.total_count %> total
+            </div>
+            <label class="flex items-center gap-2 text-sm">
+              <input type="checkbox" id="selectAll" class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+              <span class="text-gray-700">Select all on this page</span>
+            </label>
           </div>
         </div>
 
@@ -177,6 +266,19 @@
             <label class="flex items-center gap-4 px-6 py-3 hover:bg-gray-50 cursor-pointer transition-colors">
               <input type="checkbox" name="person_ids[]" value="<%= person.id %>"
                      class="person-checkbox rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+
+              <!-- Photo or Initials -->
+              <div class="w-10 h-10 rounded-full flex-shrink-0 flex items-center justify-center text-sm font-semibold
+                          <%= person.primary_party&.abbreviation == 'D' ? 'bg-blue-100 text-blue-700' :
+                              person.primary_party&.abbreviation == 'R' ? 'bg-red-100 text-red-700' :
+                              'bg-gray-200 text-gray-600' %>">
+                <% if person.photo_url.present? %>
+                  <%= image_tag person.photo_url, class: "w-10 h-10 rounded-full object-cover", alt: person.full_name %>
+                <% else %>
+                  <%= person.first_name[0] %><%= person.last_name[0] %>
+                <% end %>
+              </div>
+
               <div class="flex-1 min-w-0">
                 <div class="flex items-center gap-2 mb-1">
                   <span class="font-medium text-gray-900"><%= person.full_name %></span>
@@ -474,4 +576,28 @@
 
   // Run filter initialization on page load
   document.addEventListener('DOMContentLoaded', initializeFilters);
+
+  // Toggle dropdown for assignment filters
+  function toggleAssignmentDropdown(id) {
+    const dropdown = document.getElementById(id + '-assignment-dropdown');
+    const allDropdowns = document.querySelectorAll('[id$="-assignment-dropdown"]');
+
+    // Close all other dropdowns
+    allDropdowns.forEach(d => {
+      if (d.id !== id + '-assignment-dropdown') {
+        d.classList.add('hidden');
+      }
+    });
+
+    // Toggle this dropdown
+    dropdown.classList.toggle('hidden');
+  }
+
+  // Close dropdowns when clicking outside
+  document.addEventListener('click', function(event) {
+    if (!event.target.closest('button[onclick^="toggleAssignmentDropdown"]') &&
+        !event.target.closest('[id$="-assignment-dropdown"]')) {
+      document.querySelectorAll('[id$="-assignment-dropdown"]').forEach(d => d.classList.add('hidden'));
+    }
+  });
 </script>

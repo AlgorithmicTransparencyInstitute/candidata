@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_02_07_152215) do
+ActiveRecord::Schema[8.0].define(version: 2026_02_07_204438) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -69,7 +69,9 @@ ActiveRecord::Schema[8.0].define(version: 2026_02_07_152215) do
     t.integer "year"
     t.string "name"
     t.string "party"
+    t.bigint "election_id"
     t.index ["date"], name: "index_ballots_on_date"
+    t.index ["election_id"], name: "index_ballots_on_election_id"
     t.index ["party"], name: "index_ballots_on_party"
     t.index ["state", "date", "election_type", "party"], name: "index_ballots_unique_with_party", unique: true
     t.index ["year"], name: "index_ballots_on_year"
@@ -146,6 +148,19 @@ ActiveRecord::Schema[8.0].define(version: 2026_02_07_152215) do
     t.index ["ocdid"], name: "index_districts_on_ocdid", unique: true
     t.index ["state", "district_number", "level", "chamber"], name: "index_districts_unique", unique: true
     t.index ["state"], name: "index_districts_on_state"
+  end
+
+  create_table "elections", force: :cascade do |t|
+    t.string "state"
+    t.date "date"
+    t.string "election_type"
+    t.integer "year"
+    t.date "registration_deadline"
+    t.date "early_voting_start"
+    t.date "early_voting_end"
+    t.string "name"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
   end
 
   create_table "officeholders", force: :cascade do |t|
@@ -273,6 +288,7 @@ ActiveRecord::Schema[8.0].define(version: 2026_02_07_152215) do
     t.boolean "pre_populated", default: false
     t.boolean "researcher_verified", default: false, null: false
     t.text "research_notes"
+    t.string "validation_source"
     t.index ["airtable_id"], name: "index_social_media_accounts_on_airtable_id", unique: true
     t.index ["channel_type"], name: "index_social_media_accounts_on_channel_type"
     t.index ["entered_by_id"], name: "index_social_media_accounts_on_entered_by_id"
@@ -456,6 +472,7 @@ ActiveRecord::Schema[8.0].define(version: 2026_02_07_152215) do
   add_foreign_key "assignments", "people"
   add_foreign_key "assignments", "users"
   add_foreign_key "assignments", "users", column: "assigned_by_id"
+  add_foreign_key "ballots", "elections"
   add_foreign_key "candidates", "contests"
   add_foreign_key "candidates", "people"
   add_foreign_key "contests", "ballots"

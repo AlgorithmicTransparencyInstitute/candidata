@@ -12,6 +12,8 @@
         <div class="hidden sm:ml-8 sm:flex sm:space-x-1">
           <%= link_to "Politicians", people_path,
               class: "#{request.path.start_with?('/people') ? 'bg-indigo-50 text-indigo-700' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'} px-3 py-2 rounded-md text-sm font-medium" %>
+          <%= link_to "Elections", elections_path,
+              class: "#{request.path.start_with?('/elections') ? 'bg-indigo-50 text-indigo-700' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'} px-3 py-2 rounded-md text-sm font-medium" %>
           <%= link_to "Ballots", ballots_path,
               class: "#{request.path.start_with?('/ballots') ? 'bg-indigo-50 text-indigo-700' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'} px-3 py-2 rounded-md text-sm font-medium" %>
           <%= link_to "Contests", contests_path,
@@ -66,6 +68,7 @@
     <div class="sm:hidden pb-3 pt-2 border-t border-gray-100">
       <div class="flex flex-wrap gap-2">
         <%= link_to "Politicians", people_path, class: "text-gray-600 hover:text-gray-900 px-3 py-1 text-sm rounded-md hover:bg-gray-50" %>
+        <%= link_to "Elections", elections_path, class: "text-gray-600 hover:text-gray-900 px-3 py-1 text-sm rounded-md hover:bg-gray-50" %>
         <%= link_to "Ballots", ballots_path, class: "text-gray-600 hover:text-gray-900 px-3 py-1 text-sm rounded-md hover:bg-gray-50" %>
         <%= link_to "Contests", contests_path, class: "text-gray-600 hover:text-gray-900 px-3 py-1 text-sm rounded-md hover:bg-gray-50" %>
         <%= link_to "Offices", offices_path, class: "text-gray-600 hover:text-gray-900 px-3 py-1 text-sm rounded-md hover:bg-gray-50" %>

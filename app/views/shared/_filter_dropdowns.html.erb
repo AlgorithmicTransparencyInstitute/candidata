@@ -1,0 +1,87 @@
+<%
+  # This partial renders organized filter dropdowns
+  # Required locals:
+  #   - filters: Hash with filter groups and their fields
+  #   - form_id: ID of the form containing these filters
+  #   - preserve_params: Array of param names to preserve when clearing (e.g., [:user_id, :task_type])
+  #   - clear_url: URL to clear filters
+%>
+
+<div class="bg-white rounded-lg shadow p-6">
+  <div class="flex items-center justify-between mb-4">
+    <h2 class="text-xl font-semibold text-gray-900">Filter People</h2>
+    <% if params[:q].present? || filters.values.flatten.any? { |f| params[f[:param]].present? } %>
+      <%= link_to "Clear all filters", clear_url, class: "text-sm text-blue-600 hover:text-blue-800" %>
+    <% end %>
+  </div>
+
+  <!-- Filter Controls in One Row -->
+  <div class="flex flex-wrap gap-2 mb-4">
+    <!-- Search -->
+    <% if local_assigns[:show_search] != false %>
+      <div class="relative flex-1 min-w-[200px]">
+        <input type="text" name="q" value="<%= params[:q] %>" placeholder="Search by name..."
+               class="w-full rounded-lg border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 pr-8"
+               onkeydown="if(event.key==='Enter'){event.preventDefault();document.getElementById('<%= form_id %>').requestSubmit();}">
+        <button type="button" onclick="document.getElementById('<%= form_id %>').requestSubmit();"
+                class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+          🔍
+        </button>
+      </div>
+    <% end %>
+
+    <!-- Filter Dropdowns -->
+    <% filters.each do |group_name, group_filters| %>
+      <div class="relative inline-block">
+        <button type="button" onclick="toggleFilterDropdown('<%= group_name %>')"
+                class="px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 flex items-center gap-2">
+          <%= group_name.to_s.titleize %>
+          <span class="text-xs">▼</span>
+        </button>
+        <div id="<%= group_name %>-filter-dropdown"
+             class="hidden absolute z-10 mt-1 bg-white rounded-lg shadow-lg border border-gray-200 p-4"
+             style="min-width: <%= group_filters.length > 1 ? '16rem' : '12rem' %>">
+          <div class="space-y-3">
+            <% group_filters.each do |filter| %>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1"><%= filter[:label] %></label>
+                <%= select_tag filter[:param], filter[:options],
+                    prompt: filter[:prompt] || "All",
+                    class: "w-full rounded border-gray-300 text-sm",
+                    onchange: "document.getElementById('#{form_id}').requestSubmit()" %>
+              </div>
+            <% end %>
+          </div>
+        </div>
+      </div>
+    <% end %>
+  </div>
+
+  <!-- Active Filters Status Line -->
+  <%= render 'shared/active_filters_status', filters: filters, preserve_params: local_assigns[:preserve_params] || [] %>
+</div>
+
+<script>
+  function toggleFilterDropdown(id) {
+    const dropdown = document.getElementById(id + '-filter-dropdown');
+    const allDropdowns = document.querySelectorAll('[id$="-filter-dropdown"]');
+
+    // Close all other dropdowns
+    allDropdowns.forEach(d => {
+      if (d.id !== id + '-filter-dropdown') {
+        d.classList.add('hidden');
+      }
+    });
+
+    // Toggle this dropdown
+    dropdown.classList.toggle('hidden');
+  }
+
+  // Close dropdowns when clicking outside
+  document.addEventListener('click', function(event) {
+    if (!event.target.closest('button[onclick^="toggleFilterDropdown"]') &&
+        !event.target.closest('[id$="-filter-dropdown"]')) {
+      document.querySelectorAll('[id$="-filter-dropdown"]').forEach(d => d.classList.add('hidden'));
+    }
+  });
+</script>

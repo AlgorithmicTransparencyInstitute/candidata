@@ -1,0 +1,48 @@
+<%
+  # This partial renders a status line showing active filters
+  # Required locals:
+  #   - filters: Hash with filter groups (used for lookups)
+  #   - preserve_params: Array of param names to exclude from status (e.g., [:user_id, :task_type])
+
+  active_filters = []
+
+  # Add search if present
+  active_filters << "Name: \"#{params[:q]}\"" if params[:q].present?
+
+  # Add other filters
+  filters.each do |group_name, group_filters|
+    group_filters.each do |filter|
+      param_key = filter[:param]
+      next if params[param_key].blank?
+      next if preserve_params.include?(param_key.to_sym)
+
+      # Get the display value
+      display_value = case param_key.to_s
+      when 'state'
+        State.find_by(abbreviation: params[param_key])&.name || params[param_key]
+      when 'party_id'
+        Party.find_by(id: params[param_key])&.name
+      when 'body_id'
+        Body.find_by(id: params[param_key])&.name
+      when 'ballot_id'
+        Ballot.find_by(id: params[param_key])&.full_name
+      when 'contest_id'
+        Contest.find_by(id: params[param_key])&.full_name
+      else
+        # For string values, humanize them
+        params[param_key].to_s.humanize
+      end
+
+      active_filters << "#{filter[:label]}: #{display_value}" if display_value.present?
+    end
+  end
+%>
+
+<% if active_filters.any? %>
+  <div class="bg-blue-50 border border-blue-200 rounded-lg p-3">
+    <div class="flex items-start gap-2">
+      <span class="text-sm font-medium text-blue-900">Active filters:</span>
+      <span class="text-sm text-blue-700"><%= active_filters.join(" • ") %></span>
+    </div>
+  </div>
+<% end %>

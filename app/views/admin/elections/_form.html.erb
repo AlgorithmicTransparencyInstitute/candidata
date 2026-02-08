@@ -1,0 +1,57 @@
+<%= form_with model: [:admin, election], class: "bg-white rounded-lg shadow p-6" do |f| %>
+  <% if election.errors.any? %>
+    <div class="mb-4 p-4 bg-red-50 border border-red-200 rounded">
+      <ul class="list-disc list-inside text-red-700 text-sm">
+        <% election.errors.full_messages.each do |msg| %>
+          <li><%= msg %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div class="mb-4">
+    <label class="block text-sm font-medium text-gray-700 mb-1">Name (optional)</label>
+    <%= f.text_field :name, class: "w-full px-3 py-2 border border-gray-300 rounded-md", placeholder: "e.g., Kentucky Primary Election" %>
+    <p class="mt-1 text-xs text-gray-500">If blank, will auto-generate from state, type, and year</p>
+  </div>
+
+  <div class="grid grid-cols-2 gap-4 mb-4">
+    <div>
+      <label class="block text-sm font-medium text-gray-700 mb-1">Date *</label>
+      <%= f.date_field :date, class: "w-full px-3 py-2 border border-gray-300 rounded-md", required: true %>
+    </div>
+    <div>
+      <label class="block text-sm font-medium text-gray-700 mb-1">State *</label>
+      <%= f.select :state, State.order(:name).pluck(:abbreviation, :name).map { |a, n| [n, a] }, { include_blank: 'Select state' }, class: "w-full px-3 py-2 border border-gray-300 rounded-md", required: true %>
+    </div>
+  </div>
+
+  <div class="mb-4">
+    <label class="block text-sm font-medium text-gray-700 mb-1">Election Type *</label>
+    <%= f.select :election_type, [['Primary', 'primary'], ['General', 'general'], ['Special', 'special']], { include_blank: 'Select type' }, class: "w-full px-3 py-2 border border-gray-300 rounded-md", required: true %>
+  </div>
+
+  <div class="border-t border-gray-200 mt-6 pt-6 mb-4">
+    <h3 class="text-lg font-medium text-gray-900 mb-4">Important Dates</h3>
+
+    <div class="grid grid-cols-3 gap-4">
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Registration Deadline</label>
+        <%= f.date_field :registration_deadline, class: "w-full px-3 py-2 border border-gray-300 rounded-md" %>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Early Voting Start</label>
+        <%= f.date_field :early_voting_start, class: "w-full px-3 py-2 border border-gray-300 rounded-md" %>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Early Voting End</label>
+        <%= f.date_field :early_voting_end, class: "w-full px-3 py-2 border border-gray-300 rounded-md" %>
+      </div>
+    </div>
+  </div>
+
+  <div class="flex justify-end gap-3">
+    <%= link_to "Cancel", election.persisted? ? admin_election_path(election) : admin_elections_path, class: "px-4 py-2 text-gray-700 hover:text-gray-900" %>
+    <%= f.submit election.persisted? ? "Save Changes" : "Create Election", class: "px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 cursor-pointer" %>
+  </div>
+<% end %>

@@ -116,16 +116,65 @@ class Admin::PeopleController < Admin::BaseController
 
   def bulk_assign
     @researchers = User.researchers.order(:name)
-    @people = Person.order(:last_name, :first_name)
+    @states = State.order(:name)
+    @parties = Party.order(:name)
+    @people = Person.includes(:parties, :social_media_accounts, :officeholders, :person_parties)
 
-    if params[:contest_id].present?
-      contest = Contest.find(params[:contest_id])
-      @people = Person.joins(:candidates).where(candidates: { contest_id: contest.id })
-    elsif params[:state].present?
-      @people = @people.by_state(params[:state])
+    # Text search
+    if params[:q].present?
+      search_term = "%#{params[:q].downcase}%"
+      @people = @people.where("LOWER(first_name) LIKE :term OR LOWER(last_name) LIKE :term", term: search_term)
     end
 
-    @people = @people.page(params[:page]).per(100)
+    # State filter
+    if params[:state].present?
+      @people = @people.where(state_of_residence: params[:state])
+    end
+
+    # Party filter
+    if params[:party_id].present?
+      @people = @people.joins(:person_parties).where(person_parties: { party_id: params[:party_id] })
+    end
+
+    # Office filter (current officeholders only)
+    if params[:office_level].present?
+      @people = @people.joins(officeholders: :office)
+                       .where('officeholders.end_date IS NULL OR officeholders.end_date >= ?', Date.current)
+                       .where(offices: { level: params[:office_level] })
+                       .distinct
+    end
+
+    # Research status filter
+    if params[:research_status].present?
+      @people = @people.joins(:social_media_accounts)
+                       .where(social_media_accounts: { research_status: params[:research_status] })
+                       .distinct
+    end
+
+    # Assignment status filter
+    case params[:assignment_status]
+    when 'unassigned'
+      @people = @people.left_joins(:assignments).where(assignments: { id: nil })
+    when 'assigned'
+      @people = @people.joins(:assignments).where(assignments: { status: %w[pending in_progress] }).distinct
+    when 'completed'
+      @people = @people.joins(:assignments).where(assignments: { status: 'completed' }).distinct
+    end
+
+    # Account status filter
+    case params[:account_status]
+    when 'has_accounts'
+      @people = @people.joins(:social_media_accounts).distinct
+    when 'no_accounts'
+      @people = @people.left_joins(:social_media_accounts).where(social_media_accounts: { id: nil })
+    end
+
+    # Contest filter
+    if params[:contest_id].present?
+      @people = @people.joins(:candidates).where(candidates: { contest_id: params[:contest_id] })
+    end
+
+    @people = @people.order(:last_name, :first_name).page(params[:page]).per(100)
   end
 
   def create_bulk_assignments

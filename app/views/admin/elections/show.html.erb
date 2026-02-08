@@ -1,0 +1,74 @@
+<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+  <div class="mb-6">
+    <%= link_to "← Back to Elections", admin_elections_path, class: "text-blue-600 hover:text-blue-800" %>
+  </div>
+
+  <div class="bg-white rounded-lg shadow mb-6">
+    <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+      <div>
+        <h1 class="text-2xl font-bold text-gray-900"><%= @election.full_name %></h1>
+        <p class="text-gray-600"><%= @election.date.strftime('%B %d, %Y') %></p>
+      </div>
+      <div class="flex items-center gap-2">
+        <span class="px-3 py-1 text-sm rounded-full bg-purple-100 text-purple-800"><%= @election.election_type&.titleize %></span>
+        <%= link_to "Edit", edit_admin_election_path(@election), class: "px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300" %>
+      </div>
+    </div>
+
+    <div class="p-6 grid grid-cols-2 gap-6">
+      <div>
+        <div class="text-sm text-gray-500">State</div>
+        <div class="font-medium"><%= @election.state || 'N/A' %></div>
+      </div>
+      <div>
+        <div class="text-sm text-gray-500">Year</div>
+        <div class="font-medium"><%= @election.year %></div>
+      </div>
+      <div>
+        <div class="text-sm text-gray-500">Registration Deadline</div>
+        <div class="font-medium"><%= @election.registration_deadline&.strftime('%B %d, %Y') || 'Not set' %></div>
+      </div>
+      <div>
+        <div class="text-sm text-gray-500">Early Voting Period</div>
+        <div class="font-medium">
+          <% if @election.early_voting_start && @election.early_voting_end %>
+            <%= @election.early_voting_start.strftime('%b %d') %> - <%= @election.early_voting_end.strftime('%b %d, %Y') %>
+          <% else %>
+            Not set
+          <% end %>
+        </div>
+      </div>
+      <div>
+        <div class="text-sm text-gray-500">Ballots</div>
+        <div class="font-medium"><%= @ballots.count %></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="bg-white rounded-lg shadow">
+    <div class="px-6 py-4 border-b border-gray-200">
+      <h2 class="text-xl font-semibold text-gray-900">Ballots</h2>
+    </div>
+    <div class="divide-y divide-gray-200">
+      <% if @ballots.any? %>
+        <% @ballots.each do |ballot| %>
+          <div class="px-6 py-4 flex justify-between items-center">
+            <div>
+              <div class="font-medium"><%= ballot.full_name %></div>
+              <div class="text-sm text-gray-600">
+                <%= ballot.date.strftime('%B %d, %Y') %>
+                <% if ballot.party.present? %>
+                  · <%= ballot.party %>
+                <% end %>
+                · <%= pluralize(ballot.contests.count, 'contest') %>
+              </div>
+            </div>
+            <%= link_to "View", admin_ballot_path(ballot), class: "text-blue-600 hover:text-blue-800 text-sm" %>
+          </div>
+        <% end %>
+      <% else %>
+        <div class="px-6 py-8 text-center text-gray-500">No ballots linked to this election</div>
+      <% end %>
+    </div>
+  </div>
+</div>

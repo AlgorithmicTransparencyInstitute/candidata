@@ -1,0 +1,9 @@
+<div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+  <div class="mb-6">
+    <%= link_to "← Back to Elections", admin_elections_path, class: "text-blue-600 hover:text-blue-800" %>
+  </div>
+
+  <h1 class="text-3xl font-bold text-gray-900 mb-6">New Election</h1>
+
+  <%= render "form", election: @election %>
+</div>
