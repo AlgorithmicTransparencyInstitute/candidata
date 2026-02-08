@@ -24,6 +24,7 @@ Rails.application.routes.draw do
   namespace :admin do
     root "dashboard#index"
     get 'guide', to: 'guide#show', as: :guide
+    resources :visits, only: [:index]
     resources :parties
     resources :people do
       member do

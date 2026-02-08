@@ -1,0 +1,156 @@
+<div class="max-w-7xl mx-auto px-4 py-8">
+  <div class="mb-6">
+    <h1 class="text-3xl font-bold text-gray-900">User Activity & Login Statistics</h1>
+    <p class="text-gray-600 mt-1">Track user logins and activity across the platform</p>
+  </div>
+
+  <!-- Statistics Cards -->
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
+    <div class="bg-white rounded-lg shadow p-5">
+      <div class="text-sm font-medium text-gray-500 mb-1">Total Visits</div>
+      <div class="text-3xl font-bold text-gray-900"><%= number_with_delimiter(@total_visits) %></div>
+    </div>
+    <div class="bg-white rounded-lg shadow p-5">
+      <div class="text-sm font-medium text-gray-500 mb-1">Unique Users</div>
+      <div class="text-3xl font-bold text-blue-600"><%= number_with_delimiter(@unique_visitors) %></div>
+    </div>
+    <div class="bg-white rounded-lg shadow p-5">
+      <div class="text-sm font-medium text-gray-500 mb-1">Today</div>
+      <div class="text-3xl font-bold text-green-600"><%= number_with_delimiter(@visits_today) %></div>
+    </div>
+    <div class="bg-white rounded-lg shadow p-5">
+      <div class="text-sm font-medium text-gray-500 mb-1">This Week</div>
+      <div class="text-3xl font-bold text-purple-600"><%= number_with_delimiter(@visits_this_week) %></div>
+    </div>
+    <div class="bg-white rounded-lg shadow p-5">
+      <div class="text-sm font-medium text-gray-500 mb-1">This Month</div>
+      <div class="text-3xl font-bold text-orange-600"><%= number_with_delimiter(@visits_this_month) %></div>
+    </div>
+  </div>
+
+  <!-- Most Active Users -->
+  <% if @most_active_users.any? %>
+    <div class="bg-white rounded-lg shadow mb-6">
+      <div class="px-6 py-4 border-b border-gray-200">
+        <h2 class="text-lg font-semibold text-gray-900">Most Active Users (Last 30 Days)</h2>
+      </div>
+      <div class="p-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+          <% @most_active_users.each do |user| %>
+            <div class="bg-gray-50 rounded-lg p-4">
+              <%= link_to admin_user_path(user), class: "block hover:bg-gray-100 rounded transition" do %>
+                <div class="font-medium text-gray-900"><%= user.name || user.email %></div>
+                <div class="text-sm text-gray-600"><%= user.role.titleize %></div>
+                <div class="text-2xl font-bold text-blue-600 mt-2"><%= user.visits_count %></div>
+                <div class="text-xs text-gray-500">visits</div>
+              <% end %>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    </div>
+  <% end %>
+
+  <!-- Filters -->
+  <div class="bg-white rounded-lg shadow mb-6 p-4">
+    <%= form_with url: admin_visits_path, method: :get, class: "flex flex-wrap gap-4 items-end" do |f| %>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">User</label>
+        <%= select_tag :user_id,
+            options_for_select([['All Users', '']] + User.order(:name).map { |u| [u.name.presence || u.email, u.id] }, params[:user_id]),
+            class: "px-3 py-2 border border-gray-300 rounded-md" %>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
+        <%= date_field_tag :start_date, params[:start_date], class: "px-3 py-2 border border-gray-300 rounded-md" %>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">End Date</label>
+        <%= date_field_tag :end_date, params[:end_date], class: "px-3 py-2 border border-gray-300 rounded-md" %>
+      </div>
+      <div>
+        <%= submit_tag "Filter", class: "px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 cursor-pointer" %>
+        <%= link_to "Clear", admin_visits_path, class: "px-4 py-2 text-gray-600 hover:text-gray-900" %>
+      </div>
+    <% end %>
+  </div>
+
+  <% if @filtered_user %>
+    <div class="mb-4 bg-blue-50 border border-blue-200 rounded-lg p-4">
+      <div class="flex items-center justify-between">
+        <div>
+          <span class="text-blue-900 font-medium">Filtered by user:</span>
+          <%= link_to @filtered_user.name || @filtered_user.email, admin_user_path(@filtered_user), class: "text-blue-600 hover:text-blue-800 ml-2" %>
+        </div>
+        <%= link_to "Clear filter", admin_visits_path, class: "text-blue-600 hover:text-blue-800 text-sm" %>
+      </div>
+    </div>
+  <% end %>
+
+  <!-- Visits Table -->
+  <div class="bg-white rounded-lg shadow overflow-hidden">
+    <div class="px-6 py-4 border-b border-gray-200">
+      <h2 class="text-lg font-semibold text-gray-900">Recent Visits</h2>
+    </div>
+    <div class="overflow-x-auto">
+      <table class="min-w-full divide-y divide-gray-200">
+        <thead class="bg-gray-50">
+          <tr>
+            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">User</th>
+            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date & Time</th>
+            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Browser</th>
+            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">OS</th>
+            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Device</th>
+            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">IP Address</th>
+            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Landing Page</th>
+          </tr>
+        </thead>
+        <tbody class="bg-white divide-y divide-gray-200">
+          <% @visits.each do |visit| %>
+            <tr class="hover:bg-gray-50">
+              <td class="px-4 py-4 whitespace-nowrap">
+                <% if visit.user %>
+                  <%= link_to admin_user_path(visit.user), class: "text-blue-600 hover:text-blue-800" do %>
+                    <div class="text-sm font-medium text-gray-900"><%= visit.user.name || visit.user.email %></div>
+                    <div class="text-xs text-gray-500"><%= visit.user.role.titleize %></div>
+                  <% end %>
+                <% else %>
+                  <span class="text-gray-400 text-sm">Anonymous</span>
+                <% end %>
+              </td>
+              <td class="px-4 py-4 whitespace-nowrap">
+                <div class="text-sm text-gray-900"><%= visit.started_at.strftime("%b %d, %Y %I:%M %p") %></div>
+                <div class="text-xs text-gray-500"><%= time_ago_in_words(visit.started_at) %> ago</div>
+              </td>
+              <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-700">
+                <%= visit.browser %>
+              </td>
+              <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-700">
+                <%= visit.os %>
+              </td>
+              <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-700">
+                <%= visit.device_type.to_s.titleize %>
+              </td>
+              <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-600 font-mono">
+                <%= visit.ip %>
+              </td>
+              <td class="px-4 py-4 text-sm text-gray-600">
+                <% if visit.landing_page.present? %>
+                  <div class="max-w-xs truncate" title="<%= visit.landing_page %>">
+                    <%= visit.landing_page %>
+                  </div>
+                <% else %>
+                  <span class="text-gray-400">-</span>
+                <% end %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="mt-4">
+    <%= paginate @visits %>
+  </div>
+</div>

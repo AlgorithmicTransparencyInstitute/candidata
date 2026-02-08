@@ -153,6 +153,60 @@
     </div>
   </div>
 
+  <!-- Login History -->
+  <div class="bg-white rounded-lg shadow mb-6">
+    <div class="px-6 py-4 border-b border-gray-200">
+      <h2 class="text-lg font-semibold text-gray-900">Login History</h2>
+    </div>
+    <div class="p-6">
+      <% recent_visits = @user.visits.order(started_at: :desc).limit(10) %>
+      <% if recent_visits.any? %>
+        <div class="overflow-x-auto">
+          <table class="min-w-full divide-y divide-gray-200">
+            <thead>
+              <tr>
+                <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Date & Time</th>
+                <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Browser</th>
+                <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">OS</th>
+                <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Device</th>
+                <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">IP Address</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-200">
+              <% recent_visits.each do |visit| %>
+                <tr class="hover:bg-gray-50">
+                  <td class="px-3 py-3 text-sm text-gray-900">
+                    <%= visit.started_at.strftime("%b %d, %Y %I:%M %p") %>
+                    <span class="text-gray-500 text-xs block"><%= time_ago_in_words(visit.started_at) %> ago</span>
+                  </td>
+                  <td class="px-3 py-3 text-sm text-gray-700">
+                    <%= visit.browser %>
+                  </td>
+                  <td class="px-3 py-3 text-sm text-gray-700">
+                    <%= visit.os %>
+                  </td>
+                  <td class="px-3 py-3 text-sm text-gray-700">
+                    <%= visit.device_type.to_s.titleize %>
+                  </td>
+                  <td class="px-3 py-3 text-sm text-gray-600 font-mono">
+                    <%= visit.ip %>
+                  </td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        </div>
+        <% if @user.visits.count > 10 %>
+          <div class="mt-4 text-sm text-gray-600">
+            Showing 10 of <%= @user.visits.count %> total visits
+          </div>
+        <% end %>
+      <% else %>
+        <div class="text-center py-8 text-gray-500">No login history yet</div>
+      <% end %>
+    </div>
+  </div>
+
   <div class="bg-white rounded-lg shadow">
     <div class="px-6 py-4 border-b border-gray-200">
       <h2 class="text-xl font-semibold text-gray-900">Recent Assignments</h2>
