@@ -34,6 +34,7 @@ gem "paper_trail"
 gem "dotenv-rails", groups: [:development, :test]
 # Analytics tracking
 gem "mixpanel-ruby"
+gem "ahoy_matey"
 # Use Redis adapter to run Action Cable in production
 # gem "redis", ">= 4.0.1"
 

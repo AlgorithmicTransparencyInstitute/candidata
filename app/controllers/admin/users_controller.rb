@@ -1,6 +1,6 @@
 module Admin
   class UsersController < Admin::BaseController
-    before_action :set_user, only: [:show, :edit, :update, :destroy, :resend_invitation, :send_reset_password, :impersonate, :generate_invitation_link]
+    before_action :set_user, only: [:show, :edit, :update, :destroy, :resend_invitation, :send_reset_password, :impersonate, :generate_invitation_link, :send_assignment_reminder]
 
     def index
       @users = User.order(:name)
@@ -118,6 +118,18 @@ module Admin
       )
 
       render json: { invitation_url: invitation_url }
+    end
+
+    def send_assignment_reminder
+      incomplete_count = @user.assignments.where(status: [ 'pending', 'in_progress' ]).count
+
+      if incomplete_count.zero?
+        redirect_to admin_user_path(@user), alert: "This user has no incomplete assignments to remind them about."
+        return
+      end
+
+      UserMailer.assignment_reminder(@user).deliver_now
+      redirect_to admin_user_path(@user), notice: "Assignment reminder sent to #{@user.email} (#{incomplete_count} #{'assignment'.pluralize(incomplete_count)})."
     end
 
     def export_invitations

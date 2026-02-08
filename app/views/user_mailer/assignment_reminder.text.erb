@@ -1,0 +1,27 @@
+ASSIGNMENT REMINDER
+==================
+
+Hi <%= @user.name || @user.email.split('@').first.titleize %>,
+
+This is a friendly reminder that you have <%= @incomplete_assignments.count %> <%= 'assignment'.pluralize(@incomplete_assignments.count) %> waiting to be completed in your CandiData queue.
+
+<% if @incomplete_assignments.any? %>
+YOUR PENDING ASSIGNMENTS:
+<% @incomplete_assignments.each do |assignment| %>
+
+- <%= assignment.person.full_name %>
+  Task: <%= assignment.task_type == 'data_collection' ? 'Data Collection' : 'Data Validation' %>
+  Status: <%= assignment.status.humanize %>
+  Assigned: <%= time_ago_in_words(assignment.created_at) %> ago
+<% end %>
+
+Your contributions help build a comprehensive database of candidate information. Thank you for your hard work!
+
+View your assignments: <%= researcher_assignments_url %>
+<% end %>
+
+Questions or need help? Don't hesitate to reach out to your administrator.
+
+---
+CandiData - Political Candidate Information Database
+This is an automated reminder. Please do not reply to this email.

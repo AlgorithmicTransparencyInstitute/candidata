@@ -60,6 +60,7 @@ Rails.application.routes.draw do
         post :send_reset_password
         post :impersonate
         post :generate_invitation_link
+        post :send_assignment_reminder
       end
     end
     resources :researchers, only: [:index]

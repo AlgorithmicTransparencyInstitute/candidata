@@ -13,6 +13,9 @@ class ApplicationController < ActionController::Base
   # Include user impersonation support
   include Impersonatable
 
+  # Track visits with Ahoy
+  before_action :track_ahoy_visit
+
   # Track user sign-ins
   after_action :track_sign_in, if: -> { user_signed_in? && session[:just_signed_in] }
 

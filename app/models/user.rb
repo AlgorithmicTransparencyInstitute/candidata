@@ -19,6 +19,7 @@ class User < ApplicationRecord
   has_many :assignments_given, class_name: 'Assignment', foreign_key: 'assigned_by_id', dependent: :nullify
   has_many :entered_accounts, class_name: 'SocialMediaAccount', foreign_key: 'entered_by_id'
   has_many :verified_accounts, class_name: 'SocialMediaAccount', foreign_key: 'verified_by_id'
+  has_many :visits, class_name: 'Ahoy::Visit', dependent: :destroy
 
   validates :role, inclusion: { in: ROLES }
 
