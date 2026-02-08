@@ -108,6 +108,9 @@ namespace :rebuild do
       errors: []
     }
 
+    total_temp_people = TempPerson.count
+    puts "Temp people to process: #{total_temp_people}"
+
     TempPerson.find_each do |temp_person|
       # Match by person_uuid
       person = Person.find_by(person_uuid: temp_person.person_uuid)
@@ -168,7 +171,9 @@ namespace :rebuild do
         end
       end
 
-      print "." if stats[:people_matched] % 100 == 0
+      if stats[:people_matched] % 100 == 0
+        puts "Matched #{stats[:people_matched]} people, added #{stats[:race_added]} races, #{stats[:gender_added]} genders, #{stats[:accounts_added]} accounts"
+      end
     end
 
     puts "\n\n" + "="*80

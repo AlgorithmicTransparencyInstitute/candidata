@@ -718,6 +718,9 @@ namespace :govproj do
     }
 
     processed = 0
+    total_records = TempGovproj.count
+    batch_size = 1000
+
     TempGovproj.find_each do |row|
       begin
         office_uuid = row.office_uuid
@@ -819,7 +822,7 @@ namespace :govproj do
         }
         social_data.each do |platform, handle_or_url|
           next if handle_or_url.blank?
-          
+
           existing = SocialMediaAccount.find_by(person: person, platform: platform, handle: handle_or_url)
           unless existing
             SocialMediaAccount.create!(
@@ -835,7 +838,10 @@ namespace :govproj do
         end
 
         processed += 1
-        print "." if processed % 1000 == 0
+        if processed % batch_size == 0
+          percent = ((processed.to_f / total_records) * 100).round(1)
+          puts "\nProcessed #{processed}/#{total_records} (#{percent}%) - People: #{stats[:people_created]}, Offices: #{stats[:offices_created]}, Officeholders: #{stats[:officeholders_created]}"
+        end
 
       rescue => e
         stats[:errors] << "#{row.official_name}: #{e.message}"
