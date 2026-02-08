@@ -93,7 +93,7 @@
                     <!-- Candidates -->
                     <% if contest.candidates.any? %>
                       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                        <% contest.candidates.order(:last_name, :first_name).each do |candidate| %>
+                        <% contest.candidates.joins(:person).order('people.last_name', 'people.first_name').each do |candidate| %>
                           <%= link_to person_path(candidate.person), class: "flex items-center justify-between p-3 rounded-lg border border-gray-200 hover:border-indigo-300 hover:bg-indigo-50 transition-colors duration-150" do %>
                             <div class="flex items-center min-w-0 flex-1">
                               <div class="flex-shrink-0 w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center mr-3">
