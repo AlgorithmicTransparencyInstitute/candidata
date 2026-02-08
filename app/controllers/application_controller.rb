@@ -10,6 +10,9 @@ class ApplicationController < ActionController::Base
   # Include Mixpanel tracking helper
   include MixpanelHelper
 
+  # Include user impersonation support
+  include Impersonatable
+
   # Track user sign-ins
   after_action :track_sign_in, if: -> { user_signed_in? && session[:just_signed_in] }
 

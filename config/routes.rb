@@ -53,10 +53,12 @@ Rails.application.routes.draw do
     resources :users do
       collection do
         get :export_invitations
+        post :stop_impersonating
       end
       member do
         post :resend_invitation
         post :send_reset_password
+        post :impersonate
       end
     end
     resources :researchers, only: [:index]

@@ -1,0 +1,22 @@
+<div class="bg-purple-600 text-white py-2 px-4 sticky top-0 z-50 shadow-lg">
+  <div class="max-w-7xl mx-auto flex items-center justify-between">
+    <div class="flex items-center gap-3">
+      <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+      </svg>
+      <span class="font-semibold">
+        Viewing as: <%= current_user.name || current_user.email %>
+      </span>
+      <span class="text-purple-200 text-sm">
+        (<%= current_user.role.titleize %>)
+      </span>
+    </div>
+
+    <%= button_to stop_impersonating_admin_users_path, method: :post, class: "inline-flex items-center gap-2 px-4 py-1.5 bg-white text-purple-700 font-medium rounded hover:bg-purple-50 transition-colors text-sm" do %>
+      <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M9 15L3 9m0 0l6-6M3 9h12a6 6 0 010 12h-3" />
+      </svg>
+      Stop Impersonating
+    <% end %>
+  </div>
+</div>

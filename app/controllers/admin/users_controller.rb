@@ -1,6 +1,6 @@
 module Admin
   class UsersController < Admin::BaseController
-    before_action :set_user, only: [:show, :edit, :update, :destroy, :resend_invitation, :send_reset_password]
+    before_action :set_user, only: [:show, :edit, :update, :destroy, :resend_invitation, :send_reset_password, :impersonate]
 
     def index
       @users = User.order(:name)
@@ -69,6 +69,28 @@ module Admin
     def send_reset_password
       @user.send_reset_password_instructions
       redirect_to admin_user_path(@user), notice: "Password reset email sent to #{@user.email}."
+    end
+
+    def impersonate
+      unless current_user.admin?
+        redirect_to root_path, alert: "Not authorized."
+        return
+      end
+
+      if @user.admin?
+        redirect_to admin_user_path(@user), alert: "Cannot impersonate other admins."
+        return
+      end
+
+      session[:impersonating_user_id] = @user.id
+      session[:admin_user_id] = current_user.id
+      redirect_to root_path, notice: "Now viewing as #{@user.name || @user.email}"
+    end
+
+    def stop_impersonating
+      session.delete(:impersonating_user_id)
+      admin_id = session.delete(:admin_user_id)
+      redirect_to admin_users_path, notice: "Stopped impersonating. Back to admin view."
     end
 
     def export_invitations
