@@ -70,15 +70,33 @@
         </div>
       </div>
 
-      <!-- Current Offices + Party inline below header -->
-      <% if @current_offices.any? || @person.parties.any? %>
+      <!-- Current Offices / Candidacies + Party inline below header -->
+      <%
+        # Find most recent candidacy (prefer 2026 or later)
+        recent_candidacy = @candidacies.first
+      %>
+      <% if @current_offices.any? || recent_candidacy || @person.parties.any? %>
         <div class="mt-4 pt-4 border-t border-gray-200 flex flex-wrap gap-x-6 gap-y-2 text-sm">
           <% @current_offices.each do |oh| %>
             <div class="flex items-center gap-1.5 text-gray-700">
               <svg class="w-4 h-4 text-gray-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
-              <span class="font-medium"><%= oh.office.title %></span>
+              <span class="font-medium">Current: <%= oh.office.title %></span>
               <span class="text-gray-400">·</span>
               <span class="text-gray-500 capitalize"><%= oh.office.level %><%= oh.office.state.present? ? " · #{oh.office.state}" : '' %></span>
+            </div>
+          <% end %>
+          <% if recent_candidacy && @current_offices.empty? %>
+            <div class="flex items-center gap-1.5 text-blue-700">
+              <svg class="w-4 h-4 text-blue-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+              <span class="font-medium">Candidate: <%= recent_candidacy.contest.office&.title || 'Unknown Office' %></span>
+              <% if recent_candidacy.contest.office&.seat %>
+                <span class="text-gray-400">·</span>
+                <span class="text-blue-600">(<%= recent_candidacy.contest.office.seat %>)</span>
+              <% end %>
+              <% if recent_candidacy.contest.ballot %>
+                <span class="text-gray-400">·</span>
+                <span class="text-blue-600"><%= recent_candidacy.contest.ballot.year %> <%= recent_candidacy.contest.ballot.election_type&.titleize %></span>
+              <% end %>
             </div>
           <% end %>
           <% if @person.parties.count > 1 %>
@@ -95,6 +113,84 @@
   </div>
 
   <!-- Full-width work area -->
+
+  <!-- Verification Help Box (only for data_validation assignments) -->
+  <% if @assignment.task_type == 'data_validation' %>
+    <div class="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg shadow-sm mb-6">
+      <div class="px-6 py-4">
+        <div class="flex items-start gap-3">
+          <div class="flex-shrink-0 mt-0.5">
+            <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+          </div>
+          <div class="flex-1">
+            <h3 class="text-lg font-semibold text-gray-900 mb-3">How to Verify Social Media Accounts</h3>
+
+            <div class="space-y-4">
+              <div>
+                <h4 class="text-sm font-semibold text-gray-900 mb-2">✓ Verification Checklist:</h4>
+                <ul class="space-y-1.5 text-sm text-gray-700">
+                  <li class="flex items-start gap-2">
+                    <span class="text-blue-600 font-bold mt-0.5">1.</span>
+                    <span><strong>Open the account link</strong> - Click the URL to view the actual account</span>
+                  </li>
+                  <li class="flex items-start gap-2">
+                    <span class="text-blue-600 font-bold mt-0.5">2.</span>
+                    <span><strong>Confirm identity</strong> - Verify it's the correct person (check name, photo, bio)</span>
+                  </li>
+                  <li class="flex items-start gap-2">
+                    <span class="text-blue-600 font-bold mt-0.5">3.</span>
+                    <span><strong>Check account type</strong> - Is it <%= @person.social_media_accounts.first&.channel_type || 'campaign' %>? (Campaign vs. Official accounts serve different purposes)</span>
+                  </li>
+                  <li class="flex items-start gap-2">
+                    <span class="text-blue-600 font-bold mt-0.5">4.</span>
+                    <span><strong>Verify URL format</strong> - Ensure URL is clean (no tracking parameters after ? or &)</span>
+                  </li>
+                  <li class="flex items-start gap-2">
+                    <span class="text-blue-600 font-bold mt-0.5">5.</span>
+                    <span><strong>Cross-check</strong> - Use Google search "[Name] [Platform]" to confirm</span>
+                  </li>
+                </ul>
+              </div>
+
+              <div class="grid md:grid-cols-2 gap-4 text-sm">
+                <div class="bg-white rounded-lg p-3 border border-blue-100">
+                  <h5 class="font-semibold text-gray-900 mb-2">✓ If Account is Correct:</h5>
+                  <p class="text-gray-700">Click <span class="px-2 py-0.5 bg-green-100 text-green-700 rounded text-xs font-medium">Verify</span> button</p>
+                </div>
+                <div class="bg-white rounded-lg p-3 border border-blue-100">
+                  <h5 class="font-semibold text-gray-900 mb-2">✏️ If Account Needs Editing:</h5>
+                  <p class="text-gray-700">Click <span class="text-blue-600 font-medium">Edit</span>, fix the URL/handle, then verify</p>
+                </div>
+              </div>
+
+              <div class="bg-amber-50 border border-amber-200 rounded-lg p-3">
+                <div class="flex gap-2">
+                  <svg class="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+                  </svg>
+                  <div class="text-sm text-amber-900">
+                    <strong>Campaign vs. Official:</strong>
+                    <span class="text-amber-800">Campaign accounts are for election runs (e.g., "@SmithForSenate"). Official accounts are for current officeholders (e.g., "@SenSmith"). Make sure you're verifying the correct type for this assignment.</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="flex items-center justify-end gap-3 pt-2">
+                <a href="<%= researcher_guide_path %>#verification-methods" target="_blank" class="text-sm text-blue-600 hover:text-blue-800 font-medium flex items-center gap-1">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+                  </svg>
+                  Read Full Verification Guide
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  <% end %>
 
   <!-- Campaign Accounts -->
   <div class="bg-white rounded-lg shadow mb-6">

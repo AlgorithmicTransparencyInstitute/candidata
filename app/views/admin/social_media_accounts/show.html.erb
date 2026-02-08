@@ -1,0 +1,138 @@
+<div class="max-w-4xl mx-auto px-4 py-8">
+  <div class="mb-6">
+    <%= link_to "← Back to Accounts", admin_social_media_accounts_path, class: "text-blue-600 hover:text-blue-800" %>
+  </div>
+
+  <div class="bg-white rounded-lg shadow mb-6">
+    <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+      <h1 class="text-2xl font-bold text-gray-900"><%= @account.platform %> Account</h1>
+      <div class="flex gap-2">
+        <%= link_to "Edit", edit_admin_social_media_account_path(@account), class: "px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300" %>
+        <%= button_to "Delete", admin_social_media_account_path(@account), method: :delete, data: { confirm: "Are you sure?" }, class: "px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700" %>
+      </div>
+    </div>
+
+    <div class="p-6 space-y-6">
+      <!-- Person Information -->
+      <div class="border-b pb-4">
+        <h2 class="text-lg font-semibold text-gray-900 mb-3">Person</h2>
+        <div class="flex items-center gap-4">
+          <% if @person.photo_url.present? %>
+            <%= image_tag @person.photo_url, class: "w-16 h-16 rounded-full object-cover", alt: @person.full_name %>
+          <% else %>
+            <div class="w-16 h-16 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 font-semibold text-xl">
+              <%= @person.first_name[0] %><%= @person.last_name[0] %>
+            </div>
+          <% end %>
+          <div>
+            <%= link_to @person.full_name, admin_person_path(@person), class: "text-xl font-semibold text-blue-600 hover:text-blue-800" %>
+            <div class="text-sm text-gray-600">
+              <%= @person.primary_party&.name %> · <%= @person.state_of_residence %>
+            </div>
+            <% if @person.current_offices.any? %>
+              <div class="text-sm text-gray-600">
+                Current: <%= @person.current_offices.first.title %>
+              </div>
+            <% end %>
+          </div>
+        </div>
+      </div>
+
+      <!-- Account Details -->
+      <div class="grid md:grid-cols-2 gap-4">
+        <div>
+          <div class="text-sm text-gray-500">Platform</div>
+          <div class="font-medium flex items-center gap-2">
+            <%= platform_icon(@account.platform, size: 20) %>
+            <%= @account.platform %>
+          </div>
+        </div>
+        <div>
+          <div class="text-sm text-gray-500">Channel Type</div>
+          <div class="font-medium"><%= @account.channel_type %></div>
+        </div>
+        <div>
+          <div class="text-sm text-gray-500">URL</div>
+          <div class="font-medium">
+            <% if @account.url.present? %>
+              <%= link_to @account.url, @account.url, target: "_blank", class: "text-blue-600 hover:text-blue-800 break-all" %>
+            <% else %>
+              <span class="text-gray-400">—</span>
+            <% end %>
+          </div>
+        </div>
+        <div>
+          <div class="text-sm text-gray-500">Handle</div>
+          <div class="font-medium">
+            <% if @account.handle.present? %>
+              @<%= @account.handle %>
+            <% else %>
+              <span class="text-gray-400">—</span>
+            <% end %>
+          </div>
+        </div>
+        <div>
+          <div class="text-sm text-gray-500">Research Status</div>
+          <div class="font-medium"><%= research_status_badge(@account.research_status) %></div>
+        </div>
+        <div>
+          <div class="text-sm text-gray-500">Account Status</div>
+          <div class="font-medium">
+            <%= @account.account_inactive ? '<span class="text-red-600">Inactive</span>'.html_safe : '<span class="text-green-600">Active</span>'.html_safe %>
+          </div>
+        </div>
+      </div>
+
+      <!-- Research Information -->
+      <% if @account.entered_by || @account.verified_by %>
+        <div class="border-t pt-4">
+          <h2 class="text-lg font-semibold text-gray-900 mb-3">Research Information</h2>
+          <div class="grid md:grid-cols-2 gap-4">
+            <% if @account.entered_by %>
+              <div>
+                <div class="text-sm text-gray-500">Entered By</div>
+                <div class="font-medium"><%= @account.entered_by.name.presence || @account.entered_by.email %></div>
+                <div class="text-xs text-gray-500"><%= @account.entered_at&.strftime("%B %d, %Y at %I:%M %p") %></div>
+              </div>
+            <% end %>
+            <% if @account.verified_by %>
+              <div>
+                <div class="text-sm text-gray-500">Verified By</div>
+                <div class="font-medium"><%= @account.verified_by.name.presence || @account.verified_by.email %></div>
+                <div class="text-xs text-gray-500"><%= @account.verified_at&.strftime("%B %d, %Y at %I:%M %p") %></div>
+              </div>
+            <% end %>
+          </div>
+        </div>
+      <% end %>
+
+      <!-- Notes -->
+      <% if @account.research_notes.present? || @account.verification_notes.present? %>
+        <div class="border-t pt-4">
+          <h2 class="text-lg font-semibold text-gray-900 mb-3">Notes</h2>
+          <% if @account.research_notes.present? %>
+            <div class="mb-3">
+              <div class="text-sm font-medium text-gray-700">Research Notes:</div>
+              <div class="mt-1 p-3 bg-gray-50 rounded border border-gray-200 text-sm"><%= @account.research_notes %></div>
+            </div>
+          <% end %>
+          <% if @account.verification_notes.present? %>
+            <div>
+              <div class="text-sm font-medium text-gray-700">Verification Notes:</div>
+              <div class="mt-1 p-3 bg-gray-50 rounded border border-gray-200 text-sm"><%= @account.verification_notes %></div>
+            </div>
+          <% end %>
+        </div>
+      <% end %>
+
+      <!-- Metadata -->
+      <div class="border-t pt-4 text-xs text-gray-500">
+        <div>Created: <%= @account.created_at.strftime("%B %d, %Y at %I:%M %p") %></div>
+        <div>Last Updated: <%= @account.updated_at.strftime("%B %d, %Y at %I:%M %p") %></div>
+        <% if @account.pre_populated %>
+          <div class="mt-1"><span class="px-2 py-1 bg-gray-100 text-gray-600 rounded text-xs">Pre-populated</span></div>
+        <% end %>
+      </div>
+    </div>
+  </div>
+</div>

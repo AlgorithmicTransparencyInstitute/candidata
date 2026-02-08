@@ -1,0 +1,144 @@
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+  <div class="flex justify-between items-center mb-6">
+    <h1 class="text-3xl font-bold text-gray-900">Researchers</h1>
+  </div>
+
+  <!-- Filters and Sorting -->
+  <div class="bg-white rounded-lg shadow mb-6 p-4">
+    <form action="<%= admin_researchers_path %>" method="get" class="flex gap-3 items-end">
+      <div class="flex-1">
+        <label class="block text-sm font-medium text-gray-700 mb-1">Search Researcher</label>
+        <input type="text" name="search" value="<%= params[:search] %>" placeholder="Name or email..." class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+      </div>
+      <div class="w-64">
+        <label class="block text-sm font-medium text-gray-700 mb-1">Filter by Status</label>
+        <select name="filter" class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" onchange="this.form.submit()">
+          <option value="">All Researchers</option>
+          <option value="has_pending_collection" <%= 'selected' if params[:filter] == 'has_pending_collection' %>>Pending Data Collection</option>
+          <option value="has_pending_validation" <%= 'selected' if params[:filter] == 'has_pending_validation' %>>Pending Validation</option>
+          <option value="has_any_pending" <%= 'selected' if params[:filter] == 'has_any_pending' %>>Any Pending</option>
+          <option value="has_in_progress" <%= 'selected' if params[:filter] == 'has_in_progress' %>>In Progress</option>
+          <option value="no_assignments" <%= 'selected' if params[:filter] == 'no_assignments' %>>No Assignments</option>
+        </select>
+      </div>
+      <div class="w-56">
+        <label class="block text-sm font-medium text-gray-700 mb-1">Sort by</label>
+        <select name="sort" class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" onchange="this.form.submit()">
+          <option value="name" <%= 'selected' if params[:sort].blank? || params[:sort] == 'name' %>>Name</option>
+          <option value="pending_desc" <%= 'selected' if params[:sort] == 'pending_desc' %>>Most Pending</option>
+          <option value="in_progress_desc" <%= 'selected' if params[:sort] == 'in_progress_desc' %>>Most In Progress</option>
+          <option value="completed_desc" <%= 'selected' if params[:sort] == 'completed_desc' %>>Most Completed</option>
+          <option value="total_desc" <%= 'selected' if params[:sort] == 'total_desc' %>>Most Total</option>
+        </select>
+      </div>
+      <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Search</button>
+    </form>
+  </div>
+
+  <div class="bg-white rounded-lg shadow overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="min-w-full divide-y divide-gray-200">
+        <thead class="bg-gray-50">
+          <tr>
+            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Researcher</th>
+            <th class="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase border-l border-gray-200" colspan="3">Data Collection</th>
+            <th class="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase border-l border-gray-200" colspan="3">Data Validation</th>
+            <th class="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase border-l border-gray-200">Total</th>
+          </tr>
+          <tr class="bg-gray-50">
+            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500"></th>
+            <th class="px-2 py-2 text-center text-xs font-medium text-gray-500 border-l border-gray-200">Pending</th>
+            <th class="px-2 py-2 text-center text-xs font-medium text-gray-500">In Prog.</th>
+            <th class="px-2 py-2 text-center text-xs font-medium text-gray-500">Done</th>
+            <th class="px-2 py-2 text-center text-xs font-medium text-gray-500 border-l border-gray-200">Pending</th>
+            <th class="px-2 py-2 text-center text-xs font-medium text-gray-500">In Prog.</th>
+            <th class="px-2 py-2 text-center text-xs font-medium text-gray-500">Done</th>
+            <th class="px-2 py-2 text-center text-xs font-medium text-gray-500 border-l border-gray-200"></th>
+          </tr>
+        </thead>
+        <tbody class="bg-white divide-y divide-gray-200">
+          <% @researchers.each do |researcher| %>
+            <% collection_pending = researcher.instance_variable_get(:@collection_pending) || 0 %>
+            <% collection_in_progress = researcher.instance_variable_get(:@collection_in_progress) || 0 %>
+            <% collection_completed = researcher.instance_variable_get(:@collection_completed) || 0 %>
+            <% validation_pending = researcher.instance_variable_get(:@validation_pending) || 0 %>
+            <% validation_in_progress = researcher.instance_variable_get(:@validation_in_progress) || 0 %>
+            <% validation_completed = researcher.instance_variable_get(:@validation_completed) || 0 %>
+            <% total = researcher.instance_variable_get(:@total_assignments) || 0 %>
+            <tr class="hover:bg-gray-50 cursor-pointer" onclick="window.location='<%= admin_user_path(researcher) %>'">
+              <td class="px-4 py-3">
+                <div class="flex items-center">
+                  <%= user_avatar(researcher, size: "w-8 h-8") %>
+                  <div class="ml-2">
+                    <div class="text-sm font-medium text-gray-900"><%= researcher.name || researcher.email %></div>
+                  </div>
+                </div>
+              </td>
+              <td class="px-2 py-3 text-center border-l border-gray-200">
+                <% if collection_pending > 0 %>
+                  <span class="px-2 py-1 text-sm rounded-full bg-red-100 text-red-800 font-medium">
+                    <%= collection_pending %>
+                  </span>
+                <% else %>
+                  <span class="text-gray-400 text-sm">—</span>
+                <% end %>
+              </td>
+              <td class="px-2 py-3 text-center">
+                <% if collection_in_progress > 0 %>
+                  <span class="px-2 py-1 text-sm rounded-full bg-blue-100 text-blue-800">
+                    <%= collection_in_progress %>
+                  </span>
+                <% else %>
+                  <span class="text-gray-400 text-sm">—</span>
+                <% end %>
+              </td>
+              <td class="px-2 py-3 text-center">
+                <% if collection_completed > 0 %>
+                  <span class="px-2 py-1 text-sm rounded-full bg-green-100 text-green-800">
+                    <%= collection_completed %>
+                  </span>
+                <% else %>
+                  <span class="text-gray-400 text-sm">—</span>
+                <% end %>
+              </td>
+              <td class="px-2 py-3 text-center border-l border-gray-200">
+                <% if validation_pending > 0 %>
+                  <span class="px-2 py-1 text-sm rounded-full bg-red-100 text-red-800 font-medium">
+                    <%= validation_pending %>
+                  </span>
+                <% else %>
+                  <span class="text-gray-400 text-sm">—</span>
+                <% end %>
+              </td>
+              <td class="px-2 py-3 text-center">
+                <% if validation_in_progress > 0 %>
+                  <span class="px-2 py-1 text-sm rounded-full bg-blue-100 text-blue-800">
+                    <%= validation_in_progress %>
+                  </span>
+                <% else %>
+                  <span class="text-gray-400 text-sm">—</span>
+                <% end %>
+              </td>
+              <td class="px-2 py-3 text-center">
+                <% if validation_completed > 0 %>
+                  <span class="px-2 py-1 text-sm rounded-full bg-green-100 text-green-800">
+                    <%= validation_completed %>
+                  </span>
+                <% else %>
+                  <span class="text-gray-400 text-sm">—</span>
+                <% end %>
+              </td>
+              <td class="px-2 py-3 text-center border-l border-gray-200">
+                <span class="text-sm font-medium text-gray-900"><%= total %></span>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="mt-4">
+    <%= paginate @researchers %>
+  </div>
+</div>

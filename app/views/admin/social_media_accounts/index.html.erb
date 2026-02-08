@@ -1,0 +1,132 @@
+<div class="max-w-7xl mx-auto px-4 py-8">
+  <div class="flex justify-between items-center mb-6">
+    <h1 class="text-3xl font-bold text-gray-900">Social Media Accounts</h1>
+    <%= link_to "New Account", new_admin_social_media_account_path, class: "px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700" %>
+  </div>
+
+  <!-- Filters -->
+  <div class="bg-white rounded-lg shadow mb-6 p-4">
+    <%= form_with url: admin_social_media_accounts_path, method: :get, class: "space-y-4" do |f| %>
+      <!-- Search Row -->
+      <div class="flex gap-4">
+        <div class="flex-1">
+          <label class="block text-sm font-medium text-gray-700 mb-1">Search URL or Handle</label>
+          <%= text_field_tag :search, params[:search], placeholder: "Search by URL or @handle...", class: "w-full px-3 py-2 border border-gray-300 rounded-md text-sm" %>
+        </div>
+        <div class="flex-1">
+          <label class="block text-sm font-medium text-gray-700 mb-1">Search Person Name</label>
+          <%= text_field_tag :person_name, params[:person_name], placeholder: "Search by person name...", class: "w-full px-3 py-2 border border-gray-300 rounded-md text-sm" %>
+        </div>
+      </div>
+
+      <!-- Filter Row -->
+      <div class="grid grid-cols-1 md:grid-cols-6 gap-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">State</label>
+          <%= select_tag :state, options_for_select([["All States", ""]] + @states.map { |s| [s, s] }, params[:state]), class: "w-full px-3 py-2 border border-gray-300 rounded-md text-sm" %>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Party</label>
+          <%= select_tag :party_id, options_for_select([["All Parties", ""]] + @parties.map { |p| [p.abbreviation, p.id] }, params[:party_id]), class: "w-full px-3 py-2 border border-gray-300 rounded-md text-sm" %>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Platform</label>
+          <%= select_tag :platform, options_for_select([["All Platforms", ""]] + @platforms.map { |p| [p, p] }, params[:platform]), class: "w-full px-3 py-2 border border-gray-300 rounded-md text-sm" %>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Channel Type</label>
+          <%= select_tag :channel_type, options_for_select([["All Types", ""]] + @channel_types.map { |c| [c, c] }, params[:channel_type]), class: "w-full px-3 py-2 border border-gray-300 rounded-md text-sm" %>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Research Status</label>
+          <%= select_tag :research_status, options_for_select([["All Statuses", ""]] + @research_statuses.map { |s| [s.humanize, s] }, params[:research_status]), class: "w-full px-3 py-2 border border-gray-300 rounded-md text-sm" %>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Account Status</label>
+          <%= select_tag :account_status, options_for_select([["All", ""], ["Active", "active"], ["Inactive", "inactive"]], params[:account_status]), class: "w-full px-3 py-2 border border-gray-300 rounded-md text-sm" %>
+        </div>
+      </div>
+
+      <div class="flex gap-2 pt-2">
+        <%= submit_tag "Apply Filters", class: "px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 cursor-pointer" %>
+        <%= link_to "Clear All", admin_social_media_accounts_path, class: "px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300" %>
+      </div>
+    <% end %>
+  </div>
+
+  <!-- Accounts Table -->
+  <div class="bg-white rounded-lg shadow overflow-hidden">
+    <table class="min-w-full divide-y divide-gray-200">
+      <thead class="bg-gray-50">
+        <tr>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Person</th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Platform</th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Account</th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Channel</th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Research Status</th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Entered By</th>
+          <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
+        </tr>
+      </thead>
+      <tbody class="bg-white divide-y divide-gray-200">
+        <% @accounts.each do |account| %>
+          <tr class="hover:bg-gray-50">
+            <td class="px-6 py-4">
+              <%= link_to account.person.full_name, admin_person_path(account.person), class: "text-blue-600 hover:text-blue-800 font-medium" %>
+              <div class="text-xs text-gray-500">
+                <%= account.person.primary_party&.abbreviation %> · <%= account.person.state_of_residence %>
+              </div>
+            </td>
+            <td class="px-6 py-4 text-sm text-gray-900">
+              <div class="flex items-center gap-2">
+                <%= platform_icon(account.platform, size: 16) %>
+                <%= account.platform %>
+              </div>
+            </td>
+            <td class="px-6 py-4 text-sm">
+              <% if account.url.present? %>
+                <div class="truncate max-w-xs">
+                  <%= link_to account.url, account.url, target: "_blank", class: "text-blue-600 hover:text-blue-800" %>
+                </div>
+              <% elsif account.handle.present? %>
+                <div class="text-gray-900">@<%= account.handle %></div>
+              <% else %>
+                <span class="text-gray-400">—</span>
+              <% end %>
+            </td>
+            <td class="px-6 py-4 text-sm text-gray-600">
+              <%= account.channel_type %>
+            </td>
+            <td class="px-6 py-4">
+              <%= research_status_badge(account.research_status) %>
+            </td>
+            <td class="px-6 py-4 text-sm text-gray-600">
+              <% if account.entered_by %>
+                <%= account.entered_by.name.presence || account.entered_by.email.split('@').first %>
+                <div class="text-xs text-gray-400"><%= time_ago_in_words(account.entered_at) %> ago</div>
+              <% else %>
+                <span class="text-gray-400">—</span>
+              <% end %>
+            </td>
+            <td class="px-6 py-4 text-right">
+              <%= link_to "View", admin_social_media_account_path(account), class: "text-blue-600 hover:text-blue-800 mr-2 text-sm" %>
+              <%= link_to "Edit", edit_admin_social_media_account_path(account), class: "text-gray-600 hover:text-gray-800 text-sm" %>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="mt-4 flex justify-between items-center">
+    <div class="text-sm text-gray-600">
+      Showing <%= @accounts.count %> of <%= @accounts.total_count %> accounts
+    </div>
+    <%= paginate @accounts %>
+  </div>
+</div>

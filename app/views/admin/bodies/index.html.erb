@@ -1,0 +1,75 @@
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+  <div class="flex justify-between items-center mb-6">
+    <h1 class="text-3xl font-bold text-gray-900">Bodies</h1>
+    <%= link_to "New Body", new_admin_body_path, class: "px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700" %>
+  </div>
+
+  <!-- Filters -->
+  <div class="bg-white rounded-lg shadow mb-6 p-4">
+    <div class="flex gap-2 flex-wrap">
+      <%= link_to "All", admin_bodies_path, class: "px-4 py-2 rounded #{params[:level].blank? && params[:branch].blank? ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}" %>
+      <%= link_to "Federal", admin_bodies_path(level: 'federal'), class: "px-4 py-2 rounded #{params[:level] == 'federal' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}" %>
+      <%= link_to "State", admin_bodies_path(level: 'state'), class: "px-4 py-2 rounded #{params[:level] == 'state' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}" %>
+      <%= link_to "Local", admin_bodies_path(level: 'local'), class: "px-4 py-2 rounded #{params[:level] == 'local' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}" %>
+      <span class="text-gray-400">|</span>
+      <%= link_to "Legislative", admin_bodies_path(branch: 'legislative'), class: "px-4 py-2 rounded #{params[:branch] == 'legislative' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}" %>
+      <%= link_to "Executive", admin_bodies_path(branch: 'executive'), class: "px-4 py-2 rounded #{params[:branch] == 'executive' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}" %>
+      <%= link_to "Judicial", admin_bodies_path(branch: 'judicial'), class: "px-4 py-2 rounded #{params[:branch] == 'judicial' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}" %>
+    </div>
+  </div>
+
+  <div class="bg-white rounded-lg shadow overflow-hidden">
+    <table class="min-w-full divide-y divide-gray-200">
+      <thead class="bg-gray-50">
+        <tr>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">State/Country</th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Level</th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Branch</th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Chamber Type</th>
+          <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Offices</th>
+          <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
+        </tr>
+      </thead>
+      <tbody class="bg-white divide-y divide-gray-200">
+        <% @bodies.each do |body| %>
+          <tr class="hover:bg-gray-50">
+            <td class="px-6 py-4">
+              <%= link_to body.name, admin_body_path(body), class: "text-blue-600 hover:text-blue-800 font-medium" %>
+              <% if body.parent_body.present? %>
+                <div class="text-xs text-gray-500 mt-1">
+                  Parent: <%= body.parent_body.name %>
+                </div>
+              <% end %>
+            </td>
+            <td class="px-6 py-4 text-gray-600"><%= body.state || body.country %></td>
+            <td class="px-6 py-4">
+              <span class="px-2 py-1 text-xs rounded-full <%= body.level == 'federal' ? 'bg-purple-100 text-purple-800' : body.level == 'state' ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800' %>">
+                <%= body.level&.titleize %>
+              </span>
+            </td>
+            <td class="px-6 py-4 text-gray-600"><%= body.branch&.titleize %></td>
+            <td class="px-6 py-4 text-gray-600"><%= body.chamber_type&.titleize %></td>
+            <td class="px-6 py-4 text-center text-gray-600"><%= body.offices.count %></td>
+            <td class="px-6 py-4 text-right">
+              <%= link_to "Edit", edit_admin_body_path(body), class: "text-blue-600 hover:text-blue-800 mr-3" %>
+              <%= button_to "Delete", admin_body_path(body), method: :delete,
+                  data: { turbo_confirm: "Delete #{body.name}?" },
+                  class: "text-red-600 hover:text-red-800" %>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+
+    <% if @bodies.empty? %>
+      <div class="text-center py-12">
+        <p class="text-gray-500">No bodies yet</p>
+      </div>
+    <% end %>
+  </div>
+
+  <div class="mt-4">
+    <%= paginate @bodies %>
+  </div>
+</div>

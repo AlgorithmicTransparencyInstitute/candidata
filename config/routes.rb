@@ -23,6 +23,7 @@ Rails.application.routes.draw do
   # Admin namespace
   namespace :admin do
     root "dashboard#index"
+    get 'guide', to: 'guide#show', as: :guide
     resources :parties
     resources :people do
       member do
@@ -35,6 +36,7 @@ Rails.application.routes.draw do
       end
     end
     resources :districts
+    resources :bodies
     resources :offices
     resources :elections
     resources :ballots
@@ -44,20 +46,24 @@ Rails.application.routes.draw do
     resources :assignments do
       member do
         patch :complete
+        patch :mark_incomplete
       end
     end
+    resources :social_media_accounts
     resources :users do
       member do
         post :resend_invitation
         post :send_reset_password
       end
     end
+    resources :researchers, only: [:index]
     resources :invitations, only: [:new, :create]
   end
 
   # Researcher workspace
   namespace :researcher do
     root "dashboard#index"
+    get 'guide', to: 'guide#show', as: :guide
     get "queue", to: "queue#index"
     resources :assignments, only: [:index, :show] do
       member do
@@ -120,6 +126,7 @@ Rails.application.routes.draw do
   get "help/data-sources", to: "help#data_sources", as: :help_data_sources
   get "help/data-model", to: "help#data_model", as: :help_data_model
   get "help/coverage", to: "help#coverage", as: :help_coverage
+  get "help/researcher-guide", to: "help#researcher_guide", as: :help_researcher_guide
 
   # About page
   get "about", to: "about#index", as: :about

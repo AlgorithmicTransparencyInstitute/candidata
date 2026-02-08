@@ -1,9 +1,15 @@
 module Admin
   class AssignmentsController < Admin::BaseController
-    before_action :set_assignment, only: [:show, :edit, :update, :destroy, :complete]
+    before_action :set_assignment, only: [:show, :edit, :update, :destroy, :complete, :mark_incomplete]
 
     def index
-      @assignments = Assignment.includes(:user, :assigned_by, :person).order(created_at: :desc)
+      @assignments = Assignment.includes(:user, :assigned_by, person: [
+        :party_affiliation,
+        { person_parties: :party },
+        :social_media_accounts,
+        { officeholders: :office },
+        { candidates: { contest: [:office, :ballot] } }
+      ]).order(created_at: :desc)
 
       if params[:status].present?
         @assignments = @assignments.where(status: params[:status])
@@ -212,6 +218,11 @@ module Admin
     def complete
       @assignment.complete!
       redirect_to admin_assignments_path, notice: "Assignment marked complete."
+    end
+
+    def mark_incomplete
+      @assignment.update!(status: 'pending', completed_at: nil)
+      redirect_back fallback_location: admin_assignments_path, notice: "Assignment marked as incomplete."
     end
 
     private

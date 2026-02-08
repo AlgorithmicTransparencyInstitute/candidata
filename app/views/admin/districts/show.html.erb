@@ -1,0 +1,79 @@
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+  <div class="mb-6">
+    <%= link_to admin_districts_path, class: "inline-flex items-center text-sm text-gray-600 hover:text-gray-900" do %>
+      <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+      </svg>
+      Back to Districts
+    <% end %>
+  </div>
+
+  <div class="bg-white rounded-lg shadow mb-6">
+    <div class="px-6 py-4 border-b border-gray-200">
+      <div class="flex justify-between items-start">
+        <div>
+          <h1 class="text-3xl font-bold text-gray-900"><%= @district.full_name %></h1>
+          <p class="mt-1 text-sm text-gray-600">District #<%= @district.id %></p>
+        </div>
+        <div class="flex gap-2">
+          <%= link_to "Edit", edit_admin_district_path(@district), class: "px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700" %>
+          <%= button_to "Delete", admin_district_path(@district), method: :delete,
+              data: { turbo_confirm: "Delete this district?" },
+              class: "px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700" %>
+        </div>
+      </div>
+    </div>
+
+    <div class="px-6 py-4 grid grid-cols-2 gap-4">
+      <div>
+        <dt class="text-sm font-medium text-gray-500">State</dt>
+        <dd class="mt-1 text-sm text-gray-900"><%= @district.state %></dd>
+      </div>
+      <div>
+        <dt class="text-sm font-medium text-gray-500">Level</dt>
+        <dd class="mt-1 text-sm text-gray-900"><%= @district.level&.titleize %></dd>
+      </div>
+      <div>
+        <dt class="text-sm font-medium text-gray-500">Chamber</dt>
+        <dd class="mt-1 text-sm text-gray-900"><%= @district.chamber&.titleize || 'N/A' %></dd>
+      </div>
+      <div>
+        <dt class="text-sm font-medium text-gray-500">District Number</dt>
+        <dd class="mt-1 text-sm text-gray-900"><%= @district.district_number %></dd>
+      </div>
+      <div class="col-span-2">
+        <dt class="text-sm font-medium text-gray-500">OCD ID</dt>
+        <dd class="mt-1 text-sm text-gray-900"><%= @district.ocdid || 'N/A' %></dd>
+      </div>
+    </div>
+  </div>
+
+  <!-- Offices -->
+  <div class="bg-white rounded-lg shadow">
+    <div class="px-6 py-4 border-b border-gray-200">
+      <h2 class="text-xl font-bold text-gray-900">Offices (<%= @offices.total_count %>)</h2>
+    </div>
+    <% if @offices.any? %>
+      <div class="divide-y divide-gray-200">
+        <% @offices.each do |office| %>
+          <div class="px-6 py-4 hover:bg-gray-50">
+            <%= link_to admin_office_path(office), class: "text-blue-600 hover:text-blue-800 font-medium" do %>
+              <%= office.title %>
+              <% if office.seat.present? %>
+                - <%= office.seat %>
+              <% end %>
+            <% end %>
+            <p class="text-sm text-gray-600 mt-1"><%= office.body_name %></p>
+          </div>
+        <% end %>
+      </div>
+      <div class="px-6 py-4">
+        <%= paginate @offices %>
+      </div>
+    <% else %>
+      <div class="px-6 py-12 text-center text-gray-500">
+        No offices linked to this district yet
+      </div>
+    <% end %>
+  </div>
+</div>

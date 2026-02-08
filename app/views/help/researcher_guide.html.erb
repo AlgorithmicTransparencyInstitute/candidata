@@ -1,0 +1,133 @@
+<div class="min-h-screen bg-gray-50">
+  <%= render "shared/public_navbar" %>
+
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="mb-6">
+      <%= link_to "← Back to Help", help_path, class: "text-blue-600 hover:text-blue-800" %>
+    </div>
+
+    <h1 class="text-3xl font-bold text-gray-900 mb-4">Researcher Guide</h1>
+
+    <p class="text-lg text-gray-600 mb-8">
+      Complete guides for researchers working on data collection and verification tasks.
+      These are the same guides our internal research team uses to ensure accuracy and consistency.
+    </p>
+
+    <!-- Verification Guide -->
+    <section class="mb-12">
+      <h2 class="text-2xl font-bold text-gray-900 mb-6">Account Verification Guide</h2>
+      <p class="text-gray-600 mb-6">
+        This guide explains how to verify social media accounts for politicians and candidates.
+        Verification ensures that accounts are correctly attributed and formatted.
+      </p>
+
+      <%= render "shared/verification_guide", channel_type: "campaign", show_guide_link: false %>
+    </section>
+
+    <!-- Data Collection Best Practices -->
+    <section class="bg-white rounded-lg shadow p-8 mb-8">
+      <h2 class="text-2xl font-bold text-gray-900 mb-6">Data Collection Best Practices</h2>
+
+      <div class="space-y-6">
+        <div>
+          <h3 class="text-lg font-semibold text-gray-900 mb-3">Research Methods</h3>
+          <ul class="space-y-2 text-gray-700 list-disc list-inside">
+            <li><strong>Google Search:</strong> Search "[Name] [Platform]" (e.g., "John Smith Twitter")</li>
+            <li><strong>Campaign Website:</strong> Check their official campaign or government website for social media links</li>
+            <li><strong>Cross-Reference:</strong> Verify account matches official information (name, photo, location, office)</li>
+            <li><strong>Platform Verification:</strong> Look for verified badges (blue checkmarks) when available</li>
+            <li><strong>Recent Activity:</strong> Check that the account has been recently active (within past 6 months)</li>
+          </ul>
+        </div>
+
+        <div>
+          <h3 class="text-lg font-semibold text-gray-900 mb-3">Campaign vs. Official Accounts</h3>
+          <div class="bg-amber-50 border border-amber-200 rounded-lg p-4">
+            <p class="text-gray-700 mb-2"><strong>Campaign Accounts</strong> - Used during election campaigns</p>
+            <ul class="text-gray-700 list-disc list-inside ml-4 mb-4">
+              <li>Examples: @SmithForSenate, @ElectJohnDoe, @JaneForCongress</li>
+              <li>May include "For [Office]", "Elect", "Vote", or election year in handle</li>
+              <li>Active primarily during campaign season</li>
+            </ul>
+
+            <p class="text-gray-700 mb-2"><strong>Official Accounts</strong> - Used by current officeholders</p>
+            <ul class="text-gray-700 list-disc list-inside ml-4">
+              <li>Examples: @SenJohnSmith, @RepJaneDoe, @GovSmith</li>
+              <li>Usually include office title (Sen, Rep, Gov, etc.)</li>
+              <li>Maintained while in office</li>
+            </ul>
+          </div>
+        </div>
+
+        <div>
+          <h3 class="text-lg font-semibold text-gray-900 mb-3">URL Formatting</h3>
+          <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <p class="text-gray-700 mb-2"><strong>Always use clean URLs without tracking parameters</strong></p>
+            <div class="space-y-2 text-sm">
+              <div class="flex items-start gap-2">
+                <span class="text-green-600 font-bold">✓</span>
+                <span class="text-gray-700">https://twitter.com/username</span>
+              </div>
+              <div class="flex items-start gap-2">
+                <span class="text-red-600 font-bold">✗</span>
+                <span class="text-gray-700">https://twitter.com/username?ref=src%5Etfw</span>
+              </div>
+            </div>
+            <p class="text-gray-600 text-sm mt-3">Remove everything after ? or & in the URL</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Platform-Specific Notes -->
+    <section class="bg-white rounded-lg shadow p-8">
+      <h2 class="text-2xl font-bold text-gray-900 mb-6">Platform-Specific Notes</h2>
+
+      <div class="grid md:grid-cols-2 gap-6">
+        <div>
+          <h3 class="font-semibold text-gray-900 mb-2">Facebook</h3>
+          <p class="text-sm text-gray-600">Look for official Pages, not personal profiles. URL format: facebook.com/username</p>
+        </div>
+
+        <div>
+          <h3 class="font-semibold text-gray-900 mb-2">Twitter/X</h3>
+          <p class="text-sm text-gray-600">Use twitter.com or x.com (both work). URL format: twitter.com/handle</p>
+        </div>
+
+        <div>
+          <h3 class="font-semibold text-gray-900 mb-2">Instagram</h3>
+          <p class="text-sm text-gray-600">Political accounts often have verification badges. URL format: instagram.com/handle</p>
+        </div>
+
+        <div>
+          <h3 class="font-semibold text-gray-900 mb-2">YouTube</h3>
+          <p class="text-sm text-gray-600">Look for channels, not individual videos. URL format: youtube.com/@handle or youtube.com/c/name</p>
+        </div>
+
+        <div>
+          <h3 class="font-semibold text-gray-900 mb-2">TikTok</h3>
+          <p class="text-sm text-gray-600">Growing platform for political outreach. URL format: tiktok.com/@handle</p>
+        </div>
+
+        <div>
+          <h3 class="font-semibold text-gray-900 mb-2">Truth Social, Gettr, Rumble</h3>
+          <p class="text-sm text-gray-600">Alternative platforms gaining popularity with some candidates. Verify carefully.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Link to Full Internal Guide -->
+    <div class="mt-8 p-6 bg-blue-50 rounded-lg border border-blue-200">
+      <h3 class="text-lg font-semibold text-blue-900 mb-2">For Researchers</h3>
+      <p class="text-blue-800 mb-4">
+        If you have access to the researcher dashboard, you can view the full internal guide with additional details and examples.
+      </p>
+      <%= link_to "View Full Researcher Guide", researcher_guide_path, class: "inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium" do %>
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+        </svg>
+        View Full Guide
+      <% end %>
+    </div>
+  </main>
+</div>

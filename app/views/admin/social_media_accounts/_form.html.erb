@@ -1,0 +1,78 @@
+<%= form_with model: [:admin, account], local: true, class: "space-y-6" do |f| %>
+  <% if account.errors.any? %>
+    <div class="bg-red-50 border border-red-200 rounded-md p-4">
+      <h3 class="text-sm font-medium text-red-800">Please fix the following errors:</h3>
+      <ul class="mt-2 text-sm text-red-700 list-disc list-inside">
+        <% account.errors.full_messages.each do |message| %>
+          <li><%= message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div class="grid md:grid-cols-2 gap-6">
+    <div>
+      <label class="block text-sm font-medium text-gray-700 mb-1">Person *</label>
+      <%= f.select :person_id,
+                   options_for_select(@people.map { |p| [p.full_name, p.id] }, account.person_id),
+                   { prompt: "Select person..." },
+                   class: "w-full px-3 py-2 border border-gray-300 rounded-md", required: true %>
+    </div>
+
+    <div>
+      <label class="block text-sm font-medium text-gray-700 mb-1">Platform *</label>
+      <%= f.select :platform,
+                   options_for_select(@platforms, account.platform),
+                   { prompt: "Select platform..." },
+                   class: "w-full px-3 py-2 border border-gray-300 rounded-md", required: true %>
+    </div>
+
+    <div>
+      <label class="block text-sm font-medium text-gray-700 mb-1">Channel Type</label>
+      <%= f.select :channel_type,
+                   options_for_select(@channel_types, account.channel_type),
+                   { include_blank: "Select type..." },
+                   class: "w-full px-3 py-2 border border-gray-300 rounded-md" %>
+    </div>
+
+    <div>
+      <label class="block text-sm font-medium text-gray-700 mb-1">Research Status</label>
+      <%= f.select :research_status,
+                   options_for_select(SocialMediaAccount::RESEARCH_STATUSES.map { |s| [s.humanize, s] }, account.research_status),
+                   { include_blank: "Select status..." },
+                   class: "w-full px-3 py-2 border border-gray-300 rounded-md" %>
+    </div>
+
+    <div class="md:col-span-2">
+      <label class="block text-sm font-medium text-gray-700 mb-1">URL</label>
+      <%= f.text_field :url, class: "w-full px-3 py-2 border border-gray-300 rounded-md", placeholder: "https://..." %>
+    </div>
+
+    <div>
+      <label class="block text-sm font-medium text-gray-700 mb-1">Handle</label>
+      <%= f.text_field :handle, class: "w-full px-3 py-2 border border-gray-300 rounded-md", placeholder: "username" %>
+    </div>
+
+    <div class="flex items-center">
+      <label class="flex items-center gap-2">
+        <%= f.check_box :account_inactive, class: "rounded border-gray-300 text-blue-600" %>
+        <span class="text-sm font-medium text-gray-700">Account Inactive</span>
+      </label>
+    </div>
+
+    <div class="md:col-span-2">
+      <label class="block text-sm font-medium text-gray-700 mb-1">Research Notes</label>
+      <%= f.text_area :research_notes, rows: 3, class: "w-full px-3 py-2 border border-gray-300 rounded-md" %>
+    </div>
+
+    <div class="md:col-span-2">
+      <label class="block text-sm font-medium text-gray-700 mb-1">Verification Notes</label>
+      <%= f.text_area :verification_notes, rows: 3, class: "w-full px-3 py-2 border border-gray-300 rounded-md" %>
+    </div>
+  </div>
+
+  <div class="flex justify-end gap-3 pt-4 border-t">
+    <%= link_to "Cancel", account.persisted? ? admin_social_media_account_path(account) : admin_social_media_accounts_path, class: "px-4 py-2 text-gray-700 hover:text-gray-900" %>
+    <%= f.submit account.persisted? ? "Update Account" : "Create Account", class: "px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 cursor-pointer" %>
+  </div>
+<% end %>

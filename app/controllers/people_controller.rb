@@ -3,7 +3,7 @@
 class PeopleController < ApplicationController
   
   def index
-    @people = Person.includes(:parties, :officeholders, :offices)
+    @people = Person.includes(:person_parties, :parties, :party_affiliation, :officeholders, :offices)
     
     # Search by name
     if params[:q].present?

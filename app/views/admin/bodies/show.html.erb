@@ -1,0 +1,110 @@
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+  <div class="mb-6">
+    <%= link_to admin_bodies_path, class: "inline-flex items-center text-sm text-gray-600 hover:text-gray-900" do %>
+      <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+      </svg>
+      Back to Bodies
+    <% end %>
+  </div>
+
+  <div class="bg-white rounded-lg shadow mb-6">
+    <div class="px-6 py-4 border-b border-gray-200">
+      <div class="flex justify-between items-start">
+        <div>
+          <h1 class="text-3xl font-bold text-gray-900"><%= @body.name %></h1>
+          <p class="mt-1 text-sm text-gray-600">Body #<%= @body.id %></p>
+        </div>
+        <div class="flex gap-2">
+          <%= link_to "Edit", edit_admin_body_path(@body), class: "px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700" %>
+          <%= button_to "Delete", admin_body_path(@body), method: :delete,
+              data: { turbo_confirm: "Delete this body?" },
+              class: "px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700" %>
+        </div>
+      </div>
+    </div>
+
+    <div class="px-6 py-4 grid grid-cols-2 gap-4">
+      <div>
+        <dt class="text-sm font-medium text-gray-500">Country</dt>
+        <dd class="mt-1 text-sm text-gray-900"><%= @body.country || 'N/A' %></dd>
+      </div>
+      <div>
+        <dt class="text-sm font-medium text-gray-500">State</dt>
+        <dd class="mt-1 text-sm text-gray-900"><%= @body.state || 'N/A' %></dd>
+      </div>
+      <div>
+        <dt class="text-sm font-medium text-gray-500">Level</dt>
+        <dd class="mt-1 text-sm text-gray-900"><%= @body.level&.titleize || 'N/A' %></dd>
+      </div>
+      <div>
+        <dt class="text-sm font-medium text-gray-500">Branch</dt>
+        <dd class="mt-1 text-sm text-gray-900"><%= @body.branch&.titleize || 'N/A' %></dd>
+      </div>
+      <div>
+        <dt class="text-sm font-medium text-gray-500">Chamber Type</dt>
+        <dd class="mt-1 text-sm text-gray-900"><%= @body.chamber_type&.titleize || 'N/A' %></dd>
+      </div>
+      <div>
+        <dt class="text-sm font-medium text-gray-500">Parent Body</dt>
+        <dd class="mt-1 text-sm text-gray-900">
+          <% if @body.parent_body.present? %>
+            <%= link_to @body.parent_body.name, admin_body_path(@body.parent_body), class: "text-blue-600 hover:text-blue-800" %>
+          <% else %>
+            N/A
+          <% end %>
+        </dd>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sub Bodies -->
+  <% if @sub_bodies.any? %>
+    <div class="bg-white rounded-lg shadow mb-6">
+      <div class="px-6 py-4 border-b border-gray-200">
+        <h2 class="text-xl font-bold text-gray-900">Sub Bodies (<%= @sub_bodies.count %>)</h2>
+      </div>
+      <div class="divide-y divide-gray-200">
+        <% @sub_bodies.each do |sub_body| %>
+          <div class="px-6 py-4 hover:bg-gray-50">
+            <%= link_to admin_body_path(sub_body), class: "text-blue-600 hover:text-blue-800 font-medium" do %>
+              <%= sub_body.name %>
+            <% end %>
+            <p class="text-sm text-gray-600 mt-1">
+              <%= sub_body.level&.titleize %> • <%= sub_body.branch&.titleize %>
+            </p>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  <% end %>
+
+  <!-- Offices -->
+  <div class="bg-white rounded-lg shadow">
+    <div class="px-6 py-4 border-b border-gray-200">
+      <h2 class="text-xl font-bold text-gray-900">Offices (<%= @offices.total_count %>)</h2>
+    </div>
+    <% if @offices.any? %>
+      <div class="divide-y divide-gray-200">
+        <% @offices.each do |office| %>
+          <div class="px-6 py-4 hover:bg-gray-50">
+            <%= link_to admin_office_path(office), class: "text-blue-600 hover:text-blue-800 font-medium" do %>
+              <%= office.title %>
+              <% if office.seat.present? %>
+                - <%= office.seat %>
+              <% end %>
+            <% end %>
+            <p class="text-sm text-gray-600 mt-1"><%= office.state %></p>
+          </div>
+        <% end %>
+      </div>
+      <div class="px-6 py-4">
+        <%= paginate @offices %>
+      </div>
+    <% else %>
+      <div class="px-6 py-12 text-center text-gray-500">
+        No offices linked to this body yet
+      </div>
+    <% end %>
+  </div>
+</div>

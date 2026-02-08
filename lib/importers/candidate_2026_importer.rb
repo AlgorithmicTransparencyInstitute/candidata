@@ -105,6 +105,9 @@ module Importers
     @stats[:people_created] += 1
     puts "✨ Created new person: #{person.full_name} (#{state})"
 
+    # Create party affiliation
+    create_party_affiliation(person, row['party'])
+
     # Create social media accounts
     create_social_media_accounts(person, row)
 
@@ -202,6 +205,45 @@ module Importers
       'Female'
     else
       'Other'
+    end
+  end
+
+  def create_party_affiliation(person, party_name)
+    return if party_name.blank?
+
+    # Find the party (try exact match first, then variations)
+    party = Party.find_by("LOWER(name) = ? OR LOWER(abbreviation) = ?",
+                          party_name.downcase,
+                          party_name.downcase)
+
+    unless party
+      # Try common variations
+      party = case party_name.downcase
+              when 'democratic', 'democrat', 'dem'
+                Party.find_by(name: 'Democratic Party')
+              when 'republican', 'rep'
+                Party.find_by(name: 'Republican Party')
+              when 'libertarian', 'lib'
+                Party.find_by(name: 'Libertarian Party')
+              when 'green'
+                Party.find_by(name: 'Green Party')
+              when 'independent', 'ind'
+                Party.find_by(name: 'Independent')
+              else
+                nil
+              end
+    end
+
+    if party
+      # Create PersonParty link with is_primary: true since this is their first party
+      PersonParty.find_or_create_by!(
+        person: person,
+        party: party
+      ) do |pp|
+        pp.is_primary = true
+      end
+    else
+      puts "⚠️  Could not find party: #{party_name}"
     end
   end
 

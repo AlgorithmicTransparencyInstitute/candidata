@@ -1,0 +1,66 @@
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+  <div class="flex justify-between items-center mb-6">
+    <h1 class="text-3xl font-bold text-gray-900">Districts</h1>
+    <%= link_to "New District", new_admin_district_path, class: "px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700" %>
+  </div>
+
+  <!-- Filters -->
+  <div class="bg-white rounded-lg shadow mb-6 p-4">
+    <div class="flex gap-2 flex-wrap">
+      <%= link_to "All", admin_districts_path, class: "px-4 py-2 rounded #{params[:level].blank? ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}" %>
+      <%= link_to "Federal", admin_districts_path(level: 'federal'), class: "px-4 py-2 rounded #{params[:level] == 'federal' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}" %>
+      <%= link_to "State", admin_districts_path(level: 'state'), class: "px-4 py-2 rounded #{params[:level] == 'state' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}" %>
+      <%= link_to "Local", admin_districts_path(level: 'local'), class: "px-4 py-2 rounded #{params[:level] == 'local' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}" %>
+    </div>
+  </div>
+
+  <div class="bg-white rounded-lg shadow overflow-hidden">
+    <table class="min-w-full divide-y divide-gray-200">
+      <thead class="bg-gray-50">
+        <tr>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Full Name</th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">State</th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Level</th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Chamber</th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">District #</th>
+          <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Offices</th>
+          <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
+        </tr>
+      </thead>
+      <tbody class="bg-white divide-y divide-gray-200">
+        <% @districts.each do |district| %>
+          <tr class="hover:bg-gray-50">
+            <td class="px-6 py-4">
+              <%= link_to district.full_name, admin_district_path(district), class: "text-blue-600 hover:text-blue-800 font-medium" %>
+            </td>
+            <td class="px-6 py-4 text-gray-600"><%= district.state %></td>
+            <td class="px-6 py-4">
+              <span class="px-2 py-1 text-xs rounded-full <%= district.level == 'federal' ? 'bg-purple-100 text-purple-800' : district.level == 'state' ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800' %>">
+                <%= district.level&.titleize %>
+              </span>
+            </td>
+            <td class="px-6 py-4 text-gray-600"><%= district.chamber&.titleize %></td>
+            <td class="px-6 py-4 text-gray-600"><%= district.district_number %></td>
+            <td class="px-6 py-4 text-center text-gray-600"><%= district.offices.count %></td>
+            <td class="px-6 py-4 text-right">
+              <%= link_to "Edit", edit_admin_district_path(district), class: "text-blue-600 hover:text-blue-800 mr-3" %>
+              <%= button_to "Delete", admin_district_path(district), method: :delete,
+                  data: { turbo_confirm: "Delete #{district.full_name}?" },
+                  class: "text-red-600 hover:text-red-800" %>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+
+    <% if @districts.empty? %>
+      <div class="text-center py-12">
+        <p class="text-gray-500">No districts yet</p>
+      </div>
+    <% end %>
+  </div>
+
+  <div class="mt-4">
+    <%= paginate @districts %>
+  </div>
+</div>

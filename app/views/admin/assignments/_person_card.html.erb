@@ -1,0 +1,57 @@
+<%
+  # Calculate metadata about this person
+  current_oh = person.officeholders.detect { |oh| oh.end_date.nil? }
+
+  # Find most recent candidacy (prefer 2026 or later, then most recent)
+  recent_candidate = person.candidates
+    .select { |c| c.contest&.date }
+    .sort_by { |c| c.contest.date }
+    .reverse
+    .first
+
+  populated_accounts = person.social_media_accounts.where.not(url: [nil, '']).count
+  total_accounts = person.social_media_accounts.count
+  has_website = person.website_campaign.present? || person.website_official.present?
+%>
+
+<div class="flex items-center gap-3">
+  <!-- Photo or Initials -->
+  <div class="w-10 h-10 rounded-full flex-shrink-0 flex items-center justify-center text-sm font-semibold
+              <%= person.primary_party&.abbreviation == 'D' ? 'bg-blue-100 text-blue-700' :
+                  person.primary_party&.abbreviation == 'R' ? 'bg-red-100 text-red-700' :
+                  'bg-gray-200 text-gray-600' %>">
+    <% if person.photo_url.present? %>
+      <%= image_tag person.photo_url, class: "w-10 h-10 rounded-full object-cover", alt: person.full_name %>
+    <% else %>
+      <%= person.first_name[0] %><%= person.last_name[0] %>
+    <% end %>
+  </div>
+
+  <div class="flex-1 min-w-0">
+    <div class="flex items-center gap-2 mb-0.5">
+      <%= link_to person.full_name, admin_person_path(person), class: "font-medium text-blue-600 hover:text-blue-800" %>
+      <% if person.primary_party %>
+        <span class="px-1.5 py-0.5 text-xs rounded <%= person.primary_party.abbreviation == 'D' ? 'bg-blue-100 text-blue-700' : person.primary_party.abbreviation == 'R' ? 'bg-red-100 text-red-700' : 'bg-gray-100 text-gray-600' %>">
+          <%= person.primary_party.abbreviation %>
+        </span>
+      <% end %>
+      <% if has_website %>
+        <span class="text-xs text-green-600" title="Has website">🌐</span>
+      <% end %>
+    </div>
+    <div class="text-xs text-gray-600">
+      <%= person.state_of_residence || "Unknown state" %>
+      <% if current_oh&.office %>
+        · Current: <%= current_oh.office.title %><%= " (#{current_oh.office.seat})" if current_oh.office.seat.present? %>
+      <% elsif recent_candidate&.contest&.office %>
+        · Candidate: <%= recent_candidate.contest.office.title %><%= " (#{recent_candidate.contest.office.seat})" if recent_candidate.contest.office.seat.present? %>
+        <% if recent_candidate.contest.ballot %>
+          (<%= recent_candidate.contest.ballot.year %> <%= recent_candidate.contest.ballot.election_type&.titleize %>)
+        <% end %>
+      <% end %>
+    </div>
+    <div class="text-xs text-gray-500">
+      Accounts: <%= populated_accounts %>/<%= total_accounts %> populated
+    </div>
+  </div>
+</div>

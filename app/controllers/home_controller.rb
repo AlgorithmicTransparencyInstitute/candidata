@@ -23,4 +23,8 @@ class HomeController < ApplicationController
     # Preload state names for display
     @states_by_abbr = State.all.index_by(&:abbreviation)
   end
+
+  def help
+    # Public help page showing researcher guides
+  end
 end

@@ -15,6 +15,7 @@ module Verification
       @accounts = @person.social_media_accounts.campaign.core_platforms.where.not(research_status: 'verified').order(:platform)
       @verified_accounts = @person.social_media_accounts.campaign.core_platforms.where(research_status: 'verified').order(:platform)
       @current_offices = @person.officeholders.current.includes(office: [:body, :district])
+      @candidacies = @person.candidates.includes(contest: [:ballot, :office]).order('contests.date DESC')
     end
 
     def start

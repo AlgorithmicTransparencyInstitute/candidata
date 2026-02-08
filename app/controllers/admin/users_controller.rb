@@ -9,7 +9,13 @@ module Admin
     end
 
     def show
-      @assignments = @user.assignments.includes(:person).order(created_at: :desc).limit(20)
+      @assignments = @user.assignments.includes(person: [
+        :party_affiliation,
+        { person_parties: :party },
+        :social_media_accounts,
+        { officeholders: :office },
+        { candidates: { contest: [:office, :ballot] } }
+      ]).order(created_at: :desc).limit(20)
     end
 
     def new

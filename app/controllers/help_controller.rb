@@ -20,4 +20,8 @@ class HelpController < ApplicationController
       states: 56
     }
   end
+
+  def researcher_guide
+    # Public-facing researcher guide page
+  end
 end

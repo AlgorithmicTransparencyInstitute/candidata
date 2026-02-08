@@ -88,20 +88,30 @@
         </nav>
 
         <!-- User menu at bottom -->
-        <div class="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-700">
-          <div class="flex items-center">
-            <%= user_avatar(current_user, size: "w-8 h-8") %>
-            <div class="ml-3 flex-1">
-              <%= link_to edit_profile_path, class: "block" do %>
-                <p class="text-sm font-medium text-white truncate hover:text-gray-200"><%= current_user&.name || current_user&.email %></p>
-                <p class="text-xs text-gray-400"><%= current_user&.role&.titleize %></p>
+        <div class="absolute bottom-0 left-0 right-0 border-t border-gray-700">
+          <%= link_to researcher_guide_path, target: "_blank", class: "block px-4 py-3 text-sm text-gray-300 hover:bg-gray-700 hover:text-white border-b border-gray-700" do %>
+            <div class="flex items-center">
+              <svg class="mr-3 h-5 w-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9 5.25h.008v.008H12v-.008z" />
+              </svg>
+              User Guide
+            </div>
+          <% end %>
+          <div class="p-4">
+            <div class="flex items-center">
+              <%= user_avatar(current_user, size: "w-8 h-8") %>
+              <div class="ml-3 flex-1">
+                <%= link_to edit_profile_path, class: "block" do %>
+                  <p class="text-sm font-medium text-white truncate hover:text-gray-200"><%= current_user&.name || current_user&.email %></p>
+                  <p class="text-xs text-gray-400"><%= current_user&.role&.titleize %></p>
+                <% end %>
+              </div>
+              <%= button_to destroy_user_session_path, method: :delete, class: "text-gray-400 hover:text-white" do %>
+                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75" />
+                </svg>
               <% end %>
             </div>
-            <%= button_to destroy_user_session_path, method: :delete, class: "text-gray-400 hover:text-white" do %>
-              <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75" />
-              </svg>
-            <% end %>
           </div>
         </div>
       </div>

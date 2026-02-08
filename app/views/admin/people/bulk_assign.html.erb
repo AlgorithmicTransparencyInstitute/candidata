@@ -1,221 +1,287 @@
-<div class="max-w-7xl mx-auto px-4 py-8">
-  <h1 class="text-3xl font-bold text-gray-900 mb-6">Create Assignments</h1>
-
-  <%= form_with url: create_bulk_assignments_admin_people_path, method: :post, class: "space-y-6" do |f| %>
-    <!-- Assignment Settings -->
-    <div class="bg-white rounded-lg shadow p-6">
-      <h2 class="text-xl font-semibold text-gray-900 mb-4">Assignment Settings</h2>
-      <div class="grid md:grid-cols-2 gap-4">
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Researcher</label>
-          <%= select_tag :user_id, options_from_collection_for_select(@researchers, :id, :name, params[:user_id]), prompt: "Select researcher...", class: "mt-1 block w-full rounded-lg border-gray-300 focus:border-indigo-500 focus:ring-indigo-500", required: true %>
-        </div>
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Task Type</label>
-          <%= select_tag :task_type, options_for_select([['Data Collection - Find accounts', 'data_collection'], ['Data Validation - Verify accounts', 'data_validation']], params[:task_type]), class: "mt-1 block w-full rounded-lg border-gray-300 focus:border-indigo-500 focus:ring-indigo-500" %>
-        </div>
-      </div>
+<div class="flex flex-col h-screen">
+  <!-- Breadcrumb -->
+  <div class="px-4 py-2 bg-gray-50 border-b">
+    <div class="max-w-7xl mx-auto">
+      <nav class="flex text-sm">
+        <%= link_to "People", admin_people_path, class: "text-gray-600 hover:text-gray-900" %>
+        <span class="mx-2 text-gray-400">/</span>
+        <span class="text-gray-900">Create Assignments</span>
+      </nav>
     </div>
+  </div>
 
-    <!-- Filters -->
-    <div class="bg-white rounded-lg shadow p-6">
-      <div class="flex items-center justify-between mb-4">
-        <h2 class="text-xl font-semibold text-gray-900">Filter People</h2>
-        <% if params[:q].present? || params[:state].present? || params[:party_id].present? || params[:office_level].present? || params[:research_status].present? || params[:assignment_status].present? || params[:account_status].present? %>
-          <%= link_to "Clear all filters", bulk_assign_admin_people_path(user_id: params[:user_id], task_type: params[:task_type]), class: "text-sm text-blue-600 hover:text-blue-800" %>
-        <% end %>
-      </div>
-
-      <!-- Filter Controls in One Row -->
-      <div class="flex flex-wrap gap-2 mb-4">
-        <!-- Search -->
-        <div class="relative flex-1 min-w-[200px]">
-          <input type="text" name="q" value="<%= params[:q] %>" placeholder="Search by name..."
-                 class="w-full rounded-lg border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 pr-8">
-          <button type="submit" class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
-            🔍
-          </button>
-        </div>
-
-        <!-- Demographics Dropdown -->
-        <div class="relative inline-block">
-          <button type="button" onclick="toggleDropdown('demographics')" class="px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 flex items-center gap-2">
-            Demographics
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-            </svg>
-          </button>
-          <div id="demographics-dropdown" class="hidden absolute z-10 mt-1 w-64 bg-white rounded-lg shadow-lg border border-gray-200 p-4">
-            <div class="space-y-3">
+  <%= form_with url: create_bulk_assignments_admin_people_path, method: :post, class: "flex-1 flex flex-col overflow-hidden" do |f| %>
+    <div class="flex-1 overflow-y-auto">
+      <div class="max-w-7xl mx-auto px-4 py-4 space-y-4">
+        <!-- Step 1: Assignment Settings -->
+        <div class="bg-white rounded-lg shadow">
+          <div class="bg-indigo-600 text-white px-4 py-2 text-sm font-medium rounded-t-lg">
+            Step 1: Assignment Settings
+          </div>
+          <div class="p-4">
+            <div class="grid md:grid-cols-2 gap-3">
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">State</label>
-                <%= select_tag :state, options_from_collection_for_select(@states, :abbreviation, :name, params[:state]),
-                    prompt: "All states", class: "w-full rounded border-gray-300 text-sm", onchange: "this.form.requestSubmit()" %>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Researcher</label>
+                <%= select_tag :user_id, options_from_collection_for_select(@researchers, :id, :name, params[:user_id]), prompt: "Select researcher...", class: "block w-full rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 text-sm", required: true %>
               </div>
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Party</label>
-                <%= select_tag :party_id, options_from_collection_for_select(@parties, :id, :name, params[:party_id]),
-                    prompt: "All parties", class: "w-full rounded border-gray-300 text-sm", onchange: "this.form.requestSubmit()" %>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Task Type</label>
+                <%= select_tag :task_type, options_for_select([['Data Collection - Find accounts', 'data_collection'], ['Data Validation - Verify accounts', 'data_validation']], params[:task_type]), class: "block w-full rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 text-sm" %>
               </div>
             </div>
           </div>
         </div>
 
-        <!-- Office Dropdown -->
-        <div class="relative inline-block">
-          <button type="button" onclick="toggleDropdown('office')" class="px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 flex items-center gap-2">
-            Office
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-            </svg>
-          </button>
-          <div id="office-dropdown" class="hidden absolute z-10 mt-1 w-48 bg-white rounded-lg shadow-lg border border-gray-200 p-4">
-            <label class="block text-sm font-medium text-gray-700 mb-1">Office Level</label>
-            <%= select_tag :office_level, options_for_select([['Federal', 'federal'], ['State', 'state'], ['Local', 'local']], params[:office_level]),
-                prompt: "All levels", class: "w-full rounded border-gray-300 text-sm", onchange: "this.form.requestSubmit()" %>
+        <!-- Step 2: Filter & Select People -->
+        <div class="bg-white rounded-lg shadow flex-1 flex flex-col">
+          <div class="bg-indigo-600 text-white px-4 py-2 text-sm font-medium rounded-t-lg flex items-center justify-between">
+            <span>Step 2: Filter & Select People</span>
+            <% if params[:q].present? || params[:state].present? || params[:party_id].present? || params[:office_level].present? || params[:assignment_status].present? || params[:account_status].present? || params[:research_status].present? %>
+              <%= link_to "Clear filters", bulk_assign_admin_people_path(user_id: params[:user_id], task_type: params[:task_type]), class: "text-xs text-white underline hover:no-underline" %>
+            <% end %>
           </div>
-        </div>
 
-        <!-- Status Dropdown -->
-        <div class="relative inline-block">
-          <button type="button" onclick="toggleDropdown('status')" class="px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 flex items-center gap-2">
-            Status
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-            </svg>
-          </button>
-          <div id="status-dropdown" class="hidden absolute z-10 mt-1 w-56 bg-white rounded-lg shadow-lg border border-gray-200 p-4">
-            <div class="space-y-3">
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Assignment Status</label>
-                <%= select_tag :assignment_status, options_for_select([['Unassigned', 'unassigned'], ['Currently Assigned', 'assigned'], ['Completed', 'completed']], params[:assignment_status]),
-                    prompt: "Any", class: "w-full rounded border-gray-300 text-sm", onchange: "this.form.requestSubmit()" %>
-              </div>
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Account Status</label>
-                <%= select_tag :account_status, options_for_select([['Has Accounts', 'has_accounts'], ['No Accounts', 'no_accounts']], params[:account_status]),
-                    prompt: "Any", class: "w-full rounded border-gray-300 text-sm", onchange: "this.form.requestSubmit()" %>
-              </div>
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Research Status</label>
-                <%= select_tag :research_status, options_for_select([['Not Started', 'not_started'], ['Entered', 'entered'], ['Verified', 'verified'], ['Not Found', 'not_found']], params[:research_status]),
-                    prompt: "Any", class: "w-full rounded border-gray-300 text-sm", onchange: "this.form.requestSubmit()" %>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Active Filters Status Line -->
-      <% active_filters = [] %>
-      <% active_filters << "Name: \"#{params[:q]}\"" if params[:q].present? %>
-      <% active_filters << "State: #{@states.find_by(abbreviation: params[:state])&.name}" if params[:state].present? %>
-      <% active_filters << "Party: #{@parties.find(params[:party_id])&.name}" if params[:party_id].present? %>
-      <% active_filters << "Office: #{params[:office_level].titleize}" if params[:office_level].present? %>
-      <% active_filters << "Assignment: #{params[:assignment_status].titleize}" if params[:assignment_status].present? %>
-      <% active_filters << "Accounts: #{params[:account_status].humanize}" if params[:account_status].present? %>
-      <% active_filters << "Research: #{params[:research_status].humanize}" if params[:research_status].present? %>
-
-      <% if active_filters.any? %>
-        <div class="bg-blue-50 border-l-4 border-blue-500 p-4 mt-4">
-          <div class="flex items-start gap-3">
-            <svg class="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path>
-            </svg>
-            <div class="flex-1">
-              <div class="text-sm font-semibold text-blue-900 mb-1">Active Filters:</div>
-              <div class="text-sm text-blue-800"><%= active_filters.join(" • ") %></div>
-            </div>
-          </div>
-        </div>
-      <% else %>
-        <div class="bg-gray-50 border border-gray-200 rounded-lg p-3 mt-4 text-center">
-          <span class="text-sm text-gray-500">No filters applied - showing all people</span>
-        </div>
-      <% end %>
-    </div>
-
-    <!-- People Selection -->
-    <div class="bg-white rounded-lg shadow">
-      <div class="px-6 py-4 border-b border-gray-200">
-        <div class="flex flex-col gap-2">
-          <div class="text-sm font-medium text-gray-700">
-            Showing <%= @people.total_count %> people
-          </div>
-          <label class="flex items-center gap-2 text-sm">
-            <input type="checkbox" id="selectAll" class="rounded border-gray-300">
-            <span class="text-gray-700">Select all on this page</span>
-          </label>
-        </div>
-      </div>
-      <div class="divide-y divide-gray-200 max-h-96 overflow-y-auto">
-        <% if @people.any? %>
-          <% @people.each do |person| %>
-            <label class="px-6 py-3 flex items-center gap-3 hover:bg-gray-50 cursor-pointer">
-              <%= check_box_tag "person_ids[]", person.id, false, class: "person-checkbox rounded border-gray-300" %>
-
-              <!-- Photo or Initials -->
-              <div class="w-10 h-10 rounded-full flex-shrink-0 flex items-center justify-center text-sm font-semibold
-                          <%= person.primary_party&.abbreviation == 'D' ? 'bg-blue-100 text-blue-700' :
-                              person.primary_party&.abbreviation == 'R' ? 'bg-red-100 text-red-700' :
-                              'bg-gray-200 text-gray-600' %>">
-                <% if person.photo_url.present? %>
-                  <%= image_tag person.photo_url, class: "w-10 h-10 rounded-full object-cover", alt: person.full_name %>
-                <% else %>
-                  <%= person.first_name[0] %><%= person.last_name[0] %>
-                <% end %>
+          <div class="p-4 border-b">
+            <!-- Filter Controls in One Row -->
+            <div class="flex gap-2 items-center">
+              <!-- Search (smaller) -->
+              <div class="relative w-48">
+                <input type="text" name="q" value="<%= params[:q] %>" placeholder="Search name..."
+                       class="w-full text-sm rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 pr-8">
+                <button type="submit" class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 text-xs">
+                  🔍
+                </button>
               </div>
 
-              <div class="flex-1">
-                <div class="font-medium"><%= person.full_name %></div>
-                <div class="text-sm text-gray-600">
-                  <%= person.primary_party&.name || "No party" %> · <%= person.state_of_residence || "Unknown" %>
+              <!-- Demographics Dropdown -->
+              <div class="relative inline-block flex-1">
+                <button type="button" onclick="toggleDropdown('demographics')" class="w-full px-3 py-2 text-sm bg-white border border-gray-300 rounded-md hover:bg-gray-50 flex items-center justify-between">
+                  <span>Demographics</span>
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                  </svg>
+                </button>
+                <div id="demographics-dropdown" class="hidden absolute z-10 mt-1 w-full bg-white rounded-md shadow-lg border border-gray-200 p-3">
+                  <div class="space-y-2">
+                    <div>
+                      <label class="block text-xs font-medium text-gray-700 mb-1">State</label>
+                      <%= select_tag :state, options_from_collection_for_select(@states, :abbreviation, :name, params[:state]),
+                          prompt: "All states", class: "w-full rounded text-xs border-gray-300", onchange: "this.form.requestSubmit()" %>
+                    </div>
+                    <div>
+                      <label class="block text-xs font-medium text-gray-700 mb-1">Party</label>
+                      <%= select_tag :party_id, options_from_collection_for_select(@parties, :id, :name, params[:party_id]),
+                          prompt: "All parties", class: "w-full rounded text-xs border-gray-300", onchange: "this.form.requestSubmit()" %>
+                    </div>
+                  </div>
                 </div>
               </div>
-              <% if person.assignments.active.any? %>
-                <span class="text-xs text-yellow-600">Already assigned</span>
-              <% end %>
-            </label>
-          <% end %>
-        <% else %>
-          <div class="px-6 py-12 text-center text-gray-500">
-            No people match the current filters.
+
+              <!-- Office Dropdown -->
+              <div class="relative inline-block flex-1">
+                <button type="button" onclick="toggleDropdown('office')" class="w-full px-3 py-2 text-sm bg-white border border-gray-300 rounded-md hover:bg-gray-50 flex items-center justify-between">
+                  <span>Office</span>
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                  </svg>
+                </button>
+                <div id="office-dropdown" class="hidden absolute z-10 mt-1 w-full bg-white rounded-md shadow-lg border border-gray-200 p-3">
+                  <label class="block text-xs font-medium text-gray-700 mb-1">Office Level</label>
+                  <%= select_tag :office_level, options_for_select([['Federal', 'federal'], ['State', 'state'], ['Local', 'local']], params[:office_level]),
+                      prompt: "All levels", class: "w-full rounded text-xs border-gray-300", onchange: "this.form.requestSubmit()" %>
+                </div>
+              </div>
+
+              <!-- Status Dropdown (right-aligned) -->
+              <div class="relative inline-block flex-1">
+                <button type="button" onclick="toggleDropdown('status')" class="w-full px-3 py-2 text-sm bg-white border border-gray-300 rounded-md hover:bg-gray-50 flex items-center justify-between">
+                  <span>Assignments</span>
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                  </svg>
+                </button>
+                <div id="status-dropdown" class="hidden absolute z-10 mt-1 right-0 w-64 bg-white rounded-md shadow-lg border border-gray-200 p-3">
+                  <div class="space-y-2">
+                    <div>
+                      <label class="block text-xs font-medium text-gray-700 mb-1">Assignment Status</label>
+                      <%= select_tag :assignment_status, options_for_select([['Unassigned', 'unassigned'], ['Currently Assigned', 'assigned'], ['Completed', 'completed']], params[:assignment_status]),
+                          prompt: "Any", class: "w-full rounded text-xs border-gray-300", onchange: "this.form.requestSubmit()" %>
+                    </div>
+                    <div>
+                      <label class="block text-xs font-medium text-gray-700 mb-1">Account Status</label>
+                      <%= select_tag :account_status, options_for_select([['Has Accounts', 'has_accounts'], ['No Accounts', 'no_accounts']], params[:account_status]),
+                          prompt: "Any", class: "w-full rounded text-xs border-gray-300", onchange: "this.form.requestSubmit()" %>
+                    </div>
+                    <div>
+                      <label class="block text-xs font-medium text-gray-700 mb-1">Research Status</label>
+                      <%= select_tag :research_status, options_for_select([['Not Started', 'not_started'], ['Entered', 'entered'], ['Verified', 'verified'], ['Not Found', 'not_found']], params[:research_status]),
+                          prompt: "Any", class: "w-full rounded text-xs border-gray-300", onchange: "this.form.requestSubmit()" %>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
-        <% end %>
+
+          <!-- People List with integrated stats and filter info -->
+          <div class="px-4 py-3 border-b bg-gray-50 flex items-center justify-between">
+            <div class="text-sm">
+              <span class="font-medium text-gray-900"><span id="selected-count">0</span> selected</span>
+              <span class="text-gray-500 mx-2">·</span>
+              <span class="text-gray-600"><%= @people.total_count %> total</span>
+              <% active_filters = [] %>
+              <% active_filters << "Name: \"#{params[:q]}\"" if params[:q].present? %>
+              <% active_filters << "State: #{@states.find_by(abbreviation: params[:state])&.name}" if params[:state].present? %>
+              <% active_filters << "Party: #{@parties.find(params[:party_id])&.name}" if params[:party_id].present? %>
+              <% active_filters << "Office: #{params[:office_level].titleize}" if params[:office_level].present? %>
+              <% active_filters << "Assignment: #{params[:assignment_status].titleize}" if params[:assignment_status].present? %>
+              <% active_filters << "Accounts: #{params[:account_status].humanize}" if params[:account_status].present? %>
+              <% active_filters << "Research: #{params[:research_status].humanize}" if params[:research_status].present? %>
+              <% if active_filters.any? %>
+                <span class="text-gray-500 mx-2">·</span>
+                <span class="text-blue-600 text-xs"><%= active_filters.join(" • ") %></span>
+              <% end %>
+            </div>
+            <label class="flex items-center gap-2 text-sm">
+              <input type="checkbox" id="selectAll" class="rounded border-gray-300 text-indigo-600">
+              <span class="text-gray-700">Select all</span>
+            </label>
+          </div>
+
+          <!-- Quick Filters for Researcher List -->
+          <div class="px-4 py-2 border-b bg-white flex gap-2 text-xs">
+            <input type="text" id="researcher-search" placeholder="Filter by name/email..." class="flex-1 text-xs rounded border-gray-300 focus:border-indigo-500 focus:ring-indigo-500">
+            <select id="researcher-filter" class="text-xs rounded border-gray-300 focus:border-indigo-500 focus:ring-indigo-500">
+              <option value="">All researchers</option>
+              <option value="no-pending">No pending (collection)</option>
+              <option value="no-pending-validation">No pending (validation)</option>
+              <option value="no-pending-any">No pending (any)</option>
+            </select>
+          </div>
+
+          <div class="flex-1 overflow-y-auto divide-y divide-gray-200" id="people-list">
+            <% if @people.any? %>
+              <% @people.each do |person| %>
+                <label class="px-4 py-2 flex items-center gap-3 hover:bg-gray-50 cursor-pointer person-item"
+                       data-name="<%= person.full_name.downcase %>"
+                       data-has-collection="<%= person.assignments.where(status: 'pending', task_type: 'data_collection').exists? %>"
+                       data-has-validation="<%= person.assignments.where(status: 'pending', task_type: 'data_validation').exists? %>">
+                  <%= check_box_tag "person_ids[]", person.id, false, class: "person-checkbox rounded border-gray-300 text-indigo-600" %>
+
+                  <div class="w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center text-xs font-semibold
+                              <%= person.primary_party&.abbreviation == 'D' ? 'bg-blue-100 text-blue-700' :
+                                  person.primary_party&.abbreviation == 'R' ? 'bg-red-100 text-red-700' :
+                                  'bg-gray-200 text-gray-600' %>">
+                    <% if person.photo_url.present? %>
+                      <%= image_tag person.photo_url, class: "w-8 h-8 rounded-full object-cover", alt: person.full_name %>
+                    <% else %>
+                      <%= person.first_name[0] %><%= person.last_name[0] %>
+                    <% end %>
+                  </div>
+
+                  <div class="flex-1 min-w-0">
+                    <div class="font-medium text-sm truncate"><%= person.full_name %></div>
+                    <div class="text-xs text-gray-600 truncate">
+                      <%= person.primary_party&.name || "No party" %> · <%= person.state_of_residence || "Unknown" %>
+                    </div>
+                  </div>
+                  <% if person.assignments.active.any? %>
+                    <span class="text-xs text-yellow-600">Assigned</span>
+                  <% end %>
+                </label>
+              <% end %>
+            <% else %>
+              <div class="px-4 py-12 text-center text-gray-500 text-sm">
+                No people match the current filters.
+              </div>
+            <% end %>
+          </div>
+        </div>
       </div>
     </div>
 
-    <div class="flex justify-end">
-      <%= submit_tag "Create Assignments", class: "px-6 py-3 bg-blue-600 text-white rounded hover:bg-blue-700 cursor-pointer" %>
+    <!-- Fixed Bottom Bar -->
+    <div class="border-t bg-white px-4 py-3">
+      <div class="max-w-7xl mx-auto flex justify-between items-center">
+        <div class="text-sm text-gray-600">
+          Page <%= @people.current_page %> of <%= @people.total_pages %>
+        </div>
+        <%= submit_tag "Create Assignments", class: "px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 cursor-pointer font-medium" %>
+      </div>
     </div>
   <% end %>
-
-  <div class="mt-4">
-    <%= paginate @people %>
-  </div>
 </div>
 
 <script>
-  document.getElementById('selectAll').addEventListener('change', function() {
-    document.querySelectorAll('.person-checkbox').forEach(cb => cb.checked = this.checked);
+  // Select all functionality
+  const selectAllCheckbox = document.getElementById('selectAll');
+  const personCheckboxes = document.querySelectorAll('.person-checkbox');
+  const selectedCount = document.getElementById('selected-count');
+
+  function updateSelectedCount() {
+    const count = document.querySelectorAll('.person-checkbox:checked').length;
+    selectedCount.textContent = count;
+  }
+
+  selectAllCheckbox.addEventListener('change', function() {
+    document.querySelectorAll('.person-item:not([style*="display: none"]) .person-checkbox').forEach(cb => {
+      cb.checked = this.checked;
+    });
+    updateSelectedCount();
   });
 
+  personCheckboxes.forEach(cb => {
+    cb.addEventListener('change', updateSelectedCount);
+  });
+
+  // Researcher quick filters
+  const searchInput = document.getElementById('researcher-search');
+  const filterSelect = document.getElementById('researcher-filter');
+  const peopleItems = document.querySelectorAll('.person-item');
+
+  function applyFilters() {
+    const searchTerm = searchInput.value.toLowerCase();
+    const filterValue = filterSelect.value;
+
+    peopleItems.forEach(item => {
+      const name = item.dataset.name;
+      const hasCollection = item.dataset.hasCollection === 'true';
+      const hasValidation = item.dataset.hasValidation === 'true';
+
+      let matchesSearch = !searchTerm || name.includes(searchTerm);
+      let matchesFilter = true;
+
+      if (filterValue === 'no-pending') {
+        matchesFilter = !hasCollection;
+      } else if (filterValue === 'no-pending-validation') {
+        matchesFilter = !hasValidation;
+      } else if (filterValue === 'no-pending-any') {
+        matchesFilter = !hasCollection && !hasValidation;
+      }
+
+      item.style.display = (matchesSearch && matchesFilter) ? '' : 'none';
+    });
+
+    updateSelectedCount();
+  }
+
+  searchInput.addEventListener('input', applyFilters);
+  filterSelect.addEventListener('change', applyFilters);
+
+  // Dropdown toggle
   function toggleDropdown(id) {
     const dropdown = document.getElementById(id + '-dropdown');
     const allDropdowns = document.querySelectorAll('[id$="-dropdown"]');
 
-    // Close all other dropdowns
     allDropdowns.forEach(d => {
       if (d.id !== id + '-dropdown') {
         d.classList.add('hidden');
       }
     });
 
-    // Toggle this dropdown
     dropdown.classList.toggle('hidden');
   }
 
-  // Close dropdowns when clicking outside
   document.addEventListener('click', function(event) {
     if (!event.target.closest('button[onclick^="toggleDropdown"]') &&
         !event.target.closest('[id$="-dropdown"]')) {

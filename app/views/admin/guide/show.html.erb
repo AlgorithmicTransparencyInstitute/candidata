@@ -1,0 +1,285 @@
+<div class="max-w-4xl mx-auto px-4 py-8">
+  <div class="bg-white rounded-lg shadow-lg">
+    <div class="px-8 py-6 border-b border-gray-200">
+      <h1 class="text-3xl font-bold text-gray-900">Admin User Guide</h1>
+      <p class="mt-2 text-gray-600">Comprehensive guide for administrators of the CandiData system</p>
+    </div>
+
+    <div class="px-8 py-6">
+      <!-- Table of Contents -->
+      <div class="mb-8 p-4 bg-blue-50 rounded-lg">
+        <h2 class="text-lg font-semibold text-blue-900 mb-3">Table of Contents</h2>
+        <nav class="space-y-1 text-sm">
+          <a href="#inviting-researchers" class="block text-blue-700 hover:text-blue-900">1. Inviting Researchers</a>
+          <a href="#inviting-admins" class="block text-blue-700 hover:text-blue-900">2. Inviting Admins</a>
+          <a href="#creating-assignments" class="block text-blue-700 hover:text-blue-900">3. Creating New Assignments</a>
+          <a href="#monitoring-progress" class="block text-blue-700 hover:text-blue-900">4. Monitoring Researcher Progress</a>
+          <a href="#reassignment" class="block text-blue-700 hover:text-blue-900">5. Finding Tasks for Re-assignment</a>
+          <a href="#uncompleting" class="block text-blue-700 hover:text-blue-900">6. Un-completing Assignments</a>
+          <a href="#managing-records" class="block text-blue-700 hover:text-blue-900">7. Managing Records</a>
+          <a href="#faqs" class="block text-blue-700 hover:text-blue-900">8. FAQs</a>
+        </nav>
+      </div>
+
+      <!-- Section 1: Inviting Researchers -->
+      <section id="inviting-researchers" class="mb-8">
+        <h2 class="text-2xl font-bold text-gray-900 mb-4">1. Inviting Researchers</h2>
+        <div class="prose prose-sm max-w-none">
+          <p class="text-gray-700 mb-4">Researchers are the team members who will perform data collection and validation tasks. Follow these steps to invite new researchers:</p>
+
+          <ol class="list-decimal list-inside space-y-3 text-gray-700">
+            <li><strong>Navigate to Invite Users:</strong> Click <%= link_to "Invite Users", new_admin_invitation_path, target: "_blank", class: "text-blue-600 hover:text-blue-800" %> in the admin sidebar</li>
+            <li><strong>Enter researcher email:</strong> Type the email address of the person you want to invite</li>
+            <li><strong>Select role:</strong> Choose "Researcher" from the role dropdown</li>
+            <li><strong>Optional: Add name:</strong> You can pre-fill their name if known</li>
+            <li><strong>Send invitation:</strong> Click "Send Invitation" button</li>
+          </ol>
+
+          <div class="mt-4 p-4 bg-yellow-50 border-l-4 border-yellow-400">
+            <p class="text-sm text-yellow-800"><strong>Note:</strong> The researcher will receive an email with a link to set up their account. The invitation expires after 7 days, but you can resend it from the <%= link_to "Users page", admin_users_path, target: "_blank", class: "text-yellow-900 underline" %>.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Section 2: Inviting Admins -->
+      <section id="inviting-admins" class="mb-8">
+        <h2 class="text-2xl font-bold text-gray-900 mb-4">2. Inviting Admins</h2>
+        <div class="prose prose-sm max-w-none">
+          <p class="text-gray-700 mb-4">Admins have full access to the system including user management, data management, and system configuration.</p>
+
+          <ol class="list-decimal list-inside space-y-3 text-gray-700">
+            <li><strong>Navigate to Invite Users:</strong> Click <%= link_to "Invite Users", new_admin_invitation_path, target: "_blank", class: "text-blue-600 hover:text-blue-800" %> in the sidebar</li>
+            <li><strong>Enter admin email:</strong> Type the email address</li>
+            <li><strong>Select role:</strong> Choose "Admin" from the role dropdown</li>
+            <li><strong>Send invitation:</strong> Click "Send Invitation"</li>
+          </ol>
+
+          <div class="mt-4 p-4 bg-red-50 border-l-4 border-red-400">
+            <p class="text-sm text-red-800"><strong>Important:</strong> Only invite trusted individuals as admins. Admins can modify all data, manage users, and access sensitive information.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Section 3: Creating Assignments -->
+      <section id="creating-assignments" class="mb-8">
+        <h2 class="text-2xl font-bold text-gray-900 mb-4">3. Creating New Assignments</h2>
+        <div class="prose prose-sm max-w-none">
+          <p class="text-gray-700 mb-4">Assignments are how you distribute work to researchers. There are two types of assignments:</p>
+
+          <ul class="list-disc list-inside space-y-2 text-gray-700 mb-4">
+            <li><strong>Data Collection:</strong> Find and enter social media accounts for politicians</li>
+            <li><strong>Data Validation:</strong> Verify accounts that have been entered by other researchers</li>
+          </ul>
+
+          <h3 class="text-lg font-semibold text-gray-900 mt-6 mb-3">Steps to Create Assignments:</h3>
+          <ol class="list-decimal list-inside space-y-3 text-gray-700">
+            <li><strong>Go to <%= link_to "Create Assignments", new_admin_assignment_path, target: "_blank", class: "text-blue-600 hover:text-blue-800" %></strong> (click the + icon next to Assignments in the sidebar)</li>
+            <li><strong>Step 1 - Select Researcher & Task Type:</strong>
+              <ul class="list-disc list-inside ml-6 mt-2 space-y-1">
+                <li>Choose a researcher from the list (shows their current workload)</li>
+                <li>Select task type: Data Collection or Data Validation</li>
+              </ul>
+            </li>
+            <li><strong>Step 2 - Filter & Select People:</strong>
+              <ul class="list-disc list-inside ml-6 mt-2 space-y-1">
+                <li>Use filters to narrow down people (state, party, office, etc.)</li>
+                <li>Use the search box to find specific people by name</li>
+                <li>Use quick filters to find people without pending assignments</li>
+                <li>Check the boxes next to people you want to assign</li>
+                <li>Click "Select all" to select all visible people</li>
+              </ul>
+            </li>
+            <li><strong>Review & Submit:</strong> Click "Create Assignments" at the bottom</li>
+          </ol>
+
+          <div class="mt-4 p-4 bg-blue-50 border-l-4 border-blue-400">
+            <p class="text-sm text-blue-800"><strong>Tip:</strong> Balance workloads by checking the "active tasks" count shown next to each researcher's name. The system color-codes workloads: green (0), yellow (1-9), red (10+).</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Section 4: Monitoring Progress -->
+      <section id="monitoring-progress" class="mb-8">
+        <h2 class="text-2xl font-bold text-gray-900 mb-4">4. Monitoring Researcher Progress</h2>
+        <div class="prose prose-sm max-w-none">
+          <p class="text-gray-700 mb-4">Track the status of all assignments and researcher productivity:</p>
+
+          <h3 class="text-lg font-semibold text-gray-900 mt-6 mb-3">View All Assignments:</h3>
+          <ol class="list-decimal list-inside space-y-3 text-gray-700">
+            <li><strong>Go to <%= link_to "Assignments", admin_assignments_path, target: "_blank", class: "text-blue-600 hover:text-blue-800" %></strong></li>
+            <li><strong>Filter assignments:</strong> Use the filters to view by status, task type, or researcher</li>
+            <li><strong>Assignment statuses:</strong>
+              <ul class="list-disc list-inside ml-6 mt-2 space-y-1">
+                <li><span class="px-2 py-1 bg-gray-100 text-gray-800 rounded text-xs">Pending</span> - Not yet started</li>
+                <li><span class="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs">In Progress</span> - Researcher is working on it</li>
+                <li><span class="px-2 py-1 bg-green-100 text-green-800 rounded text-xs">Completed</span> - Finished</li>
+              </ul>
+            </li>
+          </ol>
+
+          <h3 class="text-lg font-semibold text-gray-900 mt-6 mb-3">View Researcher Performance:</h3>
+          <ol class="list-decimal list-inside space-y-3 text-gray-700">
+            <li><strong>Go to <%= link_to "Researchers", admin_researchers_path, target: "_blank", class: "text-blue-600 hover:text-blue-800" %></strong></li>
+            <li><strong>View stats:</strong> See pending, in-progress, and completed tasks for each researcher</li>
+            <li><strong>Filter researchers:</strong> Find researchers with specific workload patterns</li>
+            <li><strong>Sort by workload:</strong> Identify researchers who need more/less work</li>
+          </ol>
+        </div>
+      </section>
+
+      <!-- Section 5: Finding Tasks for Re-assignment -->
+      <section id="reassignment" class="mb-8">
+        <h2 class="text-2xl font-bold text-gray-900 mb-4">5. Finding Tasks That Need Re-assignment (Re-validation)</h2>
+        <div class="prose prose-sm max-w-none">
+          <p class="text-gray-700 mb-4">Some social media accounts may need to be re-verified. Here's how to find and assign them:</p>
+
+          <h3 class="text-lg font-semibold text-gray-900 mt-6 mb-3">Find Accounts Needing Re-validation:</h3>
+          <ol class="list-decimal list-inside space-y-3 text-gray-700">
+            <li><strong>Go to <%= link_to "Accounts", admin_social_media_accounts_path, target: "_blank", class: "text-blue-600 hover:text-blue-800" %></strong></li>
+            <li><strong>Filter by research status:</strong> Select "Revised" or "Rejected" from the Research Status filter</li>
+            <li><strong>Review the accounts:</strong> Look at verification notes to understand why they need review</li>
+            <li><strong>Note the people:</strong> Make note of which people have accounts needing re-validation</li>
+          </ol>
+
+          <h3 class="text-lg font-semibold text-gray-900 mt-6 mb-3">Create Re-validation Assignments:</h3>
+          <ol class="list-decimal list-inside space-y-3 text-gray-700">
+            <li><strong>Go to <%= link_to "Create Assignments", new_admin_assignment_path, target: "_blank", class: "text-blue-600 hover:text-blue-800" %></strong></li>
+            <li><strong>Select task type:</strong> Choose "Data Validation"</li>
+            <li><strong>Find the people:</strong> Use search or filters to find the people with accounts needing review</li>
+            <li><strong>Assign to a different researcher:</strong> Choose a researcher different from who originally entered the data</li>
+          </ol>
+        </div>
+      </section>
+
+      <!-- Section 6: Un-completing Assignments -->
+      <section id="uncompleting" class="mb-8">
+        <h2 class="text-2xl font-bold text-gray-900 mb-4">6. Un-completing Assignments</h2>
+        <div class="prose prose-sm max-w-none">
+          <p class="text-gray-700 mb-4">If an assignment was completed prematurely or needs additional work, you can mark it as incomplete:</p>
+
+          <h3 class="text-lg font-semibold text-gray-900 mt-6 mb-3">From the Assignments List:</h3>
+          <ol class="list-decimal list-inside space-y-3 text-gray-700">
+            <li><strong>Go to <%= link_to "Assignments", admin_assignments_path, target: "_blank", class: "text-blue-600 hover:text-blue-800" %></strong></li>
+            <li><strong>Filter by status:</strong> Select "Completed" to see finished assignments</li>
+            <li><strong>Find the assignment:</strong> Locate the assignment that needs to be reopened</li>
+            <li><strong>Click "Mark Incomplete":</strong> The orange button will reopen the assignment</li>
+            <li><strong>Confirm:</strong> A dialog will ask you to confirm - click OK</li>
+          </ol>
+
+          <h3 class="text-lg font-semibold text-gray-900 mt-6 mb-3">From the Assignment Detail Page:</h3>
+          <ol class="list-decimal list-inside space-y-3 text-gray-700">
+            <li><strong>Click "View"</strong> on any completed assignment</li>
+            <li><strong>Click "Mark Incomplete"</strong> button at the top right</li>
+            <li><strong>Confirm the action</strong></li>
+          </ol>
+
+          <div class="mt-4 p-4 bg-yellow-50 border-l-4 border-yellow-400">
+            <p class="text-sm text-yellow-800"><strong>Note:</strong> When you mark an assignment as incomplete, it changes status back to "Pending" and will reappear in the researcher's queue.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Section 7: Managing Records -->
+      <section id="managing-records" class="mb-8">
+        <h2 class="text-2xl font-bold text-gray-900 mb-4">7. Managing System Records</h2>
+        <div class="prose prose-sm max-w-none">
+          <p class="text-gray-700 mb-4">As an admin, you can create and edit all types of records in the system:</p>
+
+          <h3 class="text-lg font-semibold text-gray-900 mt-6 mb-3">Record Types:</h3>
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <h4 class="font-semibold text-gray-900">People & Politics:</h4>
+              <ul class="list-disc list-inside text-gray-700 space-y-1 text-sm">
+                <li><%= link_to "People", admin_people_path, target: "_blank", class: "text-blue-600" %> - Politicians and candidates</li>
+                <li><%= link_to "Parties", admin_parties_path, target: "_blank", class: "text-blue-600" %> - Political parties</li>
+                <li><%= link_to "Offices", admin_offices_path, target: "_blank", class: "text-blue-600" %> - Political offices</li>
+                <li><%= link_to "Districts", admin_districts_path, target: "_blank", class: "text-blue-600" %> - Electoral districts</li>
+                <li><%= link_to "Bodies", admin_bodies_path, target: "_blank", class: "text-blue-600" %> - Legislative bodies</li>
+              </ul>
+            </div>
+            <div>
+              <h4 class="font-semibold text-gray-900">Elections & Accounts:</h4>
+              <ul class="list-disc list-inside text-gray-700 space-y-1 text-sm">
+                <li><%= link_to "Elections", admin_elections_path, target: "_blank", class: "text-blue-600" %> - Election events</li>
+                <li><%= link_to "Ballots", admin_ballots_path, target: "_blank", class: "text-blue-600" %> - Election ballots</li>
+                <li><%= link_to "Contests", admin_contests_path, target: "_blank", class: "text-blue-600" %> - Specific races</li>
+                <li><%= link_to "Accounts", admin_social_media_accounts_path, target: "_blank", class: "text-blue-600" %> - Social media accounts</li>
+              </ul>
+            </div>
+          </div>
+
+          <h3 class="text-lg font-semibold text-gray-900 mt-6 mb-3">Common Tasks:</h3>
+          <ul class="list-disc list-inside space-y-2 text-gray-700">
+            <li><strong>Viewing records:</strong> Click on any section in the sidebar, use filters and search to find specific records</li>
+            <li><strong>Creating records:</strong> Click "New [Record Type]" button on list pages</li>
+            <li><strong>Editing records:</strong> Click "Edit" link next to any record</li>
+            <li><strong>Viewing details:</strong> Click "View" or the record name to see full details</li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- Section 8: FAQs -->
+      <section id="faqs" class="mb-8">
+        <h2 class="text-2xl font-bold text-gray-900 mb-4">8. Frequently Asked Questions</h2>
+        <div class="space-y-6">
+          <div>
+            <h3 class="text-lg font-semibold text-gray-900 mb-2">Q: How many assignments should I give each researcher?</h3>
+            <p class="text-gray-700">A: This depends on the researcher's availability and experience. Start with 5-10 assignments and adjust based on their completion rate. The system shows active task counts to help you balance workloads.</p>
+          </div>
+
+          <div>
+            <h3 class="text-lg font-semibold text-gray-900 mb-2">Q: What's the difference between Data Collection and Data Validation?</h3>
+            <p class="text-gray-700">A: Data Collection involves finding and entering social media accounts from scratch. Data Validation involves reviewing and verifying accounts that have already been entered by another researcher to ensure accuracy.</p>
+          </div>
+
+          <div>
+            <h3 class="text-lg font-semibold text-gray-900 mb-2">Q: Can I assign the same person to multiple researchers?</h3>
+            <p class="text-gray-700">A: Yes, but avoid assigning the same task type. For example, you can assign a person to one researcher for Data Collection and another for Data Validation, but don't assign Data Collection to two different researchers for the same person.</p>
+          </div>
+
+          <div>
+            <h3 class="text-lg font-semibold text-gray-900 mb-2">Q: How do I know if a researcher needs help?</h3>
+            <p class="text-gray-700">A: Check the <%= link_to "Researchers", admin_researchers_path, target: "_blank", class: "text-blue-600" %> page regularly. If a researcher has many pending tasks but few completed, they may need guidance or have questions. Reach out to them directly.</p>
+          </div>
+
+          <div>
+            <h3 class="text-lg font-semibold text-gray-900 mb-2">Q: What if I accidentally created an assignment for the wrong person?</h3>
+            <p class="text-gray-700">A: Go to <%= link_to "Assignments", admin_assignments_path, target: "_blank", class: "text-blue-600" %>, find the assignment, click "View", then click "Delete" if the researcher hasn't started it yet. If they have started, communicate with them first.</p>
+          </div>
+
+          <div>
+            <h3 class="text-lg font-semibold text-gray-900 mb-2">Q: How long do invitation links last?</h3>
+            <p class="text-gray-700">A: Invitation links expire after 7 days. If someone didn't accept in time, go to the <%= link_to "Users", admin_users_path, target: "_blank", class: "text-blue-600" %> page and click "Resend Invitation" next to their name.</p>
+          </div>
+
+          <div>
+            <h3 class="text-lg font-semibold text-gray-900 mb-2">Q: Can I see which accounts a researcher has entered?</h3>
+            <p class="text-gray-700">A: Yes, go to <%= link_to "Accounts", admin_social_media_accounts_path, target: "_blank", class: "text-blue-600" %> and look at the "Entered By" column. The account list shows who entered each account and when.</p>
+          </div>
+
+          <div>
+            <h3 class="text-lg font-semibold text-gray-900 mb-2">Q: What should I do if I find incorrect data in the system?</h3>
+            <p class="text-gray-700">A: You can edit any record directly as an admin. Navigate to the appropriate section (People, Accounts, etc.), find the record, and click "Edit". Make the necessary corrections and save.</p>
+          </div>
+
+          <div>
+            <h3 class="text-lg font-semibold text-gray-900 mb-2">Q: How do I export data from the system?</h3>
+            <p class="text-gray-700">A: Currently, data export is not built into the interface. Contact your system administrator if you need data exports for analysis or reporting purposes.</p>
+          </div>
+
+          <div>
+            <h3 class="text-lg font-semibold text-gray-900 mb-2">Q: Can researchers see each other's work?</h3>
+            <p class="text-gray-700">A: No, researchers can only see their own assignments. However, when doing data validation, they can see accounts that were entered by other researchers (but not who entered them).</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Footer -->
+      <div class="mt-8 pt-6 border-t border-gray-200">
+        <p class="text-sm text-gray-600 text-center">
+          Need additional help? Contact your system administrator or technical support team.
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
