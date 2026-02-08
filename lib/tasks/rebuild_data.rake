@@ -89,7 +89,7 @@ namespace :rebuild do
     puts "This will create: Offices, People, Officeholders, Official Social Media Accounts"
     puts "="*80
 
-    Rake::Task['govproj:import_from_temp'].invoke
+    Rake::Task['govproj:import_from_temp_fast'].invoke
   end
 
   desc "Step 3: Enrich matched people with data from temp_people and temp_accounts"
