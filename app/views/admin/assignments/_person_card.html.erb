@@ -35,25 +35,23 @@
           <%= person.primary_party.abbreviation %>
         </span>
       <% end %>
-    </div>
-    <div class="text-xs text-gray-600 flex items-center gap-1.5">
-      <span><%= person.state_of_residence || "?" %></span>
-      <% if current_oh&.office %>
-        <span class="text-gray-400">·</span>
-        <span class="truncate" title="<%= current_oh.office.title %><%= " (#{current_oh.office.seat})" if current_oh.office.seat.present? %>">
-          <%= current_oh.office.title.gsub('U.S. ', '').gsub('State ', '') %><%= " #{current_oh.office.seat}" if current_oh.office.seat.present? %>
-        </span>
-      <% elsif recent_candidate&.contest&.office %>
-        <span class="text-gray-400">·</span>
-        <span class="truncate" title="<%= recent_candidate.contest.office.title %><%= " (#{recent_candidate.contest.office.seat})" if recent_candidate.contest.office.seat.present? %>">
-          <%= recent_candidate.contest.ballot.year %> Candidate
-        </span>
-      <% end %>
       <% if has_website %>
-        <span class="text-green-600 flex-shrink-0" title="Has website">🌐</span>
+        <span class="text-xs text-green-600 flex-shrink-0" title="Has website">🌐</span>
       <% end %>
-      <span class="text-gray-400 flex-shrink-0">·</span>
-      <span class="text-gray-500 flex-shrink-0"><%= populated_accounts %>/<%= total_accounts %></span>
+    </div>
+    <div class="text-xs text-gray-600">
+      <%= person.state_of_residence || "Unknown" %>
+      <% if current_oh&.office %>
+        · Current: <%= current_oh.office.title %><%= " (#{current_oh.office.seat})" if current_oh.office.seat.present? %>
+      <% elsif recent_candidate&.contest&.office %>
+        · Candidate: <%= recent_candidate.contest.office.title %><%= " (#{recent_candidate.contest.office.seat})" if recent_candidate.contest.office.seat.present? %>
+        <% if recent_candidate.contest.ballot %>
+          (<%= recent_candidate.contest.ballot.year %> <%= recent_candidate.contest.ballot.election_type&.titleize %>)
+        <% end %>
+      <% end %>
+    </div>
+    <div class="text-xs text-gray-500">
+      Accounts: <%= populated_accounts %>/<%= total_accounts %> populated
     </div>
   </div>
 </div>

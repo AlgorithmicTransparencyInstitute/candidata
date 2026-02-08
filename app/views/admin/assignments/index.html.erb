@@ -44,14 +44,8 @@
               <%= render 'person_card', person: assignment.person %>
             </td>
             <td class="px-4 py-4">
-              <div class="text-sm font-medium text-gray-900">
+              <div class="text-sm font-medium text-gray-900" title="Assigned by <%= assignment.assigned_by.name.presence || assignment.assigned_by.email %> <%= time_ago_in_words(assignment.created_at) %> ago">
                 <%= assignment.user.name.presence || assignment.user.email %>
-              </div>
-              <div class="text-sm text-gray-600">
-                by <%= assignment.assigned_by.name.presence || assignment.assigned_by.email %>
-              </div>
-              <div class="text-xs text-gray-500">
-                <%= time_ago_in_words(assignment.created_at) %> ago
               </div>
             </td>
             <td class="px-4 py-4">
