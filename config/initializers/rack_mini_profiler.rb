@@ -29,42 +29,8 @@ if defined?(Rack::MiniProfiler)
       config.position = "top-right"
       config.storage = Rack::MiniProfiler::MemoryStore
 
-      # Only show profiler for admin users
+      # Only show profiler when explicitly authorized via Rack::MiniProfiler.authorize_request
       config.authorization_mode = :allow_authorized
-
-      # This method is called before each request to determine if profiling should be enabled
-      # It must return true/false
-      config.pre_authorize_cb = lambda { |env|
-        begin
-          # Check if user is logged in via Warden (Devise)
-          if env['warden']
-            # Try to get user from default scope
-            user = env['warden'].user(:user)
-            user ||= env['warden'].user # fallback to default
-
-            # Log for debugging
-            Rails.logger.info("Rack::MiniProfiler: Checking authorization for user: #{user.inspect}")
-
-            # Check if user is admin
-            if user && user.respond_to?(:admin?)
-              is_admin = user.admin? == true
-              Rails.logger.info("Rack::MiniProfiler: User is admin: #{is_admin}")
-              is_admin
-            else
-              Rails.logger.info("Rack::MiniProfiler: User doesn't respond to admin? or is nil")
-              false
-            end
-          else
-            Rails.logger.info("Rack::MiniProfiler: No warden in env")
-            false
-          end
-        rescue => e
-          # Log error but don't break the request
-          Rails.logger.error("Rack::MiniProfiler authorization error: #{e.message}")
-          Rails.logger.error(e.backtrace.join("\n"))
-          false
-        end
-      }
     end
   end
 end
