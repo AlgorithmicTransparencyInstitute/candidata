@@ -1,286 +1,307 @@
-<div class="max-w-6xl mx-auto px-4 py-8">
+<div class="max-w-7xl mx-auto px-4 py-8">
   <div class="mb-6">
     <%= link_to "← Back to Verification Queue", verification_queue_path, class: "text-purple-600 hover:text-purple-800" %>
   </div>
 
-  <!-- Two-column layout: Person Info + Verification Guide -->
-  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-
-    <!-- Person Header (Left Column) -->
-    <div class="bg-white rounded-lg shadow">
-      <div class="px-6 py-5">
-        <div class="flex items-start gap-4 mb-4">
-          <% if @person.photo_url.present? %>
-            <img src="<%= @person.photo_url %>" alt="<%= @person.full_name %>" class="w-20 h-20 rounded-lg object-cover">
-          <% else %>
-            <div class="w-20 h-20 rounded-lg bg-gray-200 flex items-center justify-center">
-              <span class="text-gray-500 font-medium text-2xl"><%= @person.first_name.first %><%= @person.last_name.first %></span>
-            </div>
-          <% end %>
-          <div class="flex-1">
-            <h1 class="text-2xl font-bold text-gray-900"><%= @person.full_name %></h1>
-            <div class="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-sm text-gray-600">
-              <% if @person.primary_party %>
-                <span class="inline-flex items-center gap-1">
-                  <span class="w-2 h-2 rounded-full bg-gray-400"></span>
-                  <%= @person.primary_party.name %>
-                </span>
-              <% end %>
-              <% if @person.state_of_residence.present? %>
-                <span><%= @person.state_of_residence %></span>
-              <% end %>
-            </div>
-          </div>
-        </div>
-
-        <% if @person.website_campaign.present? || @person.website_official.present? %>
-          <div class="mb-4 flex flex-wrap gap-3 text-sm">
-            <% if @person.website_campaign.present? %>
-              <a href="<%= @person.website_campaign %>" target="_blank" rel="noopener" class="text-blue-600 hover:text-blue-800 flex items-center gap-1">
-                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
-                Campaign Site
-              </a>
-            <% end %>
-            <% if @person.website_official.present? %>
-              <a href="<%= @person.website_official %>" target="_blank" rel="noopener" class="text-blue-600 hover:text-blue-800 flex items-center gap-1">
-                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
-                Official Site
-              </a>
-            <% end %>
+  <!-- Person Header (Full Width) -->
+  <div class="bg-white rounded-lg shadow mb-6">
+    <div class="px-6 py-5">
+      <div class="flex items-start gap-4 mb-4">
+        <% if @person.photo_url.present? %>
+          <img src="<%= @person.photo_url %>" alt="<%= @person.full_name %>" class="w-20 h-20 rounded-lg object-cover">
+        <% else %>
+          <div class="w-20 h-20 rounded-lg bg-gray-200 flex items-center justify-center">
+            <span class="text-gray-500 font-medium text-2xl"><%= @person.first_name.first %><%= @person.last_name.first %></span>
           </div>
         <% end %>
-
-        <!-- Current Offices / Candidacies -->
-        <%
-          # Find most recent candidacy (prefer 2026 or later)
-          recent_candidacy = @candidacies&.first
-        %>
-        <% if @current_offices.any? || recent_candidacy %>
-          <div class="pt-4 border-t border-gray-200 flex flex-wrap gap-x-6 gap-y-2 text-sm">
-            <% @current_offices.each do |oh| %>
-              <div class="flex items-center gap-1.5 text-gray-700">
-                <svg class="w-4 h-4 text-gray-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
-                <span class="font-medium">Current: <%= oh.office.title %></span>
-                <span class="text-gray-400">·</span>
-                <span class="text-gray-500 capitalize"><%= oh.office.level %><%= oh.office.state.present? ? " · #{oh.office.state}" : '' %></span>
-              </div>
+        <div class="flex-1">
+          <h1 class="text-2xl font-bold text-gray-900"><%= @person.full_name %></h1>
+          <div class="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-sm text-gray-600">
+            <% if @person.primary_party %>
+              <span class="inline-flex items-center gap-1">
+                <span class="w-2 h-2 rounded-full bg-gray-400"></span>
+                <%= @person.primary_party.name %>
+              </span>
             <% end %>
-            <% if recent_candidacy && @current_offices.empty? %>
-              <div class="flex items-center gap-1.5 text-blue-700">
-                <svg class="w-4 h-4 text-blue-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                <span class="font-medium">Candidate: <%= recent_candidacy.contest.office&.title || 'Unknown Office' %></span>
-                <% if recent_candidacy.contest.office&.seat %>
-                  <span class="text-gray-400">·</span>
-                  <span class="text-blue-600">(<%= recent_candidacy.contest.office.seat %>)</span>
-                <% end %>
-                <% if recent_candidacy.contest.ballot %>
-                  <span class="text-gray-400">·</span>
-                  <span class="text-blue-600"><%= recent_candidacy.contest.ballot.year %> <%= recent_candidacy.contest.ballot.election_type&.titleize %></span>
-                <% end %>
-              </div>
+            <% if @person.state_of_residence.present? %>
+              <span><%= @person.state_of_residence %></span>
             <% end %>
           </div>
-        <% end %>
-
-        <!-- Assignment Status -->
-        <div class="mt-4 pt-4 border-t border-gray-200 flex items-center justify-between">
-          <span class="px-3 py-1 text-sm rounded-full <%= @assignment.pending? ? 'bg-purple-100 text-purple-800' : @assignment.in_progress? ? 'bg-orange-100 text-orange-800' : 'bg-green-100 text-green-800' %>">
-            <%= @assignment.status.humanize %>
-          </span>
-          <% if @assignment.pending? %>
-            <%= button_to "Start Verification", start_verification_assignment_path(@assignment), method: :patch, class: "px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 text-sm font-medium" %>
-          <% elsif @assignment.in_progress? %>
-            <%= button_to "Mark Complete", complete_verification_assignment_path(@assignment), method: :patch, class: "px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm font-medium", data: { confirm: "Are you sure all accounts have been verified?" } %>
-          <% elsif @assignment.completed? %>
-            <%= button_to "Reopen", reopen_verification_assignment_path(@assignment), method: :patch, class: "px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 text-sm font-medium" %>
-          <% end %>
         </div>
       </div>
-    </div>
 
-      <!-- Verification Help Box (Right Column) -->
-    <%= render "shared/verification_guide", channel_type: @accounts.first&.channel_type || 'campaign' %>
-
-  </div> <!-- End grid -->
-
-  <!-- Campaign Accounts -->
-  <div class="bg-white rounded-lg shadow mb-6">
-    <div class="px-6 py-4 border-b border-gray-200">
-      <h2 class="text-lg font-semibold text-gray-900">Campaign Accounts</h2>
-      <p class="text-sm text-gray-500">Verify, edit, or mark as not found. Click "Verify" if correct, or "Edit" to make changes.</p>
-    </div>
-    <div class="divide-y divide-gray-200">
-      <% @accounts.each do |account| %>
-        <div class="px-5 py-3" id="account-<%= account.id %>">
-
-          <% if account.research_status == 'not_started' && @assignment.in_progress? %>
-            <!-- Not started: Add data or mark not found -->
-            <div class="flex items-center gap-2">
-              <div class="w-7 h-7 rounded-full bg-gray-100 flex items-center justify-center shrink-0">
-                <%= platform_icon(account.platform, size: 16) %>
-              </div>
-              <div class="w-24 shrink-0 font-medium text-gray-900 text-sm"><%= account.platform %></div>
-              <span class="text-sm text-gray-400 italic flex-1">No data entered</span>
-              <button type="button" onclick="toggleEdit(<%= account.id %>)" class="px-3 py-1 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700 shrink-0">Add Data</button>
-              <%= button_to "Not Found", mark_not_found_verification_account_path(account), method: :patch, class: "px-3 py-1 bg-gray-200 text-gray-600 text-sm rounded-md hover:bg-gray-300 shrink-0", data: { confirm: "Mark this account as not found?" } %>
-            </div>
-            <!-- Edit form (hidden by default) -->
-            <div class="hidden mt-2" id="edit-<%= account.id %>">
-              <div class="flex items-center gap-2 ml-9">
-                <%= form_with url: mark_entered_verification_account_path(account), method: :patch, class: "flex items-center gap-2 flex-1 min-w-0" do %>
-                  <input type="url" name="url" placeholder="https://..." class="flex-1 min-w-0 px-2.5 py-1 text-sm border border-gray-300 rounded-md focus:ring-purple-500 focus:border-purple-500">
-                  <input type="text" name="handle" placeholder="@handle" class="w-28 px-2.5 py-1 text-sm border border-gray-300 rounded-md focus:ring-purple-500 focus:border-purple-500">
-                  <button type="submit" class="px-3 py-1 bg-purple-600 text-white text-sm rounded-md hover:bg-purple-700 shrink-0">Save (needs verification)</button>
-                <% end %>
-                <button type="button" onclick="toggleEdit(<%= account.id %>)" class="px-3 py-1 text-gray-500 text-sm hover:bg-gray-100 rounded-md shrink-0">Cancel</button>
-              </div>
-            </div>
-
-          <% elsif account.research_status == 'entered' && @assignment.in_progress? %>
-            <!-- Entered: Display with Verify/Edit buttons -->
-            <div class="flex items-center gap-2 group" id="display-<%= account.id %>">
-              <div class="w-7 h-7 rounded-full bg-gray-100 flex items-center justify-center shrink-0">
-                <%= platform_icon(account.platform, size: 16) %>
-              </div>
-              <div class="w-24 shrink-0 font-medium text-gray-900 text-sm"><%= account.platform %></div>
-              <div class="flex-1 text-sm min-w-0 truncate">
-                <% if account.url.present? %>
-                  <a href="<%= account.url %>" target="_blank" class="text-blue-600 hover:text-blue-800"><%= account.url %></a>
-                <% end %>
-                <% if account.handle.present? %>
-                  <span class="text-gray-600"><%= account.url.present? ? ' · ' : '' %>@<%= account.handle %></span>
-                <% end %>
-              </div>
-              <span class="px-2 py-0.5 text-xs rounded-full bg-blue-100 text-blue-700 shrink-0">Needs Verification</span>
-              <% if account.entered_by %>
-                <span class="text-xs text-gray-400 shrink-0">by <%= account.entered_by.name.split.first %></span>
-              <% end %>
-              <%= button_to "✓ Verify", verify_verification_account_path(account), method: :patch, class: "px-3 py-1 bg-green-600 text-white text-sm rounded-md hover:bg-green-700 shrink-0" %>
-              <button type="button" onclick="toggleEdit(<%= account.id %>)" class="text-xs text-purple-600 hover:text-purple-800 shrink-0">Edit</button>
-            </div>
-            <!-- Edit form (hidden by default) -->
-            <div class="hidden mt-2" id="edit-<%= account.id %>">
-              <div class="flex items-center gap-2 ml-9">
-                <%= form_with url: mark_entered_verification_account_path(account), method: :patch, class: "flex items-center gap-2 flex-1 min-w-0" do %>
-                  <input type="url" name="url" value="<%= account.url %>" placeholder="https://..." class="flex-1 min-w-0 px-2.5 py-1 text-sm border border-gray-300 rounded-md focus:ring-purple-500 focus:border-purple-500">
-                  <input type="text" name="handle" value="<%= account.handle %>" placeholder="@handle" class="w-28 px-2.5 py-1 text-sm border border-gray-300 rounded-md focus:ring-purple-500 focus:border-purple-500">
-                  <button type="submit" class="px-3 py-1 bg-purple-600 text-white text-sm rounded-md hover:bg-purple-700 shrink-0">Save (needs re-verification)</button>
-                <% end %>
-                <button type="button" onclick="toggleEdit(<%= account.id %>)" class="px-3 py-1 text-gray-500 text-sm hover:bg-gray-100 rounded-md shrink-0">Cancel</button>
-                <%= button_to "Mark Not Found", mark_not_found_verification_account_path(account), method: :patch, class: "px-3 py-1 text-red-500 text-sm hover:bg-red-50 rounded-md shrink-0", data: { confirm: "Mark as not found?" } %>
-              </div>
-            </div>
-
-          <% elsif account.research_status == 'not_found' && @assignment.in_progress? %>
-            <!-- Not found: Verify or undo -->
-            <div class="flex items-center gap-2">
-              <div class="w-7 h-7 rounded-full bg-gray-100 flex items-center justify-center shrink-0">
-                <%= platform_icon(account.platform, size: 16) %>
-              </div>
-              <div class="w-24 shrink-0 font-medium text-gray-900 text-sm"><%= account.platform %></div>
-              <span class="text-sm text-gray-400 italic flex-1">Not found</span>
-              <span class="px-2 py-0.5 text-xs rounded-full bg-gray-200 text-gray-500 shrink-0">Not Found</span>
-              <%= button_to "✓ Verify", verify_verification_account_path(account), method: :patch, class: "px-3 py-1 bg-green-600 text-white text-sm rounded-md hover:bg-green-700 shrink-0" %>
-              <%= button_to "Undo", reset_status_verification_account_path(account), method: :patch, class: "text-xs text-blue-600 hover:text-blue-800 shrink-0" %>
-            </div>
-
-          <% elsif account.research_status == 'verified' && @assignment.in_progress? %>
-            <!-- Verified but assignment reopened: Allow unverify -->
-            <div class="flex items-center gap-2">
-              <div class="w-7 h-7 rounded-full bg-gray-100 flex items-center justify-center shrink-0">
-                <%= platform_icon(account.platform, size: 16) %>
-              </div>
-              <div class="w-24 shrink-0 font-medium text-gray-900 text-sm"><%= account.platform %></div>
-              <div class="flex-1 text-sm min-w-0 truncate">
-                <% if account.url.present? %>
-                  <a href="<%= account.url %>" target="_blank" class="text-blue-600 hover:text-blue-800"><%= account.url %></a>
-                <% elsif account.handle.present? %>
-                  <span class="text-gray-600">@<%= account.handle %></span>
-                <% else %>
-                  <span class="text-gray-400 italic">Not found</span>
-                <% end %>
-              </div>
-              <span class="px-2 py-0.5 text-xs rounded-full bg-green-100 text-green-700 shrink-0">✓ Verified</span>
-              <% if account.verified_by %>
-                <span class="text-xs text-gray-400 shrink-0">by <%= account.verified_by.name.split.first %></span>
-              <% end %>
-              <%= button_to "Unverify", unverify_verification_account_path(account), method: :patch, class: "text-xs text-orange-600 hover:text-orange-800 shrink-0", data: { confirm: "Unverify this account to make changes?" } %>
-            </div>
-
-          <% elsif account.research_status == 'verified' %>
-            <!-- Verified: Read-only, show who verified -->
-            <div class="flex items-center gap-2">
-              <div class="w-7 h-7 rounded-full bg-gray-100 flex items-center justify-center shrink-0">
-                <%= platform_icon(account.platform, size: 16) %>
-              </div>
-              <div class="w-24 shrink-0 font-medium text-gray-900 text-sm"><%= account.platform %></div>
-              <div class="flex-1 text-sm min-w-0 truncate">
-                <% if account.url.present? %>
-                  <a href="<%= account.url %>" target="_blank" class="text-blue-600 hover:text-blue-800"><%= account.url %></a>
-                <% elsif account.handle.present? %>
-                  <span class="text-gray-600">@<%= account.handle %></span>
-                <% else %>
-                  <span class="text-gray-400 italic">Not found</span>
-                <% end %>
-              </div>
-              <span class="px-2 py-0.5 text-xs rounded-full bg-green-100 text-green-700 shrink-0">✓ Verified</span>
-              <% if account.verified_by %>
-                <span class="text-xs text-gray-400 shrink-0">by <%= account.verified_by.name.split.first %></span>
-              <% end %>
-            </div>
-
-          <% else %>
-            <!-- Assignment not in progress -->
-            <div class="flex items-center gap-2">
-              <div class="w-7 h-7 rounded-full bg-gray-100 flex items-center justify-center shrink-0">
-                <%= platform_icon(account.platform, size: 16) %>
-              </div>
-              <div class="w-24 shrink-0 font-medium text-gray-900 text-sm"><%= account.platform %></div>
-              <span class="text-sm text-gray-400 flex-1">Start verification to begin</span>
-            </div>
+      <% if @person.website_campaign.present? || @person.website_official.present? %>
+        <div class="mb-4 flex flex-wrap gap-3 text-sm">
+          <% if @person.website_campaign.present? %>
+            <a href="<%= @person.website_campaign %>" target="_blank" rel="noopener" class="text-blue-600 hover:text-blue-800 flex items-center gap-1">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+              Campaign Site
+            </a>
           <% end %>
-
+          <% if @person.website_official.present? %>
+            <a href="<%= @person.website_official %>" target="_blank" rel="noopener" class="text-blue-600 hover:text-blue-800 flex items-center gap-1">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+              Official Site
+            </a>
+          <% end %>
         </div>
       <% end %>
+
+      <!-- Current Offices / Candidacies -->
+      <%
+        # Find most recent candidacy (prefer 2026 or later)
+        recent_candidacy = @candidacies&.first
+      %>
+      <% if @current_offices.any? || recent_candidacy %>
+        <div class="pt-4 border-t border-gray-200 flex flex-wrap gap-x-6 gap-y-2 text-sm">
+          <% @current_offices.each do |oh| %>
+            <div class="flex items-center gap-1.5 text-gray-700">
+              <svg class="w-4 h-4 text-gray-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+              <span class="font-medium">Current: <%= oh.office.title %></span>
+              <span class="text-gray-400">·</span>
+              <span class="text-gray-500 capitalize"><%= oh.office.level %><%= oh.office.state.present? ? " · #{oh.office.state}" : '' %></span>
+            </div>
+          <% end %>
+          <% if recent_candidacy && @current_offices.empty? %>
+            <div class="flex items-center gap-1.5 text-blue-700">
+              <svg class="w-4 h-4 text-blue-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+              <span class="font-medium">Candidate: <%= recent_candidacy.contest.office&.title || 'Unknown Office' %></span>
+              <% if recent_candidacy.contest.office&.seat %>
+                <span class="text-gray-400">·</span>
+                <span class="text-blue-600">(<%= recent_candidacy.contest.office.seat %>)</span>
+              <% end %>
+              <% if recent_candidacy.contest.ballot %>
+                <span class="text-gray-400">·</span>
+                <span class="text-blue-600"><%= recent_candidacy.contest.ballot.year %> <%= recent_candidacy.contest.ballot.election_type&.titleize %></span>
+              <% end %>
+            </div>
+          <% end %>
+        </div>
+      <% end %>
+
+      <!-- Assignment Status -->
+      <div class="mt-4 pt-4 border-t border-gray-200 flex items-center justify-between">
+        <span class="px-3 py-1 text-sm rounded-full <%= @assignment.pending? ? 'bg-purple-100 text-purple-800' : @assignment.in_progress? ? 'bg-orange-100 text-orange-800' : 'bg-green-100 text-green-800' %>">
+          <%= @assignment.status.humanize %>
+        </span>
+        <% if @assignment.pending? %>
+          <%= button_to "Start Verification", start_verification_assignment_path(@assignment), method: :patch, class: "px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 text-sm font-medium" %>
+        <% elsif @assignment.in_progress? %>
+          <%= button_to "Mark Complete", complete_verification_assignment_path(@assignment), method: :patch, class: "px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm font-medium", data: { confirm: "Are you sure all accounts have been verified?" } %>
+        <% elsif @assignment.completed? %>
+          <%= button_to "Reopen", reopen_verification_assignment_path(@assignment), method: :patch, class: "px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 text-sm font-medium" %>
+        <% end %>
+      </div>
     </div>
   </div>
 
-  <!-- Verified Accounts  -->
-  <% if @verified_accounts.any? %>
-    <div class="bg-white rounded-lg shadow">
-      <div class="px-6 py-4 border-b border-gray-200">
-        <h2 class="text-lg font-semibold text-gray-900">Verified Accounts</h2>
-        <p class="text-sm text-gray-500"><%= @assignment.in_progress? ? "Click 'Unverify' to make changes" : "Already completed" %></p>
-      </div>
-      <div class="divide-y divide-gray-200">
-        <% @verified_accounts.each do |account| %>
-          <div class="px-5 py-3 flex items-center gap-2">
-            <div class="w-7 h-7 rounded-full bg-gray-100 flex items-center justify-center shrink-0">
-              <%= platform_icon(account.platform, size: 16) %>
-            </div>
-            <div class="w-24 shrink-0 font-medium text-gray-900 text-sm"><%= account.platform %></div>
-            <div class="flex-1 text-sm min-w-0 truncate">
-              <% if account.url.present? %>
-                <a href="<%= account.url %>" target="_blank" class="text-blue-600 hover:text-blue-800"><%= account.url %></a>
-              <% elsif account.handle.present? %>
-                <span class="text-gray-600">@<%= account.handle %></span>
-              <% else %>
-                <span class="text-gray-400 italic">Not found</span>
-              <% end %>
-            </div>
-            <span class="px-2 py-0.5 text-xs rounded-full bg-green-100 text-green-700 shrink-0">✓ Verified</span>
-            <% if account.verified_by %>
-              <span class="text-xs text-gray-400 shrink-0">by <%= account.verified_by.name.split.first %></span>
-            <% end %>
-            <% if @assignment.in_progress? %>
+  <!-- Main Content: Accounts (Left) + Instructions (Right) -->
+  <div class="flex gap-6">
+    <!-- Accounts List (Left Side) -->
+    <div class="flex-1 min-w-0">
+      <!-- Campaign Accounts -->
+      <div class="bg-white rounded-lg shadow mb-6">
+        <div class="px-6 py-4 border-b border-gray-200">
+          <h2 class="text-lg font-semibold text-gray-900">Campaign Accounts</h2>
+          <p class="text-sm text-gray-500">Verify, edit, or mark as not found. Click "Verify" if correct, or "Edit" to make changes.</p>
+        </div>
+        <div class="divide-y divide-gray-200">
+          <% @accounts.each do |account| %>
+            <div class="px-5 py-3" id="account-<%= account.id %>">
 
-              <%= button_to "Unverify", unverify_verification_account_path(account), method: :patch, class: "px-3 py-1 bg-orange-600 text-white text-xs rounded hover:bg-orange-700", data: { confirm: "Unverify this account to make changes?" } %>
+              <% if account.research_status == 'not_started' && @assignment.in_progress? %>
+                <!-- Not started: Add data or mark not found -->
+                <div class="flex items-center gap-2">
+                  <div class="w-7 h-7 rounded-full bg-gray-100 flex items-center justify-center shrink-0">
+                    <%= platform_icon(account.platform, size: 16) %>
+                  </div>
+                  <div class="w-24 shrink-0 font-medium text-gray-900 text-sm"><%= account.platform %></div>
+                  <span class="text-sm text-gray-400 italic flex-1">No data entered</span>
+                  <button type="button" onclick="toggleEdit(<%= account.id %>)" class="px-3 py-1 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700 shrink-0">Add Data</button>
+                  <%= button_to "Not Found", mark_not_found_verification_account_path(account), method: :patch, class: "px-3 py-1 bg-gray-200 text-gray-600 text-sm rounded-md hover:bg-gray-300 shrink-0", data: { confirm: "Mark this account as not found?" } %>
+                </div>
+                <!-- Edit form (hidden by default) -->
+                <div class="hidden mt-2" id="edit-<%= account.id %>">
+                  <div class="flex items-center gap-2 ml-9">
+                    <%= form_with url: mark_entered_verification_account_path(account), method: :patch, class: "flex items-center gap-2 flex-1 min-w-0" do %>
+                      <input type="url" name="url" placeholder="https://..." class="flex-1 min-w-0 px-2.5 py-1 text-sm border border-gray-300 rounded-md focus:ring-purple-500 focus:border-purple-500">
+                      <input type="text" name="handle" placeholder="@handle" class="w-28 px-2.5 py-1 text-sm border border-gray-300 rounded-md focus:ring-purple-500 focus:border-purple-500">
+                      <button type="submit" class="px-3 py-1 bg-purple-600 text-white text-sm rounded-md hover:bg-purple-700 shrink-0">Save (needs verification)</button>
+                    <% end %>
+                    <button type="button" onclick="toggleEdit(<%= account.id %>)" class="px-3 py-1 text-gray-500 text-sm hover:bg-gray-100 rounded-md shrink-0">Cancel</button>
+                  </div>
+                </div>
+
+              <% elsif account.research_status == 'entered' && @assignment.in_progress? %>
+                <!-- Entered: Display with Verify/Edit buttons -->
+                <div class="flex items-center gap-2 group" id="display-<%= account.id %>">
+                  <div class="w-7 h-7 rounded-full bg-gray-100 flex items-center justify-center shrink-0">
+                    <%= platform_icon(account.platform, size: 16) %>
+                  </div>
+                  <div class="w-24 shrink-0 font-medium text-gray-900 text-sm"><%= account.platform %></div>
+                  <div class="flex-1 text-sm min-w-0 truncate">
+                    <% if account.url.present? %>
+                      <a href="<%= account.url %>" target="_blank" class="text-blue-600 hover:text-blue-800"><%= account.url %></a>
+                    <% end %>
+                    <% if account.handle.present? %>
+                      <span class="text-gray-600"><%= account.url.present? ? ' · ' : '' %>@<%= account.handle %></span>
+                    <% end %>
+                  </div>
+                  <span class="px-2 py-0.5 text-xs rounded-full bg-blue-100 text-blue-700 shrink-0">Needs Verification</span>
+                  <% if account.entered_by %>
+                    <span class="text-xs text-gray-400 shrink-0">by <%= account.entered_by.name.split.first %></span>
+                  <% end %>
+                  <%= button_to "✓ Verify", verify_verification_account_path(account), method: :patch, class: "px-3 py-1 bg-green-600 text-white text-sm rounded-md hover:bg-green-700 shrink-0" %>
+                  <button type="button" onclick="toggleEdit(<%= account.id %>)" class="text-xs text-purple-600 hover:text-purple-800 shrink-0">Edit</button>
+                </div>
+                <!-- Edit form (hidden by default) -->
+                <div class="hidden mt-2" id="edit-<%= account.id %>">
+                  <div class="flex items-center gap-2 ml-9">
+                    <%= form_with url: mark_entered_verification_account_path(account), method: :patch, class: "flex items-center gap-2 flex-1 min-w-0" do %>
+                      <input type="url" name="url" value="<%= account.url %>" placeholder="https://..." class="flex-1 min-w-0 px-2.5 py-1 text-sm border border-gray-300 rounded-md focus:ring-purple-500 focus:border-purple-500">
+                      <input type="text" name="handle" value="<%= account.handle %>" placeholder="@handle" class="w-28 px-2.5 py-1 text-sm border border-gray-300 rounded-md focus:ring-purple-500 focus:border-purple-500">
+                      <button type="submit" class="px-3 py-1 bg-purple-600 text-white text-sm rounded-md hover:bg-purple-700 shrink-0">Save (needs re-verification)</button>
+                    <% end %>
+                    <button type="button" onclick="toggleEdit(<%= account.id %>)" class="px-3 py-1 text-gray-500 text-sm hover:bg-gray-100 rounded-md shrink-0">Cancel</button>
+                    <%= button_to "Mark Not Found", mark_not_found_verification_account_path(account), method: :patch, class: "px-3 py-1 text-red-500 text-sm hover:bg-red-50 rounded-md shrink-0", data: { confirm: "Mark as not found?" } %>
+                  </div>
+                </div>
+
+              <% elsif account.research_status == 'not_found' && @assignment.in_progress? %>
+                <!-- Not found: Verify or undo -->
+                <div class="flex items-center gap-2">
+                  <div class="w-7 h-7 rounded-full bg-gray-100 flex items-center justify-center shrink-0">
+                    <%= platform_icon(account.platform, size: 16) %>
+                  </div>
+                  <div class="w-24 shrink-0 font-medium text-gray-900 text-sm"><%= account.platform %></div>
+                  <span class="text-sm text-gray-400 italic flex-1">Not found</span>
+                  <span class="px-2 py-0.5 text-xs rounded-full bg-gray-200 text-gray-500 shrink-0">Not Found</span>
+                  <%= button_to "✓ Verify", verify_verification_account_path(account), method: :patch, class: "px-3 py-1 bg-green-600 text-white text-sm rounded-md hover:bg-green-700 shrink-0" %>
+                  <%= button_to "Undo", reset_status_verification_account_path(account), method: :patch, class: "text-xs text-blue-600 hover:text-blue-800 shrink-0" %>
+                </div>
+
+              <% elsif account.research_status == 'verified' && @assignment.in_progress? %>
+                <!-- Verified but assignment reopened: Allow unverify -->
+                <div class="flex items-center gap-2">
+                  <div class="w-7 h-7 rounded-full bg-gray-100 flex items-center justify-center shrink-0">
+                    <%= platform_icon(account.platform, size: 16) %>
+                  </div>
+                  <div class="w-24 shrink-0 font-medium text-gray-900 text-sm"><%= account.platform %></div>
+                  <div class="flex-1 text-sm min-w-0 truncate">
+                    <% if account.url.present? %>
+                      <a href="<%= account.url %>" target="_blank" class="text-blue-600 hover:text-blue-800"><%= account.url %></a>
+                    <% elsif account.handle.present? %>
+                      <span class="text-gray-600">@<%= account.handle %></span>
+                    <% else %>
+                      <span class="text-gray-400 italic">Not found</span>
+                    <% end %>
+                  </div>
+                  <span class="px-2 py-0.5 text-xs rounded-full bg-green-100 text-green-700 shrink-0">✓ Verified</span>
+                  <% if account.verified_by %>
+                    <span class="text-xs text-gray-400 shrink-0">by <%= account.verified_by.name.split.first %></span>
+                  <% end %>
+                  <%= button_to "Unverify", unverify_verification_account_path(account), method: :patch, class: "text-xs text-orange-600 hover:text-orange-800 shrink-0", data: { confirm: "Unverify this account to make changes?" } %>
+                </div>
+
+              <% elsif account.research_status == 'verified' %>
+                <!-- Verified: Read-only, show who verified -->
+                <div class="flex items-center gap-2">
+                  <div class="w-7 h-7 rounded-full bg-gray-100 flex items-center justify-center shrink-0">
+                    <%= platform_icon(account.platform, size: 16) %>
+                  </div>
+                  <div class="w-24 shrink-0 font-medium text-gray-900 text-sm"><%= account.platform %></div>
+                  <div class="flex-1 text-sm min-w-0 truncate">
+                    <% if account.url.present? %>
+                      <a href="<%= account.url %>" target="_blank" class="text-blue-600 hover:text-blue-800"><%= account.url %></a>
+                    <% elsif account.handle.present? %>
+                      <span class="text-gray-600">@<%= account.handle %></span>
+                    <% else %>
+                      <span class="text-gray-400 italic">Not found</span>
+                    <% end %>
+                  </div>
+                  <span class="px-2 py-0.5 text-xs rounded-full bg-green-100 text-green-700 shrink-0">✓ Verified</span>
+                  <% if account.verified_by %>
+                    <span class="text-xs text-gray-400 shrink-0">by <%= account.verified_by.name.split.first %></span>
+                  <% end %>
+                </div>
+
+              <% else %>
+                <!-- Assignment not in progress -->
+                <div class="flex items-center gap-2">
+                  <div class="w-7 h-7 rounded-full bg-gray-100 flex items-center justify-center shrink-0">
+                    <%= platform_icon(account.platform, size: 16) %>
+                  </div>
+                  <div class="w-24 shrink-0 font-medium text-gray-900 text-sm"><%= account.platform %></div>
+                  <span class="text-sm text-gray-400 flex-1">Start verification to begin</span>
+                </div>
+              <% end %>
+
+            </div>
+          <% end %>
+        </div>
+      </div>
+
+      <!-- Verified Accounts  -->
+      <% if @verified_accounts.any? %>
+        <div class="bg-white rounded-lg shadow">
+          <div class="px-6 py-4 border-b border-gray-200">
+            <h2 class="text-lg font-semibold text-gray-900">Verified Accounts</h2>
+            <p class="text-sm text-gray-500"><%= @assignment.in_progress? ? "Click 'Unverify' to make changes" : "Already completed" %></p>
+          </div>
+          <div class="divide-y divide-gray-200">
+            <% @verified_accounts.each do |account| %>
+              <div class="px-5 py-3 flex items-center gap-2">
+                <div class="w-7 h-7 rounded-full bg-gray-100 flex items-center justify-center shrink-0">
+                  <%= platform_icon(account.platform, size: 16) %>
+                </div>
+                <div class="w-24 shrink-0 font-medium text-gray-900 text-sm"><%= account.platform %></div>
+                <div class="flex-1 text-sm min-w-0 truncate">
+                  <% if account.url.present? %>
+                    <a href="<%= account.url %>" target="_blank" class="text-blue-600 hover:text-blue-800"><%= account.url %></a>
+                  <% elsif account.handle.present? %>
+                    <span class="text-gray-600">@<%= account.handle %></span>
+                  <% else %>
+                    <span class="text-gray-400 italic">Not found</span>
+                  <% end %>
+                </div>
+                <span class="px-2 py-0.5 text-xs rounded-full bg-green-100 text-green-700 shrink-0">✓ Verified</span>
+                <% if account.verified_by %>
+                  <span class="text-xs text-gray-400 shrink-0">by <%= account.verified_by.name.split.first %></span>
+                <% end %>
+                <% if @assignment.in_progress? %>
+
+                  <%= button_to "Unverify", unverify_verification_account_path(account), method: :patch, class: "px-3 py-1 bg-orange-600 text-white text-xs rounded hover:bg-orange-700", data: { confirm: "Unverify this account to make changes?" } %>
+                <% end %>
+              </div>
             <% end %>
           </div>
-        <% end %>
+        </div>
+      <% end %>
+    </div>
+
+    <!-- Instructions Panel (Right Side, Collapsible) -->
+    <div class="shrink-0 relative" id="instructions-container">
+      <!-- Expanded Instructions -->
+      <div id="instructions-expanded" class="w-96 sticky top-6">
+        <%= render "shared/verification_guide", channel_type: @accounts.first&.channel_type || 'campaign' %>
+        <button onclick="toggleInstructions()" class="mt-2 w-full px-3 py-1.5 text-sm text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-md flex items-center justify-center gap-2">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 5l7 7-7 7M5 5l7 7-7 7"/>
+          </svg>
+          Hide Instructions
+        </button>
+      </div>
+
+      <!-- Collapsed Instructions Bar -->
+      <div id="instructions-collapsed" class="hidden w-12 sticky top-6">
+        <button onclick="toggleInstructions()" class="w-full h-full min-h-[400px] bg-gradient-to-b from-blue-50 to-indigo-50 border border-blue-200 rounded-lg shadow hover:shadow-md transition-shadow flex items-center justify-center">
+          <div class="transform -rotate-90 whitespace-nowrap text-sm font-medium text-gray-700">
+            Show Instructions
+          </div>
+        </button>
       </div>
     </div>
-  <% end %>
+  </div>
 </div>
 
 <script>
@@ -290,4 +311,26 @@
     if (display) display.classList.toggle('hidden');
     if (edit) edit.classList.toggle('hidden');
   }
+
+  function toggleInstructions() {
+    const expanded = document.getElementById('instructions-expanded');
+    const collapsed = document.getElementById('instructions-collapsed');
+
+    if (expanded && collapsed) {
+      expanded.classList.toggle('hidden');
+      collapsed.classList.toggle('hidden');
+
+      // Save state to localStorage
+      const isCollapsed = expanded.classList.contains('hidden');
+      localStorage.setItem('verificationInstructionsCollapsed', isCollapsed);
+    }
+  }
+
+  // Restore collapsed state on page load
+  document.addEventListener('DOMContentLoaded', function() {
+    const isCollapsed = localStorage.getItem('verificationInstructionsCollapsed') === 'true';
+    if (isCollapsed) {
+      toggleInstructions();
+    }
+  });
 </script>
