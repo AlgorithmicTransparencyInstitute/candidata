@@ -1,28 +1,33 @@
-<%= turbo_stream.replace "account_#{@account.id}" do %>
+<%# Remove from campaign accounts section %>
+<%= turbo_stream.remove "account_#{@account.id}" %>
+
+<%# Remove empty state if it exists %>
+<%= turbo_stream.remove "verified-empty-state" %>
+
+<%# Append to verified accounts section %>
+<%= turbo_stream.append "verified-accounts-list" do %>
   <%= turbo_frame_tag "account_#{@account.id}" do %>
-    <div class="px-5 py-3" id="account-<%= @account.id %>">
-      <div class="flex items-center gap-2">
-        <div class="w-7 h-7 rounded-full bg-gray-100 flex items-center justify-center shrink-0">
-          <%= platform_icon(@account.platform, size: 16) %>
-        </div>
-        <div class="w-24 shrink-0 font-medium text-gray-900 text-sm"><%= @account.platform %></div>
-        <div class="flex-1 text-sm min-w-0 truncate">
-          <% if @account.url.present? %>
-            <a href="<%= @account.url %>" target="_blank" class="text-blue-600 hover:text-blue-800"><%= @account.url %></a>
-          <% elsif @account.handle.present? %>
-            <span class="text-gray-600">@<%= @account.handle %></span>
-          <% else %>
-            <span class="text-gray-400 italic">Not found</span>
-          <% end %>
-        </div>
-        <span class="px-2 py-0.5 text-xs rounded-full bg-green-100 text-green-700 shrink-0">✓ Verified</span>
-        <% if @account.verified_by %>
-          <span class="text-xs text-gray-400 shrink-0">by <%= @account.verified_by.name.split.first %></span>
-        <% end %>
-        <% if @assignment.in_progress? %>
-          <%= button_to "Unverify", unverify_verification_account_path(@account), method: :patch, class: "text-xs text-orange-600 hover:text-orange-800 shrink-0", data: { confirm: "Unverify this account to make changes?" } %>
+    <div class="px-5 py-3 flex items-center gap-2">
+      <div class="w-7 h-7 rounded-full bg-gray-100 flex items-center justify-center shrink-0">
+        <%= platform_icon(@account.platform, size: 16) %>
+      </div>
+      <div class="w-24 shrink-0 font-medium text-gray-900 text-sm"><%= @account.platform %></div>
+      <div class="flex-1 text-sm min-w-0 truncate">
+        <% if @account.url.present? %>
+          <a href="<%= @account.url %>" target="_blank" class="text-blue-600 hover:text-blue-800"><%= @account.url %></a>
+        <% elsif @account.handle.present? %>
+          <span class="text-gray-600">@<%= @account.handle %></span>
+        <% else %>
+          <span class="text-gray-400 italic">Not found</span>
         <% end %>
       </div>
+      <span class="px-2 py-0.5 text-xs rounded-full bg-green-100 text-green-700 shrink-0">✓ Verified</span>
+      <% if @account.verified_by %>
+        <span class="text-xs text-gray-400 shrink-0">by <%= @account.verified_by.name.split.first %></span>
+      <% end %>
+      <% if @assignment.in_progress? %>
+        <%= button_to "Unverify", unverify_verification_account_path(@account), method: :patch, class: "px-3 py-1 bg-orange-600 text-white text-xs rounded hover:bg-orange-700", data: { confirm: "Unverify this account to make changes?" } %>
+      <% end %>
     </div>
   <% end %>
 <% end %>

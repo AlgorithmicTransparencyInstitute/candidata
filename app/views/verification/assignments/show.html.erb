@@ -244,13 +244,17 @@
       </div>
 
       <!-- Verified Accounts  -->
-      <% if @verified_accounts.any? %>
-        <div class="bg-white rounded-lg shadow">
-          <div class="px-6 py-4 border-b border-gray-200">
-            <h2 class="text-lg font-semibold text-gray-900">Verified Accounts</h2>
-            <p class="text-sm text-gray-500"><%= @assignment.in_progress? ? "Click 'Unverify' to make changes" : "Already completed" %></p>
-          </div>
-          <div class="divide-y divide-gray-200">
+      <div class="bg-white rounded-lg shadow">
+        <div class="px-6 py-4 border-b border-gray-200">
+          <h2 class="text-lg font-semibold text-gray-900">Verified Accounts</h2>
+          <p class="text-sm text-gray-500"><%= @assignment.in_progress? ? "Click 'Unverify' to make changes" : "Already completed" %></p>
+        </div>
+        <div class="divide-y divide-gray-200" id="verified-accounts-list">
+          <% if @verified_accounts.empty? %>
+            <div class="px-5 py-8 text-center text-gray-400 text-sm" id="verified-empty-state">
+              No verified accounts yet
+            </div>
+          <% else %>
             <% @verified_accounts.each do |account| %>
               <%= turbo_frame_tag "account_#{account.id}" do %>
                 <div class="px-5 py-3 flex items-center gap-2">
@@ -278,9 +282,9 @@
                 </div>
               <% end %>
             <% end %>
-          </div>
+          <% end %>
         </div>
-      <% end %>
+      </div>
     </div>
 
     <!-- Instructions Panel (Right Side, Collapsible) -->
