@@ -1,0 +1,50 @@
+<%= turbo_stream.replace "account_#{@account.id}" do %>
+  <%= turbo_frame_tag "account_#{@account.id}" do %>
+    <div class="px-5 py-3" id="account-<%= @account.id %>">
+      <% if @account.research_status == 'entered' %>
+        <div class="flex items-center gap-2 group" id="display-<%= @account.id %>">
+          <div class="w-7 h-7 rounded-full bg-gray-100 flex items-center justify-center shrink-0">
+            <%= platform_icon(@account.platform, size: 16) %>
+          </div>
+          <div class="w-24 shrink-0 font-medium text-gray-900 text-sm"><%= @account.platform %></div>
+          <div class="flex-1 text-sm min-w-0 truncate">
+            <% if @account.url.present? %>
+              <a href="<%= @account.url %>" target="_blank" class="text-blue-600 hover:text-blue-800"><%= @account.url %></a>
+            <% end %>
+            <% if @account.handle.present? %>
+              <span class="text-gray-600"><%= @account.url.present? ? ' · ' : '' %>@<%= @account.handle %></span>
+            <% end %>
+          </div>
+          <span class="px-2 py-0.5 text-xs rounded-full bg-blue-100 text-blue-700 shrink-0">Needs Verification</span>
+          <% if @account.entered_by %>
+            <span class="text-xs text-gray-400 shrink-0">by <%= @account.entered_by.name.split.first %></span>
+          <% end %>
+          <%= button_to "✓ Verify", verify_verification_account_path(@account), method: :patch, class: "px-3 py-1 bg-green-600 text-white text-sm rounded-md hover:bg-green-700 shrink-0" %>
+          <button type="button" onclick="toggleEdit(<%= @account.id %>)" class="text-xs text-purple-600 hover:text-purple-800 shrink-0">Edit</button>
+        </div>
+        <div class="hidden mt-2" id="edit-<%= @account.id %>">
+          <div class="flex items-center gap-2 ml-9">
+            <%= form_with url: mark_entered_verification_account_path(@account), method: :patch, class: "flex items-center gap-2 flex-1 min-w-0" do %>
+              <input type="url" name="url" value="<%= @account.url %>" placeholder="https://..." class="flex-1 min-w-0 px-2.5 py-1 text-sm border border-gray-300 rounded-md focus:ring-purple-500 focus:border-purple-500">
+              <input type="text" name="handle" value="<%= @account.handle %>" placeholder="@handle" class="w-28 px-2.5 py-1 text-sm border border-gray-300 rounded-md focus:ring-purple-500 focus:border-purple-500">
+              <button type="submit" class="px-3 py-1 bg-purple-600 text-white text-sm rounded-md hover:bg-purple-700 shrink-0">Save (needs re-verification)</button>
+            <% end %>
+            <button type="button" onclick="toggleEdit(<%= @account.id %>)" class="px-3 py-1 text-gray-500 text-sm hover:bg-gray-100 rounded-md shrink-0">Cancel</button>
+            <%= button_to "Mark Not Found", mark_not_found_verification_account_path(@account), method: :patch, class: "px-3 py-1 text-red-500 text-sm hover:bg-red-50 rounded-md shrink-0", data: { confirm: "Mark as not found?" } %>
+          </div>
+        </div>
+      <% elsif @account.research_status == 'not_found' %>
+        <div class="flex items-center gap-2">
+          <div class="w-7 h-7 rounded-full bg-gray-100 flex items-center justify-center shrink-0">
+            <%= platform_icon(@account.platform, size: 16) %>
+          </div>
+          <div class="w-24 shrink-0 font-medium text-gray-900 text-sm"><%= @account.platform %></div>
+          <span class="text-sm text-gray-400 italic flex-1">Not found</span>
+          <span class="px-2 py-0.5 text-xs rounded-full bg-gray-200 text-gray-500 shrink-0">Not Found</span>
+          <%= button_to "✓ Verify", verify_verification_account_path(@account), method: :patch, class: "px-3 py-1 bg-green-600 text-white text-sm rounded-md hover:bg-green-700 shrink-0" %>
+          <%= button_to "Undo", reset_status_verification_account_path(@account), method: :patch, class: "text-xs text-blue-600 hover:text-blue-800 shrink-0" %>
+        </div>
+      <% end %>
+    </div>
+  <% end %>
+<% end %>

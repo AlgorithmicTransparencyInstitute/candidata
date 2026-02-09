@@ -1,0 +1,25 @@
+<%= turbo_stream.replace "account_#{@account.id}" do %>
+  <%= turbo_frame_tag "account_#{@account.id}" do %>
+    <div class="px-5 py-3" id="account-<%= @account.id %>">
+      <div class="flex items-center gap-2">
+        <div class="w-7 h-7 rounded-full bg-gray-100 flex items-center justify-center shrink-0">
+          <%= platform_icon(@account.platform, size: 16) %>
+        </div>
+        <div class="w-24 shrink-0 font-medium text-gray-900 text-sm"><%= @account.platform %></div>
+        <span class="text-sm text-gray-400 italic flex-1">No data entered</span>
+        <button type="button" onclick="toggleEdit(<%= @account.id %>)" class="px-3 py-1 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700 shrink-0">Add Data</button>
+        <%= button_to "Not Found", mark_not_found_verification_account_path(@account), method: :patch, class: "px-3 py-1 bg-gray-200 text-gray-600 text-sm rounded-md hover:bg-gray-300 shrink-0", data: { confirm: "Mark this account as not found?" } %>
+      </div>
+      <div class="hidden mt-2" id="edit-<%= @account.id %>">
+        <div class="flex items-center gap-2 ml-9">
+          <%= form_with url: mark_entered_verification_account_path(@account), method: :patch, class: "flex items-center gap-2 flex-1 min-w-0" do %>
+            <input type="url" name="url" placeholder="https://..." class="flex-1 min-w-0 px-2.5 py-1 text-sm border border-gray-300 rounded-md focus:ring-purple-500 focus:border-purple-500">
+            <input type="text" name="handle" placeholder="@handle" class="w-28 px-2.5 py-1 text-sm border border-gray-300 rounded-md focus:ring-purple-500 focus:border-purple-500">
+            <button type="submit" class="px-3 py-1 bg-purple-600 text-white text-sm rounded-md hover:bg-purple-700 shrink-0">Save (needs verification)</button>
+          <% end %>
+          <button type="button" onclick="toggleEdit(<%= @account.id %>)" class="px-3 py-1 text-gray-500 text-sm hover:bg-gray-100 rounded-md shrink-0">Cancel</button>
+        </div>
+      </div>
+    </div>
+  <% end %>
+<% end %>

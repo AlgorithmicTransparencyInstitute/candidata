@@ -76,22 +76,38 @@ module Verification
       end
 
       @account.mark_entered!(current_user, url: url, handle: handle)
-      redirect_to verification_assignment_path(@assignment), notice: "Account data saved. Needs re-verification."
+
+      respond_to do |format|
+        format.turbo_stream
+        format.html { redirect_to verification_assignment_path(@assignment), notice: "Account data saved. Needs re-verification." }
+      end
     end
 
     def mark_not_found
       @account.mark_not_found!(current_user)
-      redirect_to verification_assignment_path(@assignment), notice: "Account marked as not found."
+
+      respond_to do |format|
+        format.turbo_stream
+        format.html { redirect_to verification_assignment_path(@assignment), notice: "Account marked as not found." }
+      end
     end
 
     def reset_status
       @account.reset_status!(current_user)
-      redirect_to verification_assignment_path(@assignment), notice: "Account status reset."
+
+      respond_to do |format|
+        format.turbo_stream
+        format.html { redirect_to verification_assignment_path(@assignment), notice: "Account status reset." }
+      end
     end
 
     def verify
       @account.verify!(current_user, notes: nil)
-      redirect_to verification_assignment_path(@assignment), notice: "Account verified."
+
+      respond_to do |format|
+        format.turbo_stream
+        format.html { redirect_to verification_assignment_path(@assignment), notice: "Account verified." }
+      end
     end
 
     def unverify
@@ -112,7 +128,10 @@ module Verification
         verified_at: nil
       )
 
-      redirect_to verification_assignment_path(@assignment), notice: "Account unverified - you can now edit it."
+      respond_to do |format|
+        format.turbo_stream
+        format.html { redirect_to verification_assignment_path(@assignment), notice: "Account unverified - you can now edit it." }
+      end
     end
 
     def reject

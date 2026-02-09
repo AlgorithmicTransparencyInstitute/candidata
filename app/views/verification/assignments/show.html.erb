@@ -107,7 +107,8 @@
         </div>
         <div class="divide-y divide-gray-200">
           <% @accounts.each do |account| %>
-            <div class="px-5 py-3" id="account-<%= account.id %>">
+            <%= turbo_frame_tag "account_#{account.id}" do %>
+              <div class="px-5 py-3" id="account-<%= account.id %>">
 
               <% if account.research_status == 'not_started' && @assignment.in_progress? %>
                 <!-- Not started: Add data or mark not found -->
@@ -236,7 +237,8 @@
                 </div>
               <% end %>
 
-            </div>
+              </div>
+            <% end %>
           <% end %>
         </div>
       </div>
