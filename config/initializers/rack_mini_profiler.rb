@@ -6,8 +6,8 @@ if defined?(Rack::MiniProfiler)
   # Enable in development by default
   if Rails.env.development?
     Rack::MiniProfiler.config.tap do |config|
-      # Show badge on all pages
-      config.position = "bottom-right"
+      # Show badge on all pages in upper right
+      config.position = "top-right"
 
       # Store profiling results in memory
       config.storage = Rack::MiniProfiler::MemoryStore
@@ -20,7 +20,7 @@ if defined?(Rack::MiniProfiler)
   # Enable in production only for admin users
   if Rails.env.production?
     Rack::MiniProfiler.config.tap do |config|
-      config.position = "bottom-right"
+      config.position = "top-right"
       config.storage = Rack::MiniProfiler::MemoryStore
 
       # Only show profiler for admin users
@@ -29,14 +29,25 @@ if defined?(Rack::MiniProfiler)
       # This method is called before each request to determine if profiling should be enabled
       # It must return true/false
       config.pre_authorize_cb = lambda { |env|
-        # Get the current user from the request
-        request = Rack::Request.new(env)
+        begin
+          # Check if user is logged in via Warden (Devise)
+          if env['warden']
+            # Try to get user from default scope
+            user = env['warden'].user(:user)
+            user ||= env['warden'].user # fallback to default
 
-        # Check if user is logged in via Warden (Devise)
-        if defined?(Warden) && env['warden']
-          user = env['warden'].user
-          user&.admin? == true
-        else
+            # Check if user is admin
+            if user && user.respond_to?(:admin?)
+              user.admin? == true
+            else
+              false
+            end
+          else
+            false
+          end
+        rescue => e
+          # Log error but don't break the request
+          Rails.logger.error("Rack::MiniProfiler authorization error: #{e.message}")
           false
         end
       }
