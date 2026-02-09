@@ -39,18 +39,26 @@ if defined?(Rack::MiniProfiler)
             user = env['warden'].user(:user)
             user ||= env['warden'].user # fallback to default
 
+            # Log for debugging
+            Rails.logger.info("Rack::MiniProfiler: Checking authorization for user: #{user.inspect}")
+
             # Check if user is admin
             if user && user.respond_to?(:admin?)
-              user.admin? == true
+              is_admin = user.admin? == true
+              Rails.logger.info("Rack::MiniProfiler: User is admin: #{is_admin}")
+              is_admin
             else
+              Rails.logger.info("Rack::MiniProfiler: User doesn't respond to admin? or is nil")
               false
             end
           else
+            Rails.logger.info("Rack::MiniProfiler: No warden in env")
             false
           end
         rescue => e
           # Log error but don't break the request
           Rails.logger.error("Rack::MiniProfiler authorization error: #{e.message}")
+          Rails.logger.error(e.backtrace.join("\n"))
           false
         end
       }
