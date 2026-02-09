@@ -20,17 +20,11 @@ if defined?(Rack::MiniProfiler)
     end
   end
 
-  # Enable in production only for admin users
+  # Disable in production (MemoryStore doesn't work reliably on Heroku)
+  # To enable in production, you need Redis or Memcache storage
   if Rails.env.production?
     Rack::MiniProfiler.config.tap do |config|
-      # Must explicitly enable in production
-      config.enabled = true
-
-      config.position = "top-right"
-      config.storage = Rack::MiniProfiler::MemoryStore
-
-      # Only show profiler when explicitly authorized via Rack::MiniProfiler.authorize_request
-      config.authorization_mode = :allow_authorized
+      config.enabled = false
     end
   end
 end

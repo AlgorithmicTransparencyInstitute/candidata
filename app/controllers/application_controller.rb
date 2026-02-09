@@ -16,19 +16,10 @@ class ApplicationController < ActionController::Base
   # Track visits with Ahoy
   before_action :track_ahoy_visit
 
-  # Authorize rack-mini-profiler for admin users
-  before_action :authorize_profiler
-
   # Track user sign-ins
   after_action :track_sign_in, if: -> { user_signed_in? && session[:just_signed_in] }
 
   private
-
-  def authorize_profiler
-    if current_user&.admin?
-      Rack::MiniProfiler.authorize_request
-    end
-  end
 
   def track_sign_in
     track_event('User Sign In', {
