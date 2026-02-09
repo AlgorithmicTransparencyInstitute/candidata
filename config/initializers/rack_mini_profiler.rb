@@ -23,6 +23,9 @@ if defined?(Rack::MiniProfiler)
   # Enable in production only for admin users
   if Rails.env.production?
     Rack::MiniProfiler.config.tap do |config|
+      # Must explicitly enable in production
+      config.enabled = true
+
       config.position = "top-right"
       config.storage = Rack::MiniProfiler::MemoryStore
 
