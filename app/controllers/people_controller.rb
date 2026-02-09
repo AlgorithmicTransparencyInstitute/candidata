@@ -3,7 +3,14 @@
 class PeopleController < ApplicationController
   
   def index
-    @people = Person.includes(:person_parties, :parties, :party_affiliation, :officeholders, :offices)
+    # Eager load associations to avoid N+1 queries:
+    # - person_parties with party (for primary_party display)
+    # - current officeholders with their offices (for current office display)
+    @people = Person.includes(
+      person_parties: :party,
+      party_affiliation: [],
+      officeholders: :office
+    )
     
     # Search by name
     if params[:q].present?

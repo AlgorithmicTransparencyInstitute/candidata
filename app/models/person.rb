@@ -88,6 +88,13 @@ class Person < ApplicationRecord
     officeholders.current.exists?
   end
 
+  # Use this when officeholders are preloaded to avoid N+1 queries
+  # Returns true if any loaded officeholder is current
+  def current_officeholder_from_loaded?
+    return false unless association(:officeholders).loaded?
+    officeholders.any?(&:current?)
+  end
+
   def officeholder_on?(date)
     officeholders.as_of(date).exists?
   end
