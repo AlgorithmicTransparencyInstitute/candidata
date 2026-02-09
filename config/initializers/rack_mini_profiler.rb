@@ -3,6 +3,9 @@
 # Configuration for rack-mini-profiler
 # Shows performance metrics in development and for admins in production
 if defined?(Rack::MiniProfiler)
+  # Configure for Turbo compatibility
+  # The profiler needs to be re-rendered after Turbo navigations
+  Rack::MiniProfiler.config.enable_hotwire_turbo_drive_support = true
   # Enable in development by default
   if Rails.env.development?
     Rack::MiniProfiler.config.tap do |config|
