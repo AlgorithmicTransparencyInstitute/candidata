@@ -1,4 +1,8 @@
-<%= turbo_stream.replace "account_#{@account.id}" do %>
+<%# Remove from verified section %>
+<%= turbo_stream.remove "account_#{@account.id}" %>
+
+<%# Prepend to campaign accounts section %>
+<%= turbo_stream.prepend "campaign-accounts-list" do %>
   <%= turbo_frame_tag "account_#{@account.id}" do %>
     <div class="px-5 py-3" id="account-<%= @account.id %>">
       <% if @account.research_status == 'entered' %>
