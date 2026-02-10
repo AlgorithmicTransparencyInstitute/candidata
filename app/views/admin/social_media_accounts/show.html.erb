@@ -167,51 +167,55 @@
               </div>
 
               <% if version.event == 'create' %>
-                <% if version.respond_to?(:object_changes) && version.object_changes.present? %>
+                <div class="text-xs text-gray-400 mt-2 italic">Record created</div>
+              <% elsif version.event == 'destroy' %>
+                <div class="text-sm text-red-600 mt-2">Record was deleted</div>
+              <% end %>
+
+              <!-- Show change diff if available (new versions with object_changes) -->
+              <% if version.respond_to?(:object_changes) && version.object_changes.present? %>
+                <% changes = YAML.load(version.object_changes) %>
+                <% relevant_changes = changes.slice('url', 'handle', 'research_status', 'channel_type', 'account_inactive', 'verified', 'entered_by_id', 'verified_by_id', 'research_notes', 'verification_notes') %>
+                <% if relevant_changes.any? %>
                   <div class="text-sm text-gray-600 mt-2">
-                    <div class="font-medium mb-1">Initial values:</div>
-                    <div class="bg-gray-50 rounded p-3 text-xs font-mono space-y-1">
-                      <% changes = YAML.load(version.object_changes) %>
-                      <% %w[url handle research_status channel_type platform account_inactive verified].each do |field| %>
-                        <% if changes[field] && changes[field][1].present? %>
-                          <div><span class="text-gray-500"><%= field %>:</span> <span class="text-green-700"><%= changes[field][1] %></span></div>
-                        <% end %>
+                    <div class="font-medium mb-1">Changes:</div>
+                    <div class="bg-yellow-50 rounded p-3 text-xs font-mono space-y-1 border border-yellow-200">
+                      <% relevant_changes.each do |field, (old_value, new_value)| %>
+                        <div class="flex items-start gap-2">
+                          <span class="text-gray-500 w-32 shrink-0"><%= field %>:</span>
+                          <div class="flex-1 min-w-0">
+                            <div class="flex items-center gap-2 flex-wrap">
+                              <span class="text-red-600 line-through break-all"><%= old_value.nil? ? '(nil)' : old_value.to_s.truncate(100) %></span>
+                              <span class="text-gray-400">→</span>
+                              <span class="text-green-700 break-all"><%= new_value.nil? ? '(nil)' : new_value.to_s.truncate(100) %></span>
+                            </div>
+                          </div>
+                        </div>
                       <% end %>
                     </div>
                   </div>
-                <% else %>
-                  <div class="text-xs text-gray-400 mt-2 italic">Record created (detailed changes not tracked)</div>
                 <% end %>
-              <% elsif version.event == 'update' %>
-                <% if version.respond_to?(:object_changes) && version.object_changes.present? %>
-                  <% changes = YAML.load(version.object_changes) %>
-                  <% relevant_changes = changes.slice('url', 'handle', 'research_status', 'channel_type', 'account_inactive', 'verified', 'entered_by_id', 'verified_by_id', 'research_notes', 'verification_notes') %>
-                  <% if relevant_changes.any? %>
-                    <div class="text-sm text-gray-600 mt-2">
-                      <div class="font-medium mb-1">Changes:</div>
-                      <div class="bg-gray-50 rounded p-3 text-xs font-mono space-y-1">
-                        <% relevant_changes.each do |field, (old_value, new_value)| %>
-                          <div class="flex items-start gap-2">
-                            <span class="text-gray-500 w-32 shrink-0"><%= field %>:</span>
-                            <div class="flex-1 min-w-0">
-                              <div class="flex items-center gap-2 flex-wrap">
-                                <span class="text-red-600 line-through break-all"><%= old_value.nil? ? '(nil)' : old_value.to_s.truncate(100) %></span>
-                                <span class="text-gray-400">→</span>
-                                <span class="text-green-700 break-all"><%= new_value.nil? ? '(nil)' : new_value.to_s.truncate(100) %></span>
-                              </div>
-                            </div>
-                          </div>
-                        <% end %>
+              <% end %>
+
+              <!-- Show full object state (available for all versions except create) -->
+              <% if version.object.present? %>
+                <% obj = YAML.load(version.object) %>
+                <% relevant_fields = obj.slice('url', 'handle', 'research_status', 'channel_type', 'platform', 'account_inactive', 'verified', 'entered_by_id', 'verified_by_id', 'entered_at', 'verified_at', 'research_notes', 'verification_notes', 'pre_populated') %>
+                <div class="text-sm text-gray-600 mt-3">
+                  <button type="button" onclick="document.getElementById('object-<%= version.id %>').classList.toggle('hidden')" class="text-blue-600 hover:text-blue-800 text-xs mb-1">
+                    ▸ Show full state at this version
+                  </button>
+                  <div id="object-<%= version.id %>" class="hidden bg-gray-50 rounded p-3 text-xs font-mono space-y-1 border border-gray-200">
+                    <% relevant_fields.each do |field, value| %>
+                      <div class="flex items-start gap-2">
+                        <span class="text-gray-500 w-40 shrink-0"><%= field %>:</span>
+                        <span class="text-gray-900 break-all flex-1">
+                          <%= value.nil? ? '<span class="text-gray-400">(nil)</span>'.html_safe : value.to_s %>
+                        </span>
                       </div>
-                    </div>
-                  <% else %>
-                    <div class="text-xs text-gray-400 mt-2 italic">Updated (no tracked field changes)</div>
-                  <% end %>
-                <% else %>
-                  <div class="text-xs text-gray-400 mt-2 italic">Record updated (detailed changes not tracked)</div>
-                <% end %>
-              <% elsif version.event == 'destroy' %>
-                <div class="text-sm text-red-600 mt-2">Record was deleted</div>
+                    <% end %>
+                  </div>
+                </div>
               <% end %>
             </div>
           <% end %>
