@@ -350,28 +350,47 @@
 </div>
 
 <script>
-  // Store URLs before marking as not found
-  const deletedUrls = {};
+  // Get CSRF token
+  const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
 
   // Capture clicks on "Not Found" buttons to save the URL
   document.addEventListener('DOMContentLoaded', function() {
-    document.querySelectorAll('form[action*="mark_not_found"]').forEach(function(form) {
-      form.addEventListener('submit', function(e) {
-        const formAction = this.action;
-        const accountId = formAction.match(/accounts\/(\d+)/)[1];
-        const displayEl = document.getElementById('display-' + accountId);
+    // Capture all "Not Found" button clicks
+    document.addEventListener('click', function(e) {
+      const button = e.target.closest('button[type="submit"], input[type="submit"]');
+      if (!button) return;
 
-        if (displayEl) {
-          const urlLink = displayEl.querySelector('a[href]');
-          if (urlLink) {
-            const url = urlLink.textContent.trim();
-            deletedUrls[accountId] = url;
+      const form = button.closest('form');
+      if (!form || !form.action.includes('mark_not_found')) return;
 
-            // Store in sessionStorage for page reloads
-            sessionStorage.setItem('deletedUrl_' + accountId, url);
+      const accountId = form.action.match(/accounts\/(\d+)/)[1];
+
+      // Try to find the URL from the display row
+      const displayEl = document.getElementById('display-' + accountId);
+      let url = null;
+
+      if (displayEl) {
+        const urlLink = displayEl.querySelector('a[href]');
+        if (urlLink) {
+          url = urlLink.textContent.trim();
+        }
+      }
+
+      // If not found in display, check the edit form input
+      if (!url) {
+        const editEl = document.getElementById('edit-' + accountId);
+        if (editEl) {
+          const urlInput = editEl.querySelector('input[type="url"][name="url"]');
+          if (urlInput && urlInput.value) {
+            url = urlInput.value.trim();
           }
         }
-      });
+      }
+
+      if (url) {
+        // Store in sessionStorage for page reloads
+        sessionStorage.setItem('deletedUrl_' + accountId, url);
+      }
     });
 
     // Show deleted URLs on page load if they exist
