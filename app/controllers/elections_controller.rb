@@ -19,7 +19,14 @@ class ElectionsController < ApplicationController
     @ballots_with_contests = @election.ballots.map do |ballot|
       {
         ballot: ballot,
-        contests: ballot.contests.includes(office: :district, candidates: :person).order('offices.title')
+        contests: ballot.contests
+                        .includes(office: :district, candidates: :person)
+                        .left_joins(office: :district)
+                        .order(
+                          Arel.sql('CASE WHEN districts.district_number IS NULL THEN 0 ELSE 1 END'),
+                          Arel.sql('districts.district_number'),
+                          'offices.title'
+                        )
       }
     end
   end

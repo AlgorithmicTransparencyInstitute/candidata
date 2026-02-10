@@ -23,7 +23,7 @@ module Admin
     end
 
     def show
-      @contests = @ballot.contests.includes(:office).order(:id)
+      @contests = @ballot.contests.includes(office: :district).order(:id)
     end
 
     def new

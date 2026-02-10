@@ -13,7 +13,7 @@ class HomeController < ApplicationController
     @upcoming_elections = Election.where('date >= ?', Date.current)
                                    .order(:date)
                                    .includes(:ballots)
-                                   .limit(5)
+                                   .limit(6)
 
     # 2026 Primary data
     @ballots_2026 = Ballot.where(year: 2026).includes(contests: :candidates).order(:state, :party)

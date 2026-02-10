@@ -9,6 +9,11 @@ class Admin::CandidatesController < Admin::BaseController
   end
 
   def edit
+    # Get contests for the same election/ballot to allow moving candidates
+    @available_contests = Contest.joins(:ballot)
+                                  .where(ballots: { year: @candidate.contest.ballot.year, state: @candidate.contest.ballot.state })
+                                  .includes(office: :district, ballot: :election)
+                                  .order('ballots.party', 'offices.title')
   end
 
   def update
@@ -31,8 +36,7 @@ class Admin::CandidatesController < Admin::BaseController
   end
 
   def candidate_params
-    params.require(:candidate).permit(:person_id, :contest_id, :party_id, :party_at_time,
-                                     :incumbent, :outcome, :tally, :vote_percentage,
-                                     :advanced_from_primary)
+    params.require(:candidate).permit(:person_id, :contest_id, :party_at_time,
+                                     :incumbent, :outcome, :tally)
   end
 end

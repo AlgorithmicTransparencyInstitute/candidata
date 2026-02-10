@@ -181,6 +181,9 @@
               <tr>
                 <td class="px-6 py-4">
                   <%= link_to candidate.contest.office.title, admin_office_path(candidate.contest.office), class: "text-blue-600 hover:text-blue-800" %>
+                  <% if candidate.contest.office.district %>
+                    <span class="text-gray-500 font-mono text-sm ml-2">(District <%= candidate.contest.office.district.district_number %>)</span>
+                  <% end %>
                 </td>
                 <td class="px-6 py-4 text-sm">
                   <%= link_to candidate.contest.ballot.full_name, admin_ballot_path(candidate.contest.ballot), class: "text-blue-600 hover:text-blue-800" %>

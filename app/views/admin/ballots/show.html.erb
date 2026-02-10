@@ -36,7 +36,12 @@
         <% @contests.each do |contest| %>
           <div class="px-6 py-4 flex justify-between items-center">
             <div>
-              <div class="font-medium"><%= contest.office.title %></div>
+              <div class="font-medium">
+                <%= contest.office.title %>
+                <% if contest.office.district %>
+                  <span class="text-gray-500 font-mono text-sm ml-2">(District <%= contest.office.district.district_number %>)</span>
+                <% end %>
+              </div>
               <div class="text-sm text-gray-600">
                 <%= contest.contest_type&.titleize %> · <%= contest.candidates.count %> candidates
               </div>

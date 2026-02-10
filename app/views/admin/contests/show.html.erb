@@ -33,6 +33,17 @@
         </div>
       </div>
       <div>
+        <div class="text-sm text-gray-500">District</div>
+        <div class="font-medium">
+          <% if @contest.office.district %>
+            <%= link_to @contest.office.district.full_name, admin_district_path(@contest.office.district), class: "text-blue-600 hover:text-blue-800" %>
+            <span class="text-gray-400 text-sm ml-2">(District #<%= @contest.office.district.district_number %>)</span>
+          <% else %>
+            <span class="text-gray-400">No district</span>
+          <% end %>
+        </div>
+      </div>
+      <div>
         <div class="text-sm text-gray-500">Contest Type</div>
         <div class="font-medium"><%= @contest.contest_type&.titleize %></div>
       </div>
@@ -69,11 +80,13 @@
                 </div>
               </div>
             </div>
-            <div class="flex items-center gap-4">
+            <div class="flex items-center gap-3">
               <% if candidate.tally && candidate.tally > 0 %>
                 <span class="text-sm text-gray-600"><%= number_with_delimiter(candidate.tally) %> votes</span>
               <% end %>
               <%= link_to "View Person", admin_person_path(candidate.person), class: "text-blue-600 hover:text-blue-800 text-sm" %>
+              <%= link_to "Edit", edit_admin_candidate_path(candidate), class: "text-blue-600 hover:text-blue-800 text-sm" %>
+              <%= button_to "Delete", admin_candidate_path(candidate), method: :delete, data: { confirm: "Are you sure you want to remove #{candidate.person.full_name} from this contest?" }, class: "text-red-600 hover:text-red-800 text-sm" %>
             </div>
           </div>
         <% end %>

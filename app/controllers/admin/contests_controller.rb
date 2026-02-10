@@ -3,7 +3,7 @@ module Admin
     before_action :set_contest, only: [:show, :edit, :update, :destroy]
 
     def index
-      @contests = Contest.includes(:office, :ballot).order(date: :desc)
+      @contests = Contest.includes(office: :district, ballot: :election).order(date: :desc)
 
       if params[:q].present?
         @contests = @contests.joins(:office).where("offices.title ILIKE ?", "%#{params[:q]}%")
@@ -15,6 +15,10 @@ module Admin
 
       if params[:year].present?
         @contests = @contests.where("EXTRACT(YEAR FROM date) = ?", params[:year])
+      end
+
+      if params[:district_number].present?
+        @contests = @contests.joins(office: :district).where(districts: { district_number: params[:district_number] })
       end
 
       @contests = @contests.page(params[:page]).per(50)
