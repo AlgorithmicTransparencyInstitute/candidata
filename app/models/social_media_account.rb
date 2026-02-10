@@ -51,10 +51,26 @@ class SocialMediaAccount < ApplicationRecord
 
   def mark_not_found!(user)
     update!(
+      url: nil,
+      handle: nil,
       entered_by: user,
       entered_at: Time.current,
       research_status: 'not_found'
     )
+  end
+
+  # Get the most recent URL before it was cleared (from version history)
+  def previous_url
+    return url if url.present?
+
+    # Look through versions in reverse order to find the last non-nil URL
+    versions.reverse_each do |version|
+      next unless version.object.present?
+      obj = YAML.unsafe_load(version.object)
+      return obj['url'] if obj['url'].present?
+    end
+
+    nil
   end
 
   def reset_status!(user)

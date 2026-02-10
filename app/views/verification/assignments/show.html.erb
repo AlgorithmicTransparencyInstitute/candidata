@@ -173,18 +173,20 @@
 
               <% elsif account.research_status == 'not_found' && @assignment.in_progress? %>
                 <!-- Not found: Verify or undo -->
-                <div class="flex items-center gap-2" id="not-found-<%= account.id %>" data-previous-url="">
+                <div class="flex items-center gap-2" id="not-found-<%= account.id %>">
                   <div class="w-7 h-7 rounded-full bg-gray-100 flex items-center justify-center shrink-0">
                     <%= platform_icon(account.platform, size: 16) %>
                   </div>
                   <div class="w-24 shrink-0 font-medium text-gray-900 text-sm"><%= account.platform %></div>
                   <div class="flex-1 flex flex-col">
                     <span class="text-sm text-gray-400 italic">Not found</span>
-                    <div id="deleted-url-<%= account.id %>" class="hidden mt-1">
-                      <span class="text-xs text-gray-400">Deleted: </span>
-                      <span id="deleted-url-value-<%= account.id %>" class="text-xs text-gray-500"></span>
-                      <button type="button" onclick="restoreDeletedUrl(<%= account.id %>)" class="ml-2 text-xs text-blue-600 hover:text-blue-800">restore</button>
-                    </div>
+                    <% if account.previous_url.present? %>
+                      <div class="mt-1">
+                        <span class="text-xs text-gray-400">Previous URL: </span>
+                        <span class="text-xs text-gray-500"><%= account.previous_url %></span>
+                        <%= button_to "Restore", mark_entered_verification_account_path(account, url: account.previous_url), method: :patch, class: "ml-2 text-xs text-blue-600 hover:text-blue-800", form: { style: "display: inline;" } %>
+                      </div>
+                    <% end %>
                   </div>
                   <span class="px-2 py-0.5 text-xs rounded-full bg-gray-200 text-gray-500 shrink-0">Not Found</span>
                   <%= button_to "✓ Verify", verify_verification_account_path(account), method: :patch, class: "px-3 py-1 bg-green-600 text-white text-sm rounded-md hover:bg-green-700 shrink-0" %>
@@ -350,93 +352,10 @@
 </div>
 
 <script>
-  // Get CSRF token
-  const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
-
-  // Capture clicks on "Not Found" buttons to save the URL
   document.addEventListener('DOMContentLoaded', function() {
-    // Capture all "Not Found" button clicks
-    document.addEventListener('click', function(e) {
-      const button = e.target.closest('button[type="submit"], input[type="submit"]');
-      if (!button) return;
-
-      const form = button.closest('form');
-      if (!form || !form.action.includes('mark_not_found')) return;
-
-      const accountId = form.action.match(/accounts\/(\d+)/)[1];
-
-      // Try to find the URL from the display row
-      const displayEl = document.getElementById('display-' + accountId);
-      let url = null;
-
-      if (displayEl) {
-        const urlLink = displayEl.querySelector('a[href]');
-        if (urlLink) {
-          url = urlLink.textContent.trim();
-        }
-      }
-
-      // If not found in display, check the edit form input
-      if (!url) {
-        const editEl = document.getElementById('edit-' + accountId);
-        if (editEl) {
-          const urlInput = editEl.querySelector('input[type="url"][name="url"]');
-          if (urlInput && urlInput.value) {
-            url = urlInput.value.trim();
-          }
-        }
-      }
-
-      if (url) {
-        // Store in sessionStorage for page reloads
-        sessionStorage.setItem('deletedUrl_' + accountId, url);
-      }
-    });
-
-    // Show deleted URLs on page load if they exist
-    Object.keys(sessionStorage).forEach(function(key) {
-      if (key.startsWith('deletedUrl_')) {
-        const accountId = key.replace('deletedUrl_', '');
-        const url = sessionStorage.getItem(key);
-        showDeletedUrl(accountId, url);
-      }
-    });
+    // Get CSRF token
+    const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
   });
-
-  function showDeletedUrl(accountId, url) {
-    const deletedUrlDiv = document.getElementById('deleted-url-' + accountId);
-    const deletedUrlValue = document.getElementById('deleted-url-value-' + accountId);
-    const notFoundRow = document.getElementById('not-found-' + accountId);
-
-    if (deletedUrlDiv && deletedUrlValue && url) {
-      deletedUrlValue.textContent = url;
-      deletedUrlDiv.classList.remove('hidden');
-      if (notFoundRow) {
-        notFoundRow.setAttribute('data-previous-url', url);
-      }
-    }
-  }
-
-  function restoreDeletedUrl(accountId) {
-    const previousUrl = sessionStorage.getItem('deletedUrl_' + accountId);
-    if (!previousUrl) return;
-
-    // Call the server to restore the URL
-    const formData = new FormData();
-    formData.append('url', previousUrl);
-    formData.append('_method', 'patch');
-    formData.append('authenticity_token', csrfToken);
-
-    fetch('/verification/accounts/' + accountId + '/mark_entered', {
-      method: 'POST',
-      body: formData
-    }).then(function() {
-      // Clear from sessionStorage
-      sessionStorage.removeItem('deletedUrl_' + accountId);
-      // Reload the page to show updated state
-      window.location.reload();
-    });
-  }
 
   function toggleEdit(accountId) {
     const display = document.getElementById('display-' + accountId);

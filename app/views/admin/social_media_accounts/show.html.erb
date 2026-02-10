@@ -174,7 +174,7 @@
 
               <!-- Show change diff if available (new versions with object_changes) -->
               <% if version.respond_to?(:object_changes) && version.object_changes.present? %>
-                <% changes = YAML.load(version.object_changes) %>
+                <% changes = YAML.unsafe_load(version.object_changes) %>
                 <% relevant_changes = changes.slice('url', 'handle', 'research_status', 'channel_type', 'account_inactive', 'verified', 'entered_by_id', 'verified_by_id', 'research_notes', 'verification_notes') %>
                 <% if relevant_changes.any? %>
                   <div class="text-sm text-gray-600 mt-2">
@@ -199,7 +199,7 @@
 
               <!-- Show full object state (available for all versions except create) -->
               <% if version.object.present? %>
-                <% obj = YAML.load(version.object) %>
+                <% obj = YAML.unsafe_load(version.object) %>
                 <% relevant_fields = obj.slice('url', 'handle', 'research_status', 'channel_type', 'platform', 'account_inactive', 'verified', 'entered_by_id', 'verified_by_id', 'entered_at', 'verified_at', 'research_notes', 'verification_notes', 'pre_populated') %>
                 <div class="text-sm text-gray-600 mt-3">
                   <button type="button" onclick="document.getElementById('object-<%= version.id %>').classList.toggle('hidden')" class="text-blue-600 hover:text-blue-800 text-xs mb-1">
