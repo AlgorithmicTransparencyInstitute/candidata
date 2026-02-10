@@ -1,0 +1,220 @@
+<!-- Load ECharts and D3 for projection -->
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/d3-array@2.8.0/dist/d3-array.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/d3-geo@2.0.1/dist/d3-geo.min.js"></script>
+
+<div class="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
+  <div class="flex items-start justify-between mb-6">
+    <div>
+      <div class="flex items-center gap-3 mb-2">
+        <div class="w-10 h-10 bg-indigo-100 rounded-lg flex items-center justify-center">
+          <svg class="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/>
+          </svg>
+        </div>
+        <h2 class="text-2xl font-bold text-gray-900">2026 Primary Elections</h2>
+      </div>
+      <p class="text-gray-600 text-base">
+        Tracking <%= number_with_delimiter(@total_2026_candidates) %> candidates across <%= @total_2026_contests %> contests in <%= @states_2026_count %> states
+      </p>
+    </div>
+  </div>
+
+  <!-- US Map -->
+  <div class="mb-6">
+    <div id="elections-map" style="width: 100%; height: 450px;"></div>
+  </div>
+
+  <!-- Action Buttons -->
+  <div class="flex flex-wrap gap-3 pt-4 border-t border-gray-200">
+    <%= link_to ballots_path(year: 2026), class: "inline-flex items-center px-5 py-2.5 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 transition-colors shadow-sm" do %>
+      <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+      </svg>
+      View All 2026 Ballots
+    <% end %>
+    <%= link_to contests_path(year: 2026), class: "inline-flex items-center px-5 py-2.5 bg-white text-indigo-600 font-semibold rounded-lg hover:bg-gray-50 transition-colors border border-gray-300" do %>
+      <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+      </svg>
+      Browse Contests
+    <% end %>
+  </div>
+</div>
+
+<script>
+  // Use Turbo-compatible event listener
+  function initElectionsMap() {
+    if (typeof echarts === 'undefined') {
+      console.error('ECharts not loaded');
+      return;
+    }
+
+    const chartDom = document.getElementById('elections-map');
+    if (!chartDom) return;
+
+    // Dispose existing chart instance if it exists
+    const existingInstance = echarts.getInstanceByDom(chartDom);
+    if (existingInstance) {
+      existingInstance.dispose();
+    }
+
+    const myChart = echarts.init(chartDom);
+
+    // State election data from controller
+    const stateElections = <%= raw @state_elections_data.to_json %>;
+
+    // State name to abbreviation mapping
+    const STATE_NAME_TO_CODE = {
+      "Alabama": "AL", "Alaska": "AK", "Arizona": "AZ", "Arkansas": "AR",
+      "California": "CA", "Colorado": "CO", "Connecticut": "CT", "Delaware": "DE",
+      "Florida": "FL", "Georgia": "GA", "Hawaii": "HI", "Idaho": "ID",
+      "Illinois": "IL", "Indiana": "IN", "Iowa": "IA", "Kansas": "KS",
+      "Kentucky": "KY", "Louisiana": "LA", "Maine": "ME", "Maryland": "MD",
+      "Massachusetts": "MA", "Michigan": "MI", "Minnesota": "MN", "Mississippi": "MS",
+      "Missouri": "MO", "Montana": "MT", "Nebraska": "NE", "Nevada": "NV",
+      "New Hampshire": "NH", "New Jersey": "NJ", "New Mexico": "NM", "New York": "NY",
+      "North Carolina": "NC", "North Dakota": "ND", "Ohio": "OH", "Oklahoma": "OK",
+      "Oregon": "OR", "Pennsylvania": "PA", "Rhode Island": "RI", "South Carolina": "SC",
+      "South Dakota": "SD", "Tennessee": "TN", "Texas": "TX", "Utah": "UT",
+      "Vermont": "VT", "Virginia": "VA", "Washington": "WA", "West Virginia": "WV",
+      "Wisconsin": "WI", "Wyoming": "WY"
+    };
+
+    // Load USA map using ECharts official GeoJSON
+    fetch('https://raw.githubusercontent.com/apache/echarts-website/asf-site/examples/data/asset/geo/USA.json')
+      .then(response => response.json())
+      .then(usaJson => {
+        // Create Albers USA projection for proper Alaska/Hawaii positioning
+        const projection = d3.geoAlbersUsa();
+
+        // Register map
+        echarts.registerMap('USA', usaJson);
+
+        // Prepare data
+        const mapData = Object.keys(STATE_NAME_TO_CODE).map(stateName => {
+          const code = STATE_NAME_TO_CODE[stateName];
+          const election = stateElections[code];
+          const hasContests = election && election.contest_count > 0;
+
+          return {
+            name: stateName,
+            value: hasContests ? 2 : 1,
+            code: code,
+            election: election,
+            itemStyle: {
+              areaColor: hasContests ? '#2563eb' : '#e2e8f0'
+            },
+            emphasis: {
+              itemStyle: {
+                areaColor: hasContests ? '#1d4ed8' : '#cbd5e1'
+              }
+            }
+          };
+        });
+
+        const option = {
+          tooltip: {
+            trigger: 'item',
+            formatter: function(params) {
+              if (!params.data) return '';
+
+              const code = params.data.code;
+              const election = params.data.election;
+
+              let html = `<strong>${params.name} (${code})</strong><br/>`;
+
+              if (election) {
+                if (election.date) {
+                  const date = new Date(election.date);
+                  html += `Election: ${date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}<br/>`;
+                }
+                if (election.registration_deadline) {
+                  const deadline = new Date(election.registration_deadline);
+                  html += `Registration: ${deadline.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}<br/>`;
+                }
+                if (election.contest_count > 0) {
+                  html += `Contests: ${election.contest_count}`;
+                } else {
+                  html += 'No contest data yet';
+                }
+              } else {
+                html += 'No election data';
+              }
+
+              return html;
+            }
+          },
+          series: [
+            {
+              type: 'map',
+              map: 'USA',
+              roam: false,  // Disable zoom/pan to prevent scroll interference
+              projection: {
+                project: function (point) {
+                  return projection(point);
+                },
+                unproject: function (point) {
+                  return projection.invert(point);
+                }
+              },
+              emphasis: {
+                label: {
+                  show: false
+                }
+              },
+              itemStyle: {
+                borderColor: '#1e293b',
+                borderWidth: 1
+              },
+              // Minimize left margin to reduce whitespace from Aleutian Islands
+              top: 0,
+              bottom: 0,
+              left: '-5%',
+              right: 0,
+              aspectScale: 0.75,
+              data: mapData
+            }
+          ]
+        };
+
+        myChart.setOption(option);
+
+        // Add click handler
+        myChart.on('click', function(params) {
+          if (params.data && params.data.election && params.data.election.id) {
+            window.location.href = '/elections/' + params.data.election.id;
+          }
+        });
+
+        // Make responsive
+        window.addEventListener('resize', function() {
+          myChart.resize();
+        });
+      })
+      .catch(err => {
+        console.error('Failed to load USA map:', err);
+      });
+  }
+
+  // Initialize on page load (including Turbo navigation)
+  document.addEventListener('turbo:load', initElectionsMap);
+
+  // Also initialize immediately if Turbo hasn't loaded yet
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initElectionsMap);
+  } else {
+    initElectionsMap();
+  }
+
+  // Clean up chart before Turbo caches the page
+  document.addEventListener('turbo:before-cache', function() {
+    const chartDom = document.getElementById('elections-map');
+    if (chartDom) {
+      const chartInstance = echarts.getInstanceByDom(chartDom);
+      if (chartInstance) {
+        chartInstance.dispose();
+      }
+    }
+  });
+</script>

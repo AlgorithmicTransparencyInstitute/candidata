@@ -23,9 +23,29 @@ class HomeController < ApplicationController
 
     # Preload state names for display
     @states_by_abbr = State.all.index_by(&:abbreviation)
+
+    # Prepare state election data for map
+    @state_elections_data = Election.where(year: 2026, election_type: 'primary')
+                                     .select('elections.*, COUNT(DISTINCT contests.id) as contest_count')
+                                     .joins('LEFT JOIN ballots ON ballots.election_id = elections.id')
+                                     .joins('LEFT JOIN contests ON contests.ballot_id = ballots.id')
+                                     .group('elections.id')
+                                     .order('elections.state')
+                                     .index_by(&:state)
   end
 
   def help
     # Public help page showing researcher guides
+  end
+
+  def test_charts
+    # Test page for debugging ECharts
+    @state_elections_data = Election.where(year: 2026, election_type: 'primary')
+                                     .select('elections.*, COUNT(DISTINCT contests.id) as contest_count')
+                                     .joins('LEFT JOIN ballots ON ballots.election_id = elections.id')
+                                     .joins('LEFT JOIN contests ON contests.ballot_id = ballots.id')
+                                     .group('elections.id')
+                                     .order('elections.state')
+                                     .index_by(&:state)
   end
 end

@@ -139,6 +139,9 @@ Rails.application.routes.draw do
   # About page
   get "about", to: "about#index", as: :about
 
+  # Debug/test routes
+  get "test/charts", to: "home#test_charts", as: :test_charts
+
   # Defines the root path route ("/")
   root "home#index"
 end
