@@ -135,4 +135,88 @@
       </div>
     </div>
   </div>
+
+  <!-- Version History -->
+  <% if @account.versions.any? %>
+    <div class="bg-white rounded-lg shadow">
+      <div class="px-6 py-4 border-b border-gray-200">
+        <h2 class="text-lg font-semibold text-gray-900">Version History</h2>
+        <p class="text-sm text-gray-500"><%= @account.versions.count %> version<%= @account.versions.count == 1 ? '' : 's' %></p>
+      </div>
+      <div class="p-6">
+        <div class="space-y-4">
+          <% @account.versions.reverse_each.with_index do |version, index| %>
+            <div class="border-l-4 <%= index == 0 ? 'border-blue-500' : 'border-gray-300' %> pl-4 py-2">
+              <div class="flex items-start justify-between mb-2">
+                <div>
+                  <span class="font-semibold text-gray-900">
+                    <%= version.event.titleize %>
+                    <% if index == 0 %>
+                      <span class="ml-2 px-2 py-0.5 bg-blue-100 text-blue-700 text-xs rounded-full">Current</span>
+                    <% end %>
+                  </span>
+                  <div class="text-xs text-gray-500 mt-1">
+                    <%= version.created_at.strftime("%B %d, %Y at %I:%M %p") %>
+                    <% if version.whodunnit.present? %>
+                      <% user = User.find_by(id: version.whodunnit) %>
+                      · by <%= user ? (user.name.presence || user.email) : "User ##{version.whodunnit}" %>
+                    <% end %>
+                  </div>
+                </div>
+                <span class="text-xs text-gray-400 font-mono">v<%= @account.versions.count - index %></span>
+              </div>
+
+              <% if version.event == 'create' %>
+                <% if version.respond_to?(:object_changes) && version.object_changes.present? %>
+                  <div class="text-sm text-gray-600 mt-2">
+                    <div class="font-medium mb-1">Initial values:</div>
+                    <div class="bg-gray-50 rounded p-3 text-xs font-mono space-y-1">
+                      <% changes = YAML.load(version.object_changes) %>
+                      <% %w[url handle research_status channel_type platform account_inactive verified].each do |field| %>
+                        <% if changes[field] && changes[field][1].present? %>
+                          <div><span class="text-gray-500"><%= field %>:</span> <span class="text-green-700"><%= changes[field][1] %></span></div>
+                        <% end %>
+                      <% end %>
+                    </div>
+                  </div>
+                <% else %>
+                  <div class="text-xs text-gray-400 mt-2 italic">Record created (detailed changes not tracked)</div>
+                <% end %>
+              <% elsif version.event == 'update' %>
+                <% if version.respond_to?(:object_changes) && version.object_changes.present? %>
+                  <% changes = YAML.load(version.object_changes) %>
+                  <% relevant_changes = changes.slice('url', 'handle', 'research_status', 'channel_type', 'account_inactive', 'verified', 'entered_by_id', 'verified_by_id', 'research_notes', 'verification_notes') %>
+                  <% if relevant_changes.any? %>
+                    <div class="text-sm text-gray-600 mt-2">
+                      <div class="font-medium mb-1">Changes:</div>
+                      <div class="bg-gray-50 rounded p-3 text-xs font-mono space-y-1">
+                        <% relevant_changes.each do |field, (old_value, new_value)| %>
+                          <div class="flex items-start gap-2">
+                            <span class="text-gray-500 w-32 shrink-0"><%= field %>:</span>
+                            <div class="flex-1 min-w-0">
+                              <div class="flex items-center gap-2 flex-wrap">
+                                <span class="text-red-600 line-through break-all"><%= old_value.nil? ? '(nil)' : old_value.to_s.truncate(100) %></span>
+                                <span class="text-gray-400">→</span>
+                                <span class="text-green-700 break-all"><%= new_value.nil? ? '(nil)' : new_value.to_s.truncate(100) %></span>
+                              </div>
+                            </div>
+                          </div>
+                        <% end %>
+                      </div>
+                    </div>
+                  <% else %>
+                    <div class="text-xs text-gray-400 mt-2 italic">Updated (no tracked field changes)</div>
+                  <% end %>
+                <% else %>
+                  <div class="text-xs text-gray-400 mt-2 italic">Record updated (detailed changes not tracked)</div>
+                <% end %>
+              <% elsif version.event == 'destroy' %>
+                <div class="text-sm text-red-600 mt-2">Record was deleted</div>
+              <% end %>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    </div>
+  <% end %>
 </div>
