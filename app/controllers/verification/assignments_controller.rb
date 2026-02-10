@@ -11,9 +11,10 @@ module Verification
 
     def show
       @person = @assignment.person
-      # Show all core platform accounts - verifiers can handle entered, empty, or incorrect data
-      @accounts = @person.social_media_accounts.campaign.core_platforms.where.not(research_status: 'verified').order(:platform)
-      @verified_accounts = @person.social_media_accounts.campaign.core_platforms.where(research_status: 'verified').order(:platform)
+      # Group all accounts by channel_type, regardless of verification status
+      @campaign_accounts = @person.social_media_accounts.campaign.order(:platform)
+      @official_accounts = @person.social_media_accounts.official.order(:platform)
+      @personal_accounts = @person.social_media_accounts.personal.order(:platform)
       @current_offices = @person.officeholders.current.includes(office: [:body, :district])
       @candidacies = @person.candidates.includes(contest: [:ballot, :office]).order('contests.date DESC')
     end
@@ -24,7 +25,7 @@ module Verification
     end
 
     def complete
-      incomplete = @assignment.person.social_media_accounts.campaign.core_platforms.needs_verification.count
+      incomplete = @assignment.person.social_media_accounts.needs_verification.count
       if incomplete > 0
         redirect_to verification_assignment_path(@assignment), alert: "#{incomplete} accounts still need verification."
         return

@@ -102,7 +102,7 @@ Rails.application.routes.draw do
         patch :reopen
       end
     end
-    resources :accounts, only: [:show, :update, :edit] do
+    resources :accounts, only: [:show, :update, :edit, :create] do
       member do
         patch :mark_entered
         patch :mark_not_found

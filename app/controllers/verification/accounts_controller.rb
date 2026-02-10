@@ -3,11 +3,32 @@ module Verification
     before_action :authenticate_user!
     before_action :require_researcher_or_admin
     layout 'researcher'
-    before_action :set_account
-    before_action :verify_assignment
+    before_action :set_account, except: [:create]
+    before_action :verify_assignment, except: [:create]
+    before_action :verify_assignment_for_create, only: [:create]
 
     def show
       @person = @account.person
+    end
+
+    def create
+      @person = Person.find(params[:person_id])
+      @account = @person.social_media_accounts.build(create_account_params)
+      @account.entered_by = current_user
+      @account.entered_at = Time.current
+      @account.research_status = 'entered'
+
+      if @account.save
+        respond_to do |format|
+          format.turbo_stream
+          format.html { redirect_to verification_assignment_path(@assignment), notice: "Account added successfully." }
+        end
+      else
+        respond_to do |format|
+          format.turbo_stream { render turbo_stream: turbo_stream.replace("add-account-form-#{params[:channel_type]}", partial: "verification/accounts/add_form", locals: { person: @person, channel_type: params[:channel_type], account: @account }) }
+          format.html { redirect_to verification_assignment_path(@assignment), alert: @account.errors.full_messages.join(", ") }
+        end
+      end
     end
 
     def update
@@ -168,6 +189,18 @@ module Verification
 
     def account_params
       params.require(:social_media_account).permit(:url, :handle, :verification_notes)
+    end
+
+    def create_account_params
+      params.require(:social_media_account).permit(:platform, :channel_type, :url, :handle, :research_notes)
+    end
+
+    def verify_assignment_for_create
+      person = Person.find(params[:person_id])
+      @assignment = current_user.assignments.data_validation.active.find_by(person_id: person.id)
+      unless @assignment
+        redirect_to verification_assignments_path, alert: "You don't have an active verification assignment for this person."
+      end
     end
 
     def require_researcher_or_admin
