@@ -145,6 +145,14 @@ module Verification
       redirect_to verification_assignment_path(@assignment), notice: "Account rejected."
     end
 
+    def update_notes
+      @account.update!(research_notes: params[:research_notes])
+      respond_to do |format|
+        format.html { redirect_to verification_assignment_path(@assignment), notice: "Notes saved." }
+        format.any { head :ok }
+      end
+    end
+
     private
 
     def set_account

@@ -211,7 +211,6 @@
               <div class="w-24 shrink-0 font-medium text-gray-900 text-sm"><%= account.platform %></div>
               <%= form_with url: mark_entered_researcher_account_path(account), method: :patch, class: "flex items-center gap-2 flex-1 min-w-0" do %>
                 <input type="url" name="url" placeholder="https://..." class="flex-1 min-w-0 px-2.5 py-1 text-sm border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
-                <input type="text" name="handle" placeholder="@handle" class="w-28 px-2.5 py-1 text-sm border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
                 <button type="submit" class="px-3 py-1 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700 shrink-0">Save</button>
               <% end %>
               <%= button_to "Not Found", mark_not_found_researcher_account_path(account), method: :patch, class: "px-3 py-1 bg-gray-200 text-gray-600 text-sm rounded-md hover:bg-gray-300 shrink-0", data: { confirm: "Are you sure this account doesn't exist on #{account.platform}?" } %>
@@ -230,9 +229,8 @@
               <div class="flex-1 text-sm min-w-0 truncate">
                 <% if account.url.present? %>
                   <a href="<%= account.url %>" target="_blank" class="text-blue-600 hover:text-blue-800"><%= account.url %></a>
-                <% end %>
-                <% if account.handle.present? %>
-                  <span class="text-gray-600"><%= account.url.present? ? ' · ' : '' %>@<%= account.handle %></span>
+                <% else %>
+                  <span class="text-gray-400 italic">No URL</span>
                 <% end %>
               </div>
               <span class="px-2 py-0.5 text-xs rounded-full bg-green-100 text-green-700 shrink-0">Entered</span>
@@ -251,7 +249,6 @@
               <div class="flex items-center gap-2 ml-9">
                 <%= form_with url: mark_entered_researcher_account_path(account), method: :patch, class: "flex items-center gap-2 flex-1 min-w-0" do %>
                   <input type="url" name="url" value="<%= account.url %>" placeholder="https://..." class="flex-1 min-w-0 px-2.5 py-1 text-sm border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
-                  <input type="text" name="handle" value="<%= account.handle %>" placeholder="@handle" class="w-28 px-2.5 py-1 text-sm border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
                   <button type="submit" class="px-3 py-1 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700 shrink-0">Save</button>
                 <% end %>
                 <button type="button" onclick="toggleEdit(<%= account.id %>)" class="px-3 py-1 text-gray-500 text-sm hover:bg-gray-100 rounded-md shrink-0">Cancel</button>
@@ -289,9 +286,8 @@
               <div class="flex-1 text-sm min-w-0 truncate">
                 <% if account.url.present? %>
                   <a href="<%= account.url %>" target="_blank" class="text-blue-600 hover:text-blue-800"><%= account.url %></a>
-                <% end %>
-                <% if account.handle.present? %>
-                  <span class="text-gray-600"><%= account.url.present? ? ' · ' : '' %>@<%= account.handle %></span>
+                <% else %>
+                  <span class="text-gray-400 italic">No URL</span>
                 <% end %>
               </div>
               <span class="px-2 py-0.5 text-xs rounded-full bg-green-100 text-green-700 shrink-0">Entered</span>
@@ -353,8 +349,8 @@
             <div class="flex-1 text-sm min-w-0 truncate">
               <% if account.url.present? %>
                 <a href="<%= account.url %>" target="_blank" class="text-blue-600 hover:text-blue-800"><%= account.url %></a>
-              <% elsif account.handle.present? %>
-                <span class="text-gray-600">@<%= account.handle %></span>
+              <% else %>
+                <span class="text-gray-400 italic">No URL</span>
               <% end %>
             </div>
           </div>

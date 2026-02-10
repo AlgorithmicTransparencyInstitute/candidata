@@ -111,6 +111,7 @@ Rails.application.routes.draw do
         patch :unverify
         patch :verify_with_changes
         patch :reject
+        patch :update_notes
       end
     end
   end
