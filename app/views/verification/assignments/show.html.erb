@@ -98,211 +98,47 @@
           </div>
         </div>
       </div>
-      <!-- Accounts List -->
+
       <!-- Campaign Accounts -->
       <div class="bg-white rounded-lg shadow mb-6">
         <div class="px-6 py-4 border-b border-gray-200">
           <h2 class="text-lg font-semibold text-gray-900">Campaign Accounts</h2>
-          <p class="text-sm text-gray-500">Verify, edit, or mark as not found. Click "Verify" if correct, or "Edit" to make changes.</p>
+          <p class="text-sm text-gray-500">Social media accounts associated with campaigns for elected office.</p>
         </div>
         <div class="divide-y divide-gray-200" id="campaign-accounts-list">
-          <% @accounts.each do |account| %>
-            <%= turbo_frame_tag "account_#{account.id}" do %>
-              <div class="px-5 py-3" id="account-<%= account.id %>">
-
-              <% if account.research_status == 'not_started' && @assignment.in_progress? %>
-                <!-- Not started: Add data or mark not found -->
-                <div class="flex items-center gap-2">
-                  <div class="w-7 h-7 rounded-full bg-gray-100 flex items-center justify-center shrink-0">
-                    <%= platform_icon(account.platform, size: 16) %>
-                  </div>
-                  <div class="w-24 shrink-0 font-medium text-gray-900 text-sm"><%= account.platform %></div>
-                  <span class="text-sm text-gray-400 italic flex-1">No data entered</span>
-                  <button type="button" onclick="toggleEdit(<%= account.id %>)" class="px-3 py-1 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700 shrink-0">Add Data</button>
-                  <%= button_to "Not Found", mark_not_found_verification_account_path(account), method: :patch, class: "px-3 py-1 bg-gray-200 text-gray-600 text-sm rounded-md hover:bg-gray-300 shrink-0", data: { confirm: "Mark this account as not found?" } %>
-                  <button type="button" onclick="openNotesModal(<%= account.id %>, '<%= j account.platform %>')" class="shrink-0 p-1 rounded hover:bg-gray-100" title="<%= account.research_notes.present? ? 'Edit notes' : 'Add notes' %>">
-                    <svg data-notes-icon class="w-4 h-4 <%= account.research_notes.present? ? 'text-blue-600' : 'text-gray-300 hover:text-gray-500' %>" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"/></svg>
-                  </button>
-                </div>
-                <!-- Edit form (hidden by default) -->
-                <div class="hidden mt-2" id="edit-<%= account.id %>">
-                  <div class="flex items-center gap-2 ml-9">
-                    <%= form_with url: mark_entered_verification_account_path(account), method: :patch, class: "flex items-center gap-2 flex-1 min-w-0" do %>
-                      <input type="url" name="url" placeholder="https://..." class="flex-1 min-w-0 px-2.5 py-1 text-sm border border-gray-300 rounded-md focus:ring-purple-500 focus:border-purple-500">
-                      <button type="submit" class="px-3 py-1 bg-purple-600 text-white text-sm rounded-md hover:bg-purple-700 shrink-0">Save (needs verification)</button>
-                    <% end %>
-                    <button type="button" onclick="toggleEdit(<%= account.id %>)" class="px-3 py-1 text-gray-500 text-sm hover:bg-gray-100 rounded-md shrink-0">Cancel</button>
-                  </div>
-                </div>
-
-              <% elsif account.research_status == 'entered' && @assignment.in_progress? %>
-                <!-- Entered: Display with Verify/Edit buttons -->
-                <div class="flex items-center gap-2 group" id="display-<%= account.id %>">
-                  <div class="w-7 h-7 rounded-full bg-gray-100 flex items-center justify-center shrink-0">
-                    <%= platform_icon(account.platform, size: 16) %>
-                  </div>
-                  <div class="w-24 shrink-0 font-medium text-gray-900 text-sm"><%= account.platform %></div>
-                  <div class="flex-1 text-sm min-w-0 truncate">
-                    <% if account.url.present? %>
-                      <a href="<%= account.url %>" target="_blank" class="text-blue-600 hover:text-blue-800"><%= account.url %></a>
-                    <% else %>
-                      <span class="text-gray-400 italic">No URL</span>
-                    <% end %>
-                  </div>
-                  <span class="px-2 py-0.5 text-xs rounded-full bg-blue-100 text-blue-700 shrink-0">Needs Verification</span>
-                  <% if account.entered_by %>
-                    <span class="text-xs text-gray-400 shrink-0">by <%= account.entered_by.name.split.first %></span>
-                  <% end %>
-                  <%= button_to "✓ Verify", verify_verification_account_path(account), method: :patch, class: "px-3 py-1 bg-green-600 text-white text-sm rounded-md hover:bg-green-700 shrink-0" %>
-                  <button type="button" onclick="toggleEdit(<%= account.id %>)" class="text-xs text-purple-600 hover:text-purple-800 shrink-0">Edit</button>
-                  <button type="button" onclick="openNotesModal(<%= account.id %>, '<%= j account.platform %>')" class="shrink-0 p-1 rounded hover:bg-gray-100" title="<%= account.research_notes.present? ? 'Edit notes' : 'Add notes' %>">
-                    <svg data-notes-icon class="w-4 h-4 <%= account.research_notes.present? ? 'text-blue-600' : 'text-gray-300 hover:text-gray-500' %>" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"/></svg>
-                  </button>
-                </div>
-                <!-- Edit form (hidden by default) -->
-                <div class="hidden mt-2" id="edit-<%= account.id %>">
-                  <div class="flex items-center gap-2 ml-9">
-                    <%= form_with url: mark_entered_verification_account_path(account), method: :patch, class: "flex items-center gap-2 flex-1 min-w-0" do %>
-                      <input type="url" name="url" value="<%= account.url %>" placeholder="https://..." class="flex-1 min-w-0 px-2.5 py-1 text-sm border border-gray-300 rounded-md focus:ring-purple-500 focus:border-purple-500">
-                      <button type="submit" class="px-3 py-1 bg-purple-600 text-white text-sm rounded-md hover:bg-purple-700 shrink-0">Save (needs re-verification)</button>
-                    <% end %>
-                    <button type="button" onclick="toggleEdit(<%= account.id %>)" class="px-3 py-1 text-gray-500 text-sm hover:bg-gray-100 rounded-md shrink-0">Cancel</button>
-                    <%= button_to "Mark Not Found", mark_not_found_verification_account_path(account), method: :patch, class: "px-3 py-1 text-red-500 text-sm hover:bg-red-50 rounded-md shrink-0", data: { confirm: "Mark as not found?" } %>
-                  </div>
-                </div>
-
-              <% elsif account.research_status == 'not_found' && @assignment.in_progress? %>
-                <!-- Not found: Verify or undo -->
-                <div class="flex items-center gap-2" id="not-found-<%= account.id %>">
-                  <div class="w-7 h-7 rounded-full bg-gray-100 flex items-center justify-center shrink-0">
-                    <%= platform_icon(account.platform, size: 16) %>
-                  </div>
-                  <div class="w-24 shrink-0 font-medium text-gray-900 text-sm"><%= account.platform %></div>
-                  <div class="flex-1 flex flex-col">
-                    <span class="text-sm text-gray-400 italic">Not found</span>
-                    <% if account.previous_url.present? %>
-                      <div class="mt-1">
-                        <span class="text-xs text-gray-400">Previous URL: </span>
-                        <span class="text-xs text-gray-500"><%= account.previous_url %></span>
-                        <%= button_to "Restore", mark_entered_verification_account_path(account, url: account.previous_url), method: :patch, class: "ml-2 text-xs text-blue-600 hover:text-blue-800", form: { style: "display: inline;" } %>
-                      </div>
-                    <% end %>
-                  </div>
-                  <span class="px-2 py-0.5 text-xs rounded-full bg-gray-200 text-gray-500 shrink-0">Not Found</span>
-                  <%= button_to "✓ Verify", verify_verification_account_path(account), method: :patch, class: "px-3 py-1 bg-green-600 text-white text-sm rounded-md hover:bg-green-700 shrink-0" %>
-                  <%= button_to "Undo", reset_status_verification_account_path(account), method: :patch, class: "text-xs text-blue-600 hover:text-blue-800 shrink-0" %>
-                  <button type="button" onclick="openNotesModal(<%= account.id %>, '<%= j account.platform %>')" class="shrink-0 p-1 rounded hover:bg-gray-100" title="<%= account.research_notes.present? ? 'Edit notes' : 'Add notes' %>">
-                    <svg data-notes-icon class="w-4 h-4 <%= account.research_notes.present? ? 'text-blue-600' : 'text-gray-300 hover:text-gray-500' %>" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"/></svg>
-                  </button>
-                </div>
-
-              <% elsif account.research_status == 'verified' && @assignment.in_progress? %>
-                <!-- Verified but assignment reopened: Allow unverify -->
-                <div class="flex items-center gap-2">
-                  <div class="w-7 h-7 rounded-full bg-gray-100 flex items-center justify-center shrink-0">
-                    <%= platform_icon(account.platform, size: 16) %>
-                  </div>
-                  <div class="w-24 shrink-0 font-medium text-gray-900 text-sm"><%= account.platform %></div>
-                  <div class="flex-1 text-sm min-w-0 truncate">
-                    <% if account.url.present? %>
-                      <a href="<%= account.url %>" target="_blank" class="text-blue-600 hover:text-blue-800"><%= account.url %></a>
-                    <% else %>
-                      <span class="text-gray-400 italic">Not found</span>
-                    <% end %>
-                  </div>
-                  <span class="px-2 py-0.5 text-xs rounded-full bg-green-100 text-green-700 shrink-0">✓ Verified</span>
-                  <% if account.verified_by %>
-                    <span class="text-xs text-gray-400 shrink-0">by <%= account.verified_by.name.split.first %></span>
-                  <% end %>
-                  <%= button_to "Unverify", unverify_verification_account_path(account), method: :patch, class: "text-xs text-orange-600 hover:text-orange-800 shrink-0", data: { confirm: "Unverify this account to make changes?" } %>
-                  <button type="button" onclick="openNotesModal(<%= account.id %>, '<%= j account.platform %>')" class="shrink-0 p-1 rounded hover:bg-gray-100" title="<%= account.research_notes.present? ? 'Edit notes' : 'Add notes' %>">
-                    <svg data-notes-icon class="w-4 h-4 <%= account.research_notes.present? ? 'text-blue-600' : 'text-gray-300 hover:text-gray-500' %>" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"/></svg>
-                  </button>
-                </div>
-
-              <% elsif account.research_status == 'verified' %>
-                <!-- Verified: Read-only, show who verified -->
-                <div class="flex items-center gap-2">
-                  <div class="w-7 h-7 rounded-full bg-gray-100 flex items-center justify-center shrink-0">
-                    <%= platform_icon(account.platform, size: 16) %>
-                  </div>
-                  <div class="w-24 shrink-0 font-medium text-gray-900 text-sm"><%= account.platform %></div>
-                  <div class="flex-1 text-sm min-w-0 truncate">
-                    <% if account.url.present? %>
-                      <a href="<%= account.url %>" target="_blank" class="text-blue-600 hover:text-blue-800"><%= account.url %></a>
-                    <% else %>
-                      <span class="text-gray-400 italic">Not found</span>
-                    <% end %>
-                  </div>
-                  <span class="px-2 py-0.5 text-xs rounded-full bg-green-100 text-green-700 shrink-0">✓ Verified</span>
-                  <% if account.verified_by %>
-                    <span class="text-xs text-gray-400 shrink-0">by <%= account.verified_by.name.split.first %></span>
-                  <% end %>
-                </div>
-
-              <% else %>
-                <!-- Assignment not in progress -->
-                <div class="flex items-center gap-2">
-                  <div class="w-7 h-7 rounded-full bg-gray-100 flex items-center justify-center shrink-0">
-                    <%= platform_icon(account.platform, size: 16) %>
-                  </div>
-                  <div class="w-24 shrink-0 font-medium text-gray-900 text-sm"><%= account.platform %></div>
-                  <span class="text-sm text-gray-400 flex-1">Start verification to begin</span>
-                </div>
-              <% end %>
-
-              </div>
-            <% end %>
+          <% @campaign_accounts.each do |account| %>
+            <%= render "verification/accounts/account_row", account: account, assignment: @assignment %>
           <% end %>
         </div>
+        <%= render "verification/accounts/add_account_form", person: @person, channel_type: "Campaign" %>
       </div>
 
-      <!-- Verified Accounts  -->
-      <div class="bg-white rounded-lg shadow">
+      <!-- Official Office Accounts -->
+      <div class="bg-white rounded-lg shadow mb-6">
         <div class="px-6 py-4 border-b border-gray-200">
-          <h2 class="text-lg font-semibold text-gray-900">Verified Accounts</h2>
-          <p class="text-sm text-gray-500"><%= @assignment.in_progress? ? "Click 'Unverify' to make changes" : "Already completed" %></p>
+          <h2 class="text-lg font-semibold text-gray-900">Official Office Accounts</h2>
+          <p class="text-sm text-gray-500">Social media accounts maintained by the official's government office.</p>
         </div>
-        <div class="divide-y divide-gray-200" id="verified-accounts-list">
-          <% if @verified_accounts.empty? %>
-            <div class="px-5 py-8 text-center text-gray-400 text-sm" id="verified-empty-state">
-              No verified accounts yet
-            </div>
-          <% else %>
-            <% @verified_accounts.each do |account| %>
-              <%= turbo_frame_tag "account_#{account.id}" do %>
-                <div class="px-5 py-3 flex items-center gap-2 group">
-                  <div class="w-7 h-7 rounded-full bg-gray-100 flex items-center justify-center shrink-0">
-                    <%= platform_icon(account.platform, size: 16) %>
-                  </div>
-                  <div class="w-24 shrink-0 font-medium text-gray-900 text-sm"><%= account.platform %></div>
-                  <div class="flex-1 text-sm min-w-0 truncate">
-                    <% if account.url.present? %>
-                      <a href="<%= account.url %>" target="_blank" class="text-blue-600 hover:text-blue-800"><%= account.url %></a>
-                    <% else %>
-                      <span class="text-gray-400 italic">Not found</span>
-                    <% end %>
-                  </div>
-                  <span class="px-2 py-0.5 text-xs rounded-full bg-green-100 text-green-700 shrink-0">✓ Verified</span>
-                  <% if account.verified_by %>
-                    <span class="text-xs text-gray-400 shrink-0">by <%= account.verified_by.name.split.first %></span>
-                  <% end %>
-                  <% if @assignment.in_progress? %>
-
-                    <%= button_to "Unverify", unverify_verification_account_path(account), method: :patch, class: "px-3 py-1 bg-orange-600 text-white text-xs rounded hover:bg-orange-700", data: { confirm: "Unverify this account to make changes?" } %>
-                    <button type="button" onclick="openNotesModal(<%= account.id %>, '<%= j account.platform %>')" class="shrink-0 p-1 rounded hover:bg-gray-100" title="<%= account.research_notes.present? ? 'Edit notes' : 'Add notes' %>">
-                      <svg data-notes-icon class="w-4 h-4 <%= account.research_notes.present? ? 'text-blue-600' : 'text-gray-300 hover:text-gray-500' %>" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"/></svg>
-                    </button>
-                  <% else %>
-                    <button type="button" onclick="openNotesModal(<%= account.id %>, '<%= j account.platform %>')" class="shrink-0 p-1 rounded hover:bg-gray-100 opacity-0 group-hover:opacity-100 transition-opacity" title="<%= account.research_notes.present? ? 'View notes' : 'No notes' %>">
-                      <svg data-notes-icon class="w-4 h-4 <%= account.research_notes.present? ? 'text-blue-600' : 'text-gray-300 hover:text-gray-500' %>" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"/></svg>
-                    </button>
-                  <% end %>
-                </div>
-              <% end %>
-            <% end %>
+        <div class="divide-y divide-gray-200" id="official-office-accounts-list">
+          <% @official_accounts.each do |account| %>
+            <%= render "verification/accounts/account_row", account: account, assignment: @assignment %>
           <% end %>
         </div>
+        <%= render "verification/accounts/add_account_form", person: @person, channel_type: "Official Office" %>
+      </div>
+
+      <!-- Personal Accounts -->
+      <div class="bg-white rounded-lg shadow mb-6">
+        <div class="px-6 py-4 border-b border-gray-200">
+          <h2 class="text-lg font-semibold text-gray-900">Personal Accounts</h2>
+          <p class="text-sm text-gray-500">Personal social media accounts not directly affiliated with campaigns or office.</p>
+        </div>
+        <div class="divide-y divide-gray-200" id="personal-accounts-list">
+          <% @personal_accounts.each do |account| %>
+            <%= render "verification/accounts/account_row", account: account, assignment: @assignment %>
+          <% end %>
+        </div>
+        <%= render "verification/accounts/add_account_form", person: @person, channel_type: "Personal" %>
       </div>
     </div>
 
@@ -310,7 +146,7 @@
     <div class="shrink-0" id="instructions-container">
       <!-- Expanded Instructions -->
       <div id="instructions-expanded" class="w-96 sticky top-6 self-start">
-        <%= render "shared/verification_guide", channel_type: @accounts.first&.channel_type || 'campaign' %>
+        <%= render "shared/verification_guide", channel_type: "Campaign" %>
         <button onclick="toggleInstructions()" class="mt-2 w-full px-3 py-1.5 text-sm text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-md flex items-center justify-center gap-2">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 5l7 7-7 7M5 5l7 7-7 7"/>
@@ -386,12 +222,37 @@
     }
   });
 
+  // Toggle add account form
+  function showAddAccountForm(channelType) {
+    const button = document.getElementById('add-account-button-' + channelType);
+    const form = document.getElementById('add-account-form-content-' + channelType);
+    if (button && form) {
+      button.classList.add('hidden');
+      form.classList.remove('hidden');
+    }
+  }
+
+  function hideAddAccountForm(channelType) {
+    const button = document.getElementById('add-account-button-' + channelType);
+    const form = document.getElementById('add-account-form-content-' + channelType);
+    if (button && form) {
+      form.classList.add('hidden');
+      button.classList.remove('hidden');
+      // Reset the form
+      const formElement = form.querySelector('form');
+      if (formElement) formElement.reset();
+    }
+  }
+
   // Notes data for each account
   const accountNotes = {
-    <% @accounts.each do |account| %>
+    <% @campaign_accounts.each do |account| %>
       <%= account.id %>: <%= account.research_notes.to_s.to_json.html_safe %>,
     <% end %>
-    <% @verified_accounts.each do |account| %>
+    <% @official_accounts.each do |account| %>
+      <%= account.id %>: <%= account.research_notes.to_s.to_json.html_safe %>,
+    <% end %>
+    <% @personal_accounts.each do |account| %>
       <%= account.id %>: <%= account.research_notes.to_s.to_json.html_safe %>,
     <% end %>
   };

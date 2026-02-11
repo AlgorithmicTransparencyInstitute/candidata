@@ -47,6 +47,7 @@ class Person < ApplicationRecord
   }
   scope :by_state, ->(state) { where(state_of_residence: state) }
   scope :by_party, ->(party) { joins(:parties).where(parties: { id: party }) }
+  scope :needs_secondary_verification, -> { where(needs_secondary_verification: true) }
   
   def full_name
     parts = [first_name, middle_name, last_name, suffix].compact_blank
@@ -113,5 +114,24 @@ class Person < ApplicationRecord
 
   def offices_held_on(date)
     offices.joins(:officeholders).merge(Officeholder.as_of(date)).distinct
+  end
+
+  # Check if any accounts were modified during validation and mark for secondary verification
+  def mark_for_secondary_verification_if_needed!
+    modified_accounts = social_media_accounts.where(modified_during_validation: true)
+
+    if modified_accounts.any?
+      # Mark the modified accounts as needing secondary verification
+      modified_accounts.update_all(needs_secondary_verification: true)
+
+      # Mark the person record
+      update!(needs_secondary_verification: true)
+    end
+  end
+
+  # Clear secondary verification flag after secondary verification is complete
+  def clear_secondary_verification!
+    update!(needs_secondary_verification: false)
+    social_media_accounts.update_all(needs_secondary_verification: false, modified_during_validation: false)
   end
 end

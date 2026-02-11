@@ -15,9 +15,10 @@
           <a href="#creating-assignments" class="block text-blue-700 hover:text-blue-900">3. Creating New Assignments</a>
           <a href="#monitoring-progress" class="block text-blue-700 hover:text-blue-900">4. Monitoring Researcher Progress</a>
           <a href="#reassignment" class="block text-blue-700 hover:text-blue-900">5. Finding Tasks for Re-assignment</a>
-          <a href="#uncompleting" class="block text-blue-700 hover:text-blue-900">6. Un-completing Assignments</a>
-          <a href="#managing-records" class="block text-blue-700 hover:text-blue-900">7. Managing Records</a>
-          <a href="#faqs" class="block text-blue-700 hover:text-blue-900">8. FAQs</a>
+          <a href="#secondary-verification" class="block text-blue-700 hover:text-blue-900">6. Understanding Secondary Verification</a>
+          <a href="#uncompleting" class="block text-blue-700 hover:text-blue-900">7. Un-completing Assignments</a>
+          <a href="#managing-records" class="block text-blue-700 hover:text-blue-900">8. Managing Records</a>
+          <a href="#faqs" class="block text-blue-700 hover:text-blue-900">9. FAQs</a>
         </nav>
       </div>
 
@@ -151,9 +152,72 @@
         </div>
       </section>
 
-      <!-- Section 6: Un-completing Assignments -->
+      <!-- Section 6: Understanding Secondary Verification -->
+      <section id="secondary-verification" class="mb-8">
+        <h2 class="text-2xl font-bold text-gray-900 mb-4">6. Understanding Secondary Verification</h2>
+        <div class="prose prose-sm max-w-none">
+          <p class="text-gray-700 mb-4">The system uses a two-person verification workflow to ensure data quality. When a researcher modifies data during validation (instead of just verifying what was entered), the system flags it for secondary verification.</p>
+
+          <h3 class="text-lg font-semibold text-gray-900 mt-6 mb-3">How Secondary Verification Works:</h3>
+          <ol class="list-decimal list-inside space-y-3 text-gray-700">
+            <li><strong>Initial Data Collection:</strong> Researcher A finds and enters social media accounts</li>
+            <li><strong>First Validation:</strong> Researcher B reviews the accounts
+              <ul class="list-disc list-inside ml-6 mt-2 space-y-1">
+                <li>If Researcher B just verifies without changes → No secondary verification needed</li>
+                <li>If Researcher B modifies the URL or marks as "not found" → Flagged for secondary verification</li>
+              </ul>
+            </li>
+            <li><strong>Assignment Completion:</strong> When Researcher B marks the assignment complete, modified accounts are automatically flagged</li>
+            <li><strong>Visual Indicators:</strong> Accounts needing secondary verification show with a <span class="px-2 py-0.5 bg-purple-100 text-purple-700 rounded text-xs">Purple "Needs Secondary Verification" badge</span></li>
+          </ol>
+
+          <h3 class="text-lg font-semibold text-gray-900 mt-6 mb-3">Finding People Needing Secondary Verification:</h3>
+          <ol class="list-decimal list-inside space-y-3 text-gray-700">
+            <li><strong>Go to <%= link_to "People", admin_people_path, target: "_blank", class: "text-blue-600 hover:text-blue-800" %></strong></li>
+            <li><strong>Apply filter:</strong> Look for people with the "Needs Secondary Verification" flag</li>
+            <li><strong>Review accounts:</strong> Click into each person to see which accounts need secondary verification</li>
+            <li><strong>Create assignments:</strong> Assign these people to a third researcher for secondary verification</li>
+          </ol>
+
+          <h3 class="text-lg font-semibold text-gray-900 mt-6 mb-3">Account Types & Channel Types:</h3>
+          <p class="text-gray-700 mb-3">Researchers work with three types of social media account classifications:</p>
+          <div class="grid gap-3">
+            <div class="bg-purple-50 border border-purple-200 rounded-lg p-4">
+              <h4 class="font-semibold text-purple-900 mb-2">Campaign Accounts</h4>
+              <p class="text-sm text-purple-800">Accounts used when running for office (e.g., "@SmithForSenate", "@ElectJones"). These are used during election cycles and may be retired after the campaign ends.</p>
+            </div>
+            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <h4 class="font-semibold text-blue-900 mb-2">Official Office Accounts</h4>
+              <p class="text-sm text-blue-800">Accounts for current officeholders (e.g., "@SenSmith", "@RepJones"). These represent their official government work and are typically managed by their staff.</p>
+            </div>
+            <div class="bg-gray-50 border border-gray-200 rounded-lg p-4">
+              <h4 class="font-semibold text-gray-900 mb-2">Personal Accounts</h4>
+              <p class="text-sm text-gray-700">Personal accounts not affiliated with campaigns or official office. These are collected less frequently.</p>
+            </div>
+          </div>
+
+          <h3 class="text-lg font-semibold text-gray-900 mt-6 mb-3">Understanding the Verification Interface:</h3>
+          <p class="text-gray-700 mb-3">Researchers see accounts with color-coded backgrounds indicating status:</p>
+          <ul class="list-disc list-inside space-y-2 text-gray-700">
+            <li><span class="inline-block w-4 h-4 bg-white border border-gray-300 mr-2"></span><strong>White background:</strong> No data entered yet (not started)</li>
+            <li><span class="inline-block w-4 h-4 bg-blue-50 border border-blue-300 mr-2"></span><strong>Blue background:</strong> Data entered, needs verification</li>
+            <li><span class="inline-block w-4 h-4 bg-green-50 border border-green-300 mr-2"></span><strong>Green background:</strong> Verified as accurate</li>
+            <li><span class="inline-block w-4 h-4 bg-purple-50 border border-purple-300 mr-2"></span><strong>Purple background:</strong> Needs secondary verification</li>
+          </ul>
+
+          <div class="mt-4 p-4 bg-blue-50 border-l-4 border-blue-400">
+            <p class="text-sm text-blue-800"><strong>Tip:</strong> This two-person verification process ensures high data quality. Accounts that were modified during validation get extra scrutiny to catch and correct any errors.</p>
+          </div>
+
+          <div class="mt-4 p-4 bg-yellow-50 border-l-4 border-yellow-400">
+            <p class="text-sm text-yellow-800"><strong>Note:</strong> The verification UI uses icon-based buttons: a checkmark (✓) to verify as accurate, and a slash-circle (⊘) to unverify. Verified accounts cannot be edited until they are first unverified.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Section 7: Un-completing Assignments -->
       <section id="uncompleting" class="mb-8">
-        <h2 class="text-2xl font-bold text-gray-900 mb-4">6. Un-completing Assignments</h2>
+        <h2 class="text-2xl font-bold text-gray-900 mb-4">7. Un-completing Assignments</h2>
         <div class="prose prose-sm max-w-none">
           <p class="text-gray-700 mb-4">If an assignment was completed prematurely or needs additional work, you can mark it as incomplete:</p>
 
@@ -179,9 +243,9 @@
         </div>
       </section>
 
-      <!-- Section 7: Managing Records -->
+      <!-- Section 8: Managing Records -->
       <section id="managing-records" class="mb-8">
-        <h2 class="text-2xl font-bold text-gray-900 mb-4">7. Managing System Records</h2>
+        <h2 class="text-2xl font-bold text-gray-900 mb-4">8. Managing System Records</h2>
         <div class="prose prose-sm max-w-none">
           <p class="text-gray-700 mb-4">As an admin, you can create and edit all types of records in the system:</p>
 
@@ -218,9 +282,9 @@
         </div>
       </section>
 
-      <!-- Section 8: FAQs -->
+      <!-- Section 9: FAQs -->
       <section id="faqs" class="mb-8">
-        <h2 class="text-2xl font-bold text-gray-900 mb-4">8. Frequently Asked Questions</h2>
+        <h2 class="text-2xl font-bold text-gray-900 mb-4">9. Frequently Asked Questions</h2>
         <div class="space-y-6">
           <div>
             <h3 class="text-lg font-semibold text-gray-900 mb-2">Q: How many assignments should I give each researcher?</h3>

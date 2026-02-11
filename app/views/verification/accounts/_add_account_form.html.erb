@@ -1,5 +1,12 @@
-<div id="add-account-form-<%= channel_type.parameterize %>" class="px-5 py-3 bg-gray-50 border-t border-gray-200">
-  <% if local_assigns[:show_form] %>
+<div id="add-account-form-<%= channel_type.parameterize %>">
+  <div id="add-account-button-<%= channel_type.parameterize %>" class="px-5 py-3 bg-gray-50 border-t border-gray-200">
+    <!-- Add Account Button -->
+    <button type="button" onclick="showAddAccountForm('<%= channel_type.parameterize %>')" class="w-full px-4 py-2 text-sm text-purple-600 hover:text-purple-800 hover:bg-purple-50 rounded-md border border-purple-200 border-dashed">
+      + Add <%= channel_type %> Account
+    </button>
+  </div>
+
+  <div id="add-account-form-content-<%= channel_type.parameterize %>" class="hidden px-5 py-3 bg-gray-50 border-t border-gray-200">
     <!-- Add Account Form -->
     <%= form_with url: verification_accounts_path, method: :post, class: "space-y-3" do |f| %>
       <%= hidden_field_tag 'person_id', person.id %>
@@ -32,13 +39,8 @@
 
       <div class="flex gap-2">
         <button type="submit" class="px-4 py-2 bg-purple-600 text-white text-sm rounded-md hover:bg-purple-700">Add Account</button>
-        <button type="button" onclick="toggleAddAccountForm('<%= channel_type.parameterize %>')" class="px-4 py-2 text-gray-600 text-sm hover:bg-gray-100 rounded-md">Cancel</button>
+        <button type="button" onclick="hideAddAccountForm('<%= channel_type.parameterize %>')" class="px-4 py-2 text-gray-600 text-sm hover:bg-gray-100 rounded-md">Cancel</button>
       </div>
     <% end %>
-  <% else %>
-    <!-- Add Account Button -->
-    <button type="button" onclick="toggleAddAccountForm('<%= channel_type.parameterize %>')" class="w-full px-4 py-2 text-sm text-purple-600 hover:text-purple-800 hover:bg-purple-50 rounded-md border border-purple-200 border-dashed">
-      + Add <%= channel_type %> Account
-    </button>
-  <% end %>
+  </div>
 </div>

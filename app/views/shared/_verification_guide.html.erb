@@ -23,7 +23,7 @@
               </li>
               <li class="flex items-start gap-2">
                 <span class="text-blue-600 font-bold mt-0.5">3.</span>
-                <span><strong>Check account type</strong> - Is it <%= local_assigns[:channel_type] || 'campaign' %>? (Campaign vs. Official accounts serve different purposes)</span>
+                <span><strong>Check account type</strong> - Verify it belongs in the correct category (Campaign, Official Office, or Personal)</span>
               </li>
               <li class="flex items-start gap-2">
                 <span class="text-blue-600 font-bold mt-0.5">4.</span>
@@ -37,17 +37,26 @@
           </div>
 
           <div class="grid gap-3 text-sm">
-            <div class="bg-white rounded-lg p-3 border border-blue-100">
-              <h5 class="font-semibold text-gray-900 mb-1.5">✓ If Account is Correct:</h5>
-              <p class="text-gray-700">Click <span class="px-2 py-0.5 bg-green-100 text-green-700 rounded text-xs font-medium">Verify</span> button</p>
+            <div class="bg-white rounded-lg p-3 border border-green-100">
+              <h5 class="font-semibold text-gray-900 mb-1.5 flex items-center gap-1">
+                <svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                If Account is Correct:
+              </h5>
+              <p class="text-gray-700">Click the checkmark icon (✓) to verify as accurate</p>
             </div>
-            <div class="bg-white rounded-lg p-3 border border-blue-100">
+            <div class="bg-white rounded-lg p-3 border border-purple-100">
               <h5 class="font-semibold text-gray-900 mb-1.5">✏️ If Account Needs Editing:</h5>
-              <p class="text-gray-700">Click <span class="text-blue-600 font-medium">Edit</span>, fix the URL/handle, then verify</p>
+              <p class="text-gray-700 mb-1.5">Click <span class="text-purple-600 font-medium">Edit</span>, update the URL, then click <span class="px-2 py-0.5 bg-purple-600 text-white rounded text-xs font-medium">Save</span></p>
+              <p class="text-purple-700 text-xs"><strong>Note:</strong> Editing an account will mark it for secondary verification to ensure accuracy.</p>
             </div>
-            <div class="bg-white rounded-lg p-3 border border-yellow-100">
+            <div class="bg-white rounded-lg p-3 border border-gray-200">
               <h5 class="font-semibold text-gray-900 mb-1.5">⚠️ If Account Doesn't Exist:</h5>
-              <p class="text-gray-700">Click <span class="px-2 py-0.5 bg-gray-200 text-gray-600 rounded text-xs font-medium">Mark Not Found</span>, then click <span class="px-2 py-0.5 bg-green-100 text-green-700 rounded text-xs font-medium">Verify</span> to confirm this platform has no account</p>
+              <p class="text-gray-700 mb-1.5">Click <span class="px-2 py-0.5 bg-gray-200 text-gray-700 rounded text-xs font-medium">Mark Not Found</span>, then click the checkmark (✓) to verify the platform has no account</p>
+              <p class="text-gray-600 text-xs"><strong>Tip:</strong> If you previously entered a URL by mistake, it will be saved in case you need to restore it.</p>
+            </div>
+            <div class="bg-white rounded-lg p-3 border border-orange-100">
+              <h5 class="font-semibold text-gray-900 mb-1.5">🔄 To Unverify an Account:</h5>
+              <p class="text-gray-700">Click the slash-through circle icon (⊘) to unverify, then you can edit it</p>
             </div>
           </div>
 
@@ -57,8 +66,24 @@
                 <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
               </svg>
               <div class="text-sm text-amber-900">
-                <strong>Campaign vs. Official:</strong>
-                <span class="text-amber-800">Campaign accounts are for election runs (e.g., "@SmithForSenate"). Official accounts are for current officeholders (e.g., "@SenSmith"). Make sure you're verifying the correct type for this assignment.</span>
+                <strong>Account Types:</strong>
+                <ul class="mt-1 space-y-1 text-amber-800">
+                  <li><strong>Campaign:</strong> Accounts used for election runs (e.g., "@SmithForSenate")</li>
+                  <li><strong>Official Office:</strong> Accounts for current officeholders (e.g., "@SenSmith")</li>
+                  <li><strong>Personal:</strong> Personal accounts not affiliated with campaigns or office</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-purple-50 border border-purple-200 rounded-lg p-3">
+            <div class="flex gap-2">
+              <svg class="w-5 h-5 text-purple-600 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+              </svg>
+              <div class="text-sm text-purple-900">
+                <strong>Secondary Verification:</strong>
+                <span class="text-purple-800">When you modify an account's data (change URL or mark as not found), it will be flagged for secondary verification by another team member. This ensures data quality through a two-person verification process.</span>
               </div>
             </div>
           </div>

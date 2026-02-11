@@ -28,6 +28,7 @@ class SocialMediaAccount < ApplicationRecord
   scope :pre_populated, -> { where(pre_populated: true) }
   scope :needs_research, -> { where(research_status: 'not_started', pre_populated: true) }
   scope :needs_verification, -> { where(research_status: %w[entered not_found revised]) }
+  scope :needs_secondary_verification, -> { where(needs_secondary_verification: true) }
   scope :core_platforms, -> { where(platform: CORE_PLATFORMS) }
   scope :fringe_platforms, -> { where(platform: FRINGE_PLATFORMS) }
 
@@ -40,22 +41,30 @@ class SocialMediaAccount < ApplicationRecord
   end
 
   def mark_entered!(user, url: nil, handle: nil)
+    # Check if this is a modification (URL changed from existing value)
+    is_modification = persisted? && (self.url != url || self.research_status == 'verified')
+
     update!(
       url: url,
       handle: handle,
       entered_by: user,
       entered_at: Time.current,
-      research_status: 'entered'
+      research_status: 'entered',
+      modified_during_validation: is_modification || modified_during_validation
     )
   end
 
   def mark_not_found!(user)
+    # Check if this is a modification (had URL before, or was verified)
+    is_modification = url.present? || research_status == 'verified'
+
     update!(
       url: nil,
       handle: nil,
       entered_by: user,
       entered_at: Time.current,
-      research_status: 'not_found'
+      research_status: 'not_found',
+      modified_during_validation: is_modification || modified_during_validation
     )
   end
 
@@ -118,6 +127,11 @@ class SocialMediaAccount < ApplicationRecord
   # Helper to check if this account needs verification
   def needs_verification?
     research_status.in?(%w[entered not_found revised])
+  end
+
+  # Clear secondary verification flag (called during secondary verification)
+  def clear_secondary_verification!
+    update!(needs_secondary_verification: false, modified_during_validation: false)
   end
 
   # Get version count for display

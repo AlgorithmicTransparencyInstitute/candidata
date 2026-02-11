@@ -32,6 +32,10 @@ module Verification
       end
 
       @assignment.complete!
+
+      # Check if any accounts were modified during validation and mark for secondary verification
+      @assignment.person.mark_for_secondary_verification_if_needed!
+
       redirect_to verification_queue_path, notice: "Verification completed!"
     end
 

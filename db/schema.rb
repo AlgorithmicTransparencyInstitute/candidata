@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_02_10_132750) do
+ActiveRecord::Schema[8.0].define(version: 2026_02_11_131957) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pg_stat_statements"
@@ -292,8 +292,10 @@ ActiveRecord::Schema[8.0].define(version: 2026_02_10_132750) do
     t.string "website_personal"
     t.string "airtable_id"
     t.string "wikipedia_id"
+    t.boolean "needs_secondary_verification", default: false, null: false
     t.index ["airtable_id"], name: "index_people_on_airtable_id", unique: true
     t.index ["first_name", "last_name"], name: "index_people_on_first_name_and_last_name"
+    t.index ["needs_secondary_verification"], name: "index_people_on_needs_secondary_verification"
     t.index ["party_affiliation_id"], name: "index_people_on_party_affiliation_id"
     t.index ["person_uuid"], name: "index_people_on_person_uuid", unique: true
     t.index ["state_of_residence"], name: "index_people_on_state_of_residence"
@@ -333,6 +335,8 @@ ActiveRecord::Schema[8.0].define(version: 2026_02_10_132750) do
     t.boolean "researcher_verified", default: false, null: false
     t.text "research_notes"
     t.string "validation_source"
+    t.boolean "modified_during_validation", default: false, null: false
+    t.boolean "needs_secondary_verification", default: false, null: false
     t.index ["airtable_id"], name: "index_social_media_accounts_on_airtable_id", unique: true
     t.index ["channel_type"], name: "index_social_media_accounts_on_channel_type"
     t.index ["entered_by_id"], name: "index_social_media_accounts_on_entered_by_id"
