@@ -66,9 +66,9 @@
               <span class="absolute bottom-full right-0 mb-1 px-2 py-1 text-xs bg-gray-900 text-white rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">Verify as accurate</span>
             <% end %>
           <% else %>
-            <%= button_to unverify_verification_account_path(account), method: :patch, class: "p-1.5 rounded hover:bg-orange-100 text-orange-600 hover:text-orange-700 transition-colors group relative", title: "Unverify to edit", data: { confirm: "Unverify this account to make changes?" } do %>
+            <%= button_to unverify_verification_account_path(account), method: :patch, class: "p-1.5 rounded hover:bg-gray-100 text-gray-500 hover:text-gray-700 transition-colors group relative", title: "Unverify to edit", data: { confirm: "Unverify this account to make changes?" } do %>
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z"/>
               </svg>
               <span class="absolute bottom-full right-0 mb-1 px-2 py-1 text-xs bg-gray-900 text-white rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">Unverify to edit</span>
             <% end %>
