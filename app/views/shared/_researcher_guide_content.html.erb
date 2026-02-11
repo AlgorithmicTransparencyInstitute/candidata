@@ -62,12 +62,13 @@
             <li><strong>Check that it's the correct account type</strong> (Campaign vs. Official - see below)</li>
             <li><strong>Choose an action</strong>:
               <ul class="list-disc list-inside ml-6 mt-2 space-y-1">
-                <li><span class="text-green-600 font-medium">Verify</span> - Account is correct as entered</li>
-                <li><span class="text-blue-600 font-medium">Edit & Verify</span> - Account exists but URL/handle needs correction (click Edit to fix, then verify)</li>
+                <li><span class="text-green-600 font-medium">Verify</span> - Account is correct as entered, click the verify button and you're done</li>
+                <li><span class="text-blue-600 font-medium">Edit & Verify</span> - Account exists but URL needs correction (click Edit to fix, then verify)</li>
+                <li><span class="text-purple-600 font-medium">Add</span> - The system shows no account, but when you tried to confirm no such account exists, you actually found one. In this case add it, save it, and then click verify (another researcher will double check your work later)</li>
                 <li><span class="text-yellow-600 font-medium">Mark Not Found</span> - You couldn't locate an account for this platform</li>
               </ul>
             </li>
-            <li><strong>Click "Complete Assignment"</strong> when all accounts have been reviewed</li>
+            <li><strong>Click "Mark Complete"</strong> when all accounts have been reviewed</li>
           </ol>
 
           <div class="bg-blue-50 border-l-4 border-blue-500 p-4 mt-4">
@@ -110,9 +111,8 @@
             <li><strong>When you find an account</strong>:
               <ul class="list-disc list-inside ml-6 mt-2 space-y-1">
                 <li>Copy the clean URL (see URL formatting section)</li>
-                <li>Copy the handle/username</li>
-                <li>Click "Mark as Entered"</li>
-                <li>Paste the URL and handle</li>
+                <li>Click "Add Data" or "Edit"</li>
+                <li>Paste the URL</li>
                 <li>Add any relevant notes</li>
               </ul>
             </li>
@@ -268,6 +268,25 @@
               <li><span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">Official</span> - Find their official office account</li>
               <li><span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">Personal</span> - Find their personal account (rare)</li>
             </ul>
+            <div class="mt-4 p-3 bg-blue-50 rounded border border-blue-200">
+              <p class="text-xs text-blue-800"><strong>Note:</strong> Official accounts only exist for sitting incumbents, but everyone can have a campaign account.</p>
+            </div>
+          </div>
+
+          <div class="mt-6 bg-yellow-50 border-l-4 border-yellow-400 p-4">
+            <div class="flex">
+              <div class="flex-shrink-0">
+                <svg class="h-5 w-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+                </svg>
+              </div>
+              <div class="ml-3">
+                <h3 class="text-sm font-medium text-yellow-800">Personal vs. Campaign Accounts for Challengers</h3>
+                <div class="mt-2 text-sm text-yellow-700">
+                  <p>If you're researching a challenger and find what appears to be a personal account (e.g., @JohnSmith), but the majority of their recent posts on Twitter/YouTube/Instagram are about their campaign, consider it a campaign account. Record it and add a note that we should look at it closely during secondary verification.</p>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -392,7 +411,7 @@
 
         <div class="prose max-w-none space-y-4">
           <p class="text-gray-700">
-            Always use multiple methods to verify an account belongs to the correct person. Here are the most reliable techniques:
+            Always <strong>exhaust multiple methods</strong> to verify an account belongs to the correct person. This is especially critical before marking an account as "not found"—try every available technique to ensure you haven't missed anything. Here are the most reliable techniques:
           </p>
 
           <div class="space-y-6 mt-6">
