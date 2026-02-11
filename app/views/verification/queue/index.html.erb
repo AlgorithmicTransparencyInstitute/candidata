@@ -35,11 +35,12 @@
                   <%= assignment.person.state_of_residence || "Unknown state" %>
                 </div>
                 <div class="text-sm text-gray-500 mt-1">
-                  <% needs_verification = assignment.person.social_media_accounts.campaign.core_platforms.needs_verification.count %>
-                  <% if needs_verification > 0 %>
-                    <span class="text-orange-600"><%= needs_verification %> accounts need verification</span>
+                  <% total_accounts = assignment.person.social_media_accounts.campaign.core_platforms.count %>
+                  <% verified_accounts = assignment.person.social_media_accounts.campaign.core_platforms.verified.count %>
+                  <% if verified_accounts == total_accounts %>
+                    <span class="text-green-600">All <%= total_accounts %> accounts verified</span>
                   <% else %>
-                    <span class="text-green-600">All accounts verified</span>
+                    <span class="text-orange-600"><%= verified_accounts %>/<%= total_accounts %> accounts verified</span>
                   <% end %>
                 </div>
               </div>
