@@ -64,11 +64,10 @@ module Verification
       # This allows editing AND verifying in one action
       # Update the data
       url_changed = @account.url != account_params[:url]
-      handle_changed = @account.handle != account_params[:handle]
 
-      if url_changed || handle_changed
+      if url_changed
         @account.url = account_params[:url]
-        @account.handle = account_params[:handle]
+        @account.handle = nil
       end
 
       # Mark as verified with validation source
@@ -89,14 +88,13 @@ module Verification
 
     def mark_entered
       url = params[:url]&.strip
-      handle = params[:handle]&.strip
 
-      if url.blank? && handle.blank?
-        redirect_to verification_assignment_path(@assignment), alert: "Please provide a URL or handle."
+      if url.blank?
+        redirect_to verification_assignment_path(@assignment), alert: "Please provide a URL."
         return
       end
 
-      @account.mark_entered!(current_user, url: url, handle: handle)
+      @account.mark_entered!(current_user, url: url, handle: nil)
 
       respond_to do |format|
         format.turbo_stream
@@ -192,7 +190,7 @@ module Verification
     end
 
     def create_account_params
-      params.require(:social_media_account).permit(:platform, :channel_type, :url, :handle, :research_notes)
+      params.require(:social_media_account).permit(:platform, :channel_type, :url, :research_notes)
     end
 
     def verify_assignment_for_create

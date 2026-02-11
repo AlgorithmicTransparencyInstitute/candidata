@@ -1,2 +1,2 @@
-<%= turbo_stream.prepend "#{@account.channel_type.parameterize}-accounts-list", partial: "verification/accounts/account_row", locals: { account: @account, assignment: @assignment } %>
-<%= turbo_stream.replace "add-account-form-#{@account.channel_type.parameterize}", partial: "verification/accounts/add_account_button", locals: { person: @person, channel_type: @account.channel_type } %>
+<%= turbo_stream.prepend "#{@account.channel_type.parameterize}-accounts-list", partial: "verification/accounts/account_row", locals: { account: @account } %>
+<%= turbo_stream.replace "add-account-form-#{@account.channel_type.parameterize}", partial: "verification/accounts/add_account_form", locals: { person: @person, channel_type: @account.channel_type, show_form: false } %>
