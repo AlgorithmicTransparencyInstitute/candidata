@@ -119,6 +119,15 @@ module Admin
       when 'no_secondary_verification'
         assigned_ids = Assignment.where(task_type: 'secondary_verification').select(:person_id)
         @people = @people.where.not(id: assigned_ids)
+      when 'has_collection'
+        assigned_ids = Assignment.where(task_type: 'data_collection').select(:person_id)
+        @people = @people.where(id: assigned_ids)
+      when 'has_validation'
+        assigned_ids = Assignment.where(task_type: 'data_validation').select(:person_id)
+        @people = @people.where(id: assigned_ids)
+      when 'has_secondary_verification'
+        assigned_ids = Assignment.where(task_type: 'secondary_verification').select(:person_id)
+        @people = @people.where(id: assigned_ids)
       when 'needs_secondary_verification'
         @people = @people.needs_secondary_verification
       end
