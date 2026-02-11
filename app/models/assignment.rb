@@ -1,7 +1,7 @@
 class Assignment < ApplicationRecord
   has_paper_trail
 
-  TASK_TYPES = %w[data_collection data_validation].freeze
+  TASK_TYPES = %w[data_collection data_validation secondary_verification].freeze
   STATUSES = %w[pending in_progress completed].freeze
 
   belongs_to :user
@@ -17,6 +17,7 @@ class Assignment < ApplicationRecord
   scope :completed, -> { where(status: 'completed') }
   scope :data_collection, -> { where(task_type: 'data_collection') }
   scope :data_validation, -> { where(task_type: 'data_validation') }
+  scope :secondary_verification, -> { where(task_type: 'secondary_verification') }
   scope :for_user, ->(user) { where(user: user) }
   scope :active, -> { where(status: %w[pending in_progress]) }
 

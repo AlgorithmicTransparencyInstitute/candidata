@@ -98,6 +98,16 @@
                       <div class="text-xs text-gray-500">Verify collected accounts</div>
                     </div>
                   </label>
+                  <label class="flex items-center gap-3 p-3 rounded-lg border-2 cursor-pointer transition-colors task-type-option
+                    <%= @task_type == 'secondary_verification' ? 'border-orange-500 bg-orange-50' : 'border-gray-200 hover:border-gray-300' %>">
+                    <input type="radio" name="task_type" value="secondary_verification"
+                           class="text-orange-600 focus:ring-orange-500"
+                           <%= 'checked' if @task_type == 'secondary_verification' %>>
+                    <div>
+                      <div class="font-medium text-gray-900 text-sm">Secondary Verification</div>
+                      <div class="text-xs text-gray-500">Re-verify modified accounts</div>
+                    </div>
+                  </label>
                 </div>
               </div>
             </div>
@@ -223,7 +233,9 @@
                         ['All People', ''],
                         ['Unassigned (no tasks)', 'unassigned'],
                         ['No Data Collection', 'no_collection'],
-                        ['No Data Validation', 'no_validation']
+                        ['No Data Validation', 'no_validation'],
+                        ['No Secondary Verification', 'no_secondary_verification'],
+                        ['Needs Secondary Verification', 'needs_secondary_verification']
                       ], params[:assignment_filter]),
                       class: "w-full rounded text-xs border-gray-300", onchange: "applyFilters()", id: "assignment_filter" %>
                 </div>
@@ -267,6 +279,7 @@
                 <option value="">All people</option>
                 <option value="no-collection">No pending collection</option>
                 <option value="no-validation">No pending validation</option>
+                <option value="no-secondary">No pending secondary verification</option>
                 <option value="no-pending">No pending (any)</option>
               </select>
             </div>
@@ -277,6 +290,7 @@
                   <% existing_assignments = person.assignments.select { |a| %w[pending in_progress].include?(a.status) } %>
                   <% has_collection = existing_assignments.any? { |a| a.task_type == 'data_collection' } %>
                   <% has_validation = existing_assignments.any? { |a| a.task_type == 'data_validation' } %>
+                  <% has_secondary = existing_assignments.any? { |a| a.task_type == 'secondary_verification' } %>
                   <%
                     current_oh = person.officeholders.detect { |oh| oh.end_date.nil? }
                     candidate_2026 = person.candidates.joins(:contest).where('contests.date >= ?', Date.new(2026, 1, 1)).first
@@ -287,7 +301,8 @@
                   <label class="px-4 py-2 flex items-center gap-3 hover:bg-gray-50 cursor-pointer person-item"
                          data-name="<%= person.full_name.downcase %>"
                          data-has-collection="<%= has_collection %>"
-                         data-has-validation="<%= has_validation %>">
+                         data-has-validation="<%= has_validation %>"
+                         data-has-secondary="<%= has_secondary %>">
                     <input type="checkbox" name="person_ids[]" value="<%= person.id %>"
                            class="person-checkbox rounded border-gray-300 text-indigo-600">
 
@@ -326,9 +341,20 @@
 
                     <div class="flex items-center gap-2 shrink-0">
                       <% existing_assignments.each do |a| %>
-                        <span class="px-2 py-0.5 text-xs rounded-full
-                          <%= a.task_type == 'data_collection' ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700' %>">
-                          <%= a.task_type == 'data_collection' ? 'DC' : 'DV' %>
+                        <% badge_class = case a.task_type
+                          when 'data_collection' then 'bg-blue-100 text-blue-700'
+                          when 'data_validation' then 'bg-purple-100 text-purple-700'
+                          when 'secondary_verification' then 'bg-orange-100 text-orange-700'
+                          else 'bg-gray-100 text-gray-700'
+                        end %>
+                        <% badge_text = case a.task_type
+                          when 'data_collection' then 'DC'
+                          when 'data_validation' then 'DV'
+                          when 'secondary_verification' then 'SV'
+                          else 'UN'
+                        end %>
+                        <span class="px-2 py-0.5 text-xs rounded-full <%= badge_class %>">
+                          <%= badge_text %>
                         </span>
                       <% end %>
                       <% if existing_assignments.empty? %>
@@ -396,7 +422,12 @@
     if (summary) {
       if (checked > 0 && researcher && taskType) {
         const name = researcher.closest('label').querySelector('.font-medium').textContent.trim();
-        const type = taskType.value === 'data_collection' ? 'Data Collection' : 'Data Validation';
+        const typeMap = {
+          'data_collection': 'Data Collection',
+          'data_validation': 'Data Validation',
+          'secondary_verification': 'Secondary Verification'
+        };
+        const type = typeMap[taskType.value] || taskType.value;
         summary.textContent = `Assign ${checked} ${checked === 1 ? 'person' : 'people'} to ${name} for ${type}`;
       } else {
         summary.textContent = '';
@@ -430,6 +461,7 @@
       const name = item.dataset.name;
       const hasCollection = item.dataset.hasCollection === 'true';
       const hasValidation = item.dataset.hasValidation === 'true';
+      const hasSecondary = item.dataset.hasSecondary === 'true';
 
       let matchesSearch = !searchTerm || name.includes(searchTerm);
       let matchesFilter = true;
@@ -438,8 +470,10 @@
         matchesFilter = !hasCollection;
       } else if (filterValue === 'no-validation') {
         matchesFilter = !hasValidation;
+      } else if (filterValue === 'no-secondary') {
+        matchesFilter = !hasSecondary;
       } else if (filterValue === 'no-pending') {
-        matchesFilter = !hasCollection && !hasValidation;
+        matchesFilter = !hasCollection && !hasValidation && !hasSecondary;
       }
 
       item.style.display = (matchesSearch && matchesFilter) ? '' : 'none';
@@ -487,15 +521,17 @@
   document.querySelectorAll('input[name="task_type"]').forEach(radio => {
     radio.addEventListener('change', function() {
       document.querySelectorAll('.task-type-option').forEach(opt => {
-        opt.classList.remove('border-blue-500', 'bg-blue-50', 'border-purple-500', 'bg-purple-50');
+        opt.classList.remove('border-blue-500', 'bg-blue-50', 'border-purple-500', 'bg-purple-50', 'border-orange-500', 'bg-orange-50');
         opt.classList.add('border-gray-200');
       });
       const label = this.closest('label');
       label.classList.remove('border-gray-200');
       if (this.value === 'data_collection') {
         label.classList.add('border-blue-500', 'bg-blue-50');
-      } else {
+      } else if (this.value === 'data_validation') {
         label.classList.add('border-purple-500', 'bg-purple-50');
+      } else if (this.value === 'secondary_verification') {
+        label.classList.add('border-orange-500', 'bg-orange-50');
       }
       updateSubmitButton();
     });

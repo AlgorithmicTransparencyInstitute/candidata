@@ -116,6 +116,11 @@ module Admin
       when 'no_validation'
         assigned_ids = Assignment.where(task_type: 'data_validation').select(:person_id)
         @people = @people.where.not(id: assigned_ids)
+      when 'no_secondary_verification'
+        assigned_ids = Assignment.where(task_type: 'secondary_verification').select(:person_id)
+        @people = @people.where.not(id: assigned_ids)
+      when 'needs_secondary_verification'
+        @people = @people.needs_secondary_verification
       end
 
       @people = @people.page(params[:page]).per(50)
