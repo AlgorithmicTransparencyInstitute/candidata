@@ -2,7 +2,7 @@ require 'csv'
 
 module Importers
   class EnhancedCandidate2026Importer
-    PRIMARY_DATE = Date.new(2026, 3, 4) # Default primary date (will vary by state)
+    FALLBACK_PRIMARY_DATE = Date.new(2026, 3, 4) # Fallback if no Election found
     CORE_PLATFORMS = ['Facebook', 'Twitter', 'Instagram', 'YouTube', 'TikTok', 'BlueSky'].freeze
 
     def initialize(csv_path)
@@ -20,6 +20,7 @@ module Importers
         errors: []
       }
       @ballot_cache = {}
+      @election_cache = {}
     end
 
     def import
@@ -128,20 +129,21 @@ module Importers
     end
 
     def match_existing_person(name, state, is_incumbent)
-      # For incumbents, try harder to match
-      if is_incumbent
-        # Try exact match on full name in same state
-        name_parts = parse_name(name)
-        return nil unless name_parts
+      name_parts = parse_name(name)
+      return nil unless name_parts
 
-        Person.where(state_of_residence: state)
-              .where("LOWER(first_name) = ? AND LOWER(last_name) = ?",
-                     name_parts[:first].downcase,
-                     name_parts[:last].downcase)
-              .first
+      matches = Person.where(state_of_residence: state)
+                      .where("LOWER(first_name) = ? AND LOWER(last_name) = ?",
+                             name_parts[:first].downcase,
+                             name_parts[:last].downcase)
+
+      if is_incumbent
+        # For incumbents, take the first match (likely from govproj)
+        matches.first
       else
-        # For non-incumbents, don't auto-match (too risky)
-        nil
+        # For non-incumbents, only match if there's exactly one result
+        # to avoid false matches on common names
+        matches.count == 1 ? matches.first : nil
       end
     end
 
@@ -292,6 +294,10 @@ module Importers
       end
     end
 
+    def find_election_for_state(state)
+      @election_cache[state] ||= Election.find_by(state: state, election_type: 'primary', year: 2026)
+    end
+
     def find_or_create_ballot(row)
       state = row['state']
       party = row['party']
@@ -303,14 +309,28 @@ module Importers
         return @ballot_cache[cache_key].reload
       end
 
+      # Look up the Election for this state to get correct date and link
+      election = find_election_for_state(state)
+      primary_date = election&.date || FALLBACK_PRIMARY_DATE
+
+      if election.nil?
+        puts "⚠️  No Election found for #{state} — using fallback date #{FALLBACK_PRIMARY_DATE}"
+      end
+
       ballot = Ballot.find_or_create_by!(
         state: state,
-        date: PRIMARY_DATE,
+        date: primary_date,
         election_type: 'primary',
         party: party
       ) do |b|
         b.year = 2026
         b.name = "2026 #{state} #{party} Primary"
+        b.election_id = election&.id
+      end
+
+      # Ensure election_id is set even if ballot already existed
+      if ballot.election_id.nil? && election
+        ballot.update!(election_id: election.id)
       end
 
       if ballot.previously_new_record?
@@ -323,9 +343,12 @@ module Importers
       ballot
     rescue ActiveRecord::RecordInvalid => e
       # If creation failed, try to find it (might have been created by another process)
+      election = find_election_for_state(state)
+      primary_date = election&.date || FALLBACK_PRIMARY_DATE
+
       ballot = Ballot.find_by!(
         state: state,
-        date: PRIMARY_DATE,
+        date: primary_date,
         election_type: 'primary',
         party: party
       )
@@ -387,7 +410,7 @@ module Importers
         contest_type: 'primary',
         party: row['party']
       ) do |c|
-        c.date = PRIMARY_DATE
+        c.date = ballot.date
         c.location = row['state']
       end
 

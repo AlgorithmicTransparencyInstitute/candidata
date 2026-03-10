@@ -68,7 +68,11 @@ class User < ApplicationRecord
     require 'open-uri'
     begin
       # Purge old avatar if exists to replace with new one
-      avatar.purge if avatar.attached?
+      begin
+        avatar.purge if avatar.attached?
+      rescue => e
+        Rails.logger.warn "Failed to purge old avatar: #{e.message}"
+      end
 
       downloaded_image = URI.open(url)
       avatar.attach(
@@ -76,8 +80,8 @@ class User < ApplicationRecord
         filename: "avatar_#{id}.jpg",
         content_type: downloaded_image.content_type
       )
-    rescue OpenURI::HTTPError, SocketError => e
-      Rails.logger.warn "Failed to download avatar: #{e.message}"
+    rescue OpenURI::HTTPError, SocketError, StandardError => e
+      Rails.logger.warn "Failed to download/attach avatar: #{e.message}"
     end
   end
 
