@@ -65,14 +65,26 @@ class JunkipediaService
 
   # Add a single component (social media account) to a list
   # component_id is the handle, URL, or platform-specific identifier
-  def add_component(list_id:, component_id:)
+  # Retries on transient network errors
+  def add_component(list_id:, component_id:, retries: 3)
     body = { component_id: component_id }
-    response = self.class.post(
-      "/lists/#{list_id}/add_component",
-      headers: @headers,
-      body: body.to_json
-    )
-    handle_response(response, "add component '#{component_id}' to list #{list_id}")
+    attempts = 0
+    begin
+      attempts += 1
+      response = self.class.post(
+        "/lists/#{list_id}/add_component",
+        headers: @headers,
+        body: body.to_json,
+        timeout: 30
+      )
+      handle_response(response, "add component '#{component_id}' to list #{list_id}")
+    rescue Net::OpenTimeout, Net::ReadTimeout, Errno::ECONNRESET, Errno::ECONNREFUSED => e
+      if attempts <= retries
+        sleep(2 ** attempts)
+        retry
+      end
+      raise JunkipediaError, "Network error adding '#{component_id}' to list #{list_id} after #{retries} retries: #{e.message}"
+    end
   end
 
   # Remove a component from a list
