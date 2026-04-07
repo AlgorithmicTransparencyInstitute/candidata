@@ -77,6 +77,7 @@ The import service will:
 ## Documentation
 
 - [2026 Candidate Management Plan](docs/2026_CANDIDATE_MANAGEMENT_PLAN.md) - Implementation plan for admin/researcher workflow
+- [Junkipedia Integration](docs/JUNKIPEDIA_INTEGRATION.md) - Pushing social media accounts to Junkipedia for post collection
 - [Temp Data Analysis Report](docs/TEMP_DATA_ANALYSIS.md) - Analysis of staging tables with 2024 election data
 - [Rails 8 Upgrade](docs/RAILS_8_UPGRADE.md) - Rails 7.2 → 8.0 upgrade process and compatibility changes
 
