@@ -7,7 +7,7 @@ class Contest < ApplicationRecord
   has_many :people, through: :candidates
 
   CONTEST_TYPES = %w[primary general special runoff].freeze
-  PARTIES = %w[Democratic Republican Libertarian Independent].freeze + ['Working Class']
+  PARTIES = %w[Democratic Republican Libertarian Independent Nonpartisan].freeze + ['Working Class', 'Legal Marijuana NOW']
 
   validates :date, presence: true
   validates :contest_type, presence: true, inclusion: { in: CONTEST_TYPES }

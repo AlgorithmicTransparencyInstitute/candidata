@@ -256,6 +256,20 @@ module Importers
           # CSV has data → create real account
           handle = extract_handle_from_url(url, platform)
 
+          # Check for existing account with same handle (may exist from prior imports)
+          existing_by_handle = handle.present? ? SocialMediaAccount.find_by(
+            person: person,
+            platform: platform,
+            handle: handle
+          ) : nil
+
+          if existing_by_handle
+            # Update existing account with campaign info if needed
+            existing_by_handle.update(channel_type: 'Campaign', url: url) if existing_by_handle.channel_type != 'Campaign'
+            @stats[:accounts_with_data] += 1
+            next
+          end
+
           SocialMediaAccount.create!(
             person: person,
             platform: platform,
