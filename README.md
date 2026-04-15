@@ -76,6 +76,7 @@ The import service will:
 
 ## Documentation
 
+- [2026 Candidate CSV Import](docs/CANDIDATE_CSV_IMPORT.md) - Pipeline for cleaning and importing candidate data from researcher spreadsheets
 - [2026 Candidate Management Plan](docs/2026_CANDIDATE_MANAGEMENT_PLAN.md) - Implementation plan for admin/researcher workflow
 - [Junkipedia Integration](docs/JUNKIPEDIA_INTEGRATION.md) - Pushing social media accounts to Junkipedia for post collection
 - [Temp Data Analysis Report](docs/TEMP_DATA_ANALYSIS.md) - Analysis of staging tables with 2024 election data
