@@ -162,6 +162,34 @@ In development, use `letter_opener` to preview emails in browser instead of send
 - **42,780 Officeholders** - From GovProj current officials dataset
 - **66,036 Social Media Accounts** - Tracked across 10 platforms
 
+## 2026 Candidate CSV Import Workflow
+
+New candidate data arrives as Excel-exported CSVs organized by state. The import pipeline is:
+
+1. **Raw CSVs** go in `data/2026_states/<batch-folder>/` (e.g., `april15-states/`)
+2. **Cleaning script** (`lib/scripts/clean_<batch>_states_2026.rb`) standardizes parties, names, URLs, race, gender into `data/2026_states/cleaned/{STATE}_candidates_cleaned.csv`
+3. **Rake task** (`lib/tasks/import_<batch>_states_2026.rake`) runs the `EnhancedCandidate2026Importer` on cleaned CSVs
+4. **Test locally** against fresh production data before deploying
+
+```bash
+# Local testing workflow
+bin/rails import:clean_candidates_2026_<batch>
+dropdb candidata_development
+PATH="/opt/homebrew/opt/postgresql@17/bin:$PATH" heroku pg:pull DATABASE_URL candidata_development --app candidata
+bin/rails import:candidates_2026_<batch>
+
+# Production deployment
+git push origin main && git push heroku main
+heroku pg:backups:capture --app candidata     # ALWAYS backup first
+heroku run bin/rails import:candidates_2026_<batch> --app candidata
+```
+
+Key gotchas:
+- New parties must be added to `PARTIES` in both `app/models/ballot.rb` and `app/models/contest.rb`
+- pg:pull requires `PATH="/opt/homebrew/opt/postgresql@17/bin:$PATH"` prefix (local pg14 vs Heroku pg17)
+- Heroku pg:pull errors about `transaction_timeout` and `_heroku` schema are normal — data imports fine
+- See `docs/CANDIDATE_CSV_IMPORT.md` for full documentation including batch history
+
 ## Environment Variables
 
 Required for development:
