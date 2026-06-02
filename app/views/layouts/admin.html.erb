@@ -129,6 +129,12 @@
                 </svg>
                 <span class="hidden lg:inline">Accounts</span>
               <% end %>
+              <%= link_to admin_junkipedia_path, class: "group flex items-center justify-center lg:justify-start px-2 lg:px-3 py-2 text-sm font-medium rounded-md #{request.path.start_with?('/admin/junkipedia') ? 'bg-gray-800 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white'}", title: "Junkipedia Sync" do %>
+                <svg class="h-5 w-5 lg:mr-3 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+                </svg>
+                <span class="hidden lg:inline">Junkipedia Sync</span>
+              <% end %>
             </div>
           </div>
 

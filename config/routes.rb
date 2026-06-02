@@ -51,6 +51,11 @@ Rails.application.routes.draw do
       end
     end
     resources :social_media_accounts
+    get  'junkipedia',             to: 'junkipedia#index',        as: :junkipedia
+    post 'junkipedia/enqueue_all', to: 'junkipedia#enqueue_all',  as: :enqueue_all_junkipedia
+    post 'junkipedia/resolve_all', to: 'junkipedia#resolve_all',  as: :resolve_all_junkipedia
+    post 'junkipedia/:id/enqueue', to: 'junkipedia#enqueue',      as: :enqueue_junkipedia
+    post 'junkipedia/:id/resolve', to: 'junkipedia#resolve',      as: :resolve_junkipedia
     resources :users do
       collection do
         get :export_invitations

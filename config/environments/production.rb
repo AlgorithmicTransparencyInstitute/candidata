@@ -50,8 +50,11 @@ Rails.application.configure do
   # config.cache_store = :mem_cache_store
 
   # Replace the default in-process and non-durable queuing backend for Active Job.
-  # Use inline adapter to execute jobs synchronously (fixes devise_invitable email delivery)
-  config.active_job.queue_adapter = :inline
+  # :async runs jobs in an in-process thread pool so HTTP-bound jobs (e.g. Junkipedia
+  # enqueue on social-media verification) don't block the user's request.
+  # Note: jobs are lost on dyno restart — the admin Junkipedia dashboard exposes
+  # re-enqueue and re-resolve buttons to recover.
+  config.active_job.queue_adapter = :async
 
   # Raise delivery errors in production to catch issues early.
   config.action_mailer.raise_delivery_errors = true

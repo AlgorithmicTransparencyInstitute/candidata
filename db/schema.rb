@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_02_11_131957) do
+ActiveRecord::Schema[8.0].define(version: 2026_06_01_152936) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pg_stat_statements"
@@ -337,9 +337,15 @@ ActiveRecord::Schema[8.0].define(version: 2026_02_11_131957) do
     t.string "validation_source"
     t.boolean "modified_during_validation", default: false, null: false
     t.boolean "needs_secondary_verification", default: false, null: false
+    t.string "junkipedia_channel_id"
+    t.datetime "junkipedia_enqueued_at"
+    t.datetime "junkipedia_id_collected_at"
+    t.text "junkipedia_last_error"
     t.index ["airtable_id"], name: "index_social_media_accounts_on_airtable_id", unique: true
     t.index ["channel_type"], name: "index_social_media_accounts_on_channel_type"
     t.index ["entered_by_id"], name: "index_social_media_accounts_on_entered_by_id"
+    t.index ["junkipedia_channel_id"], name: "index_social_media_accounts_on_junkipedia_channel_id"
+    t.index ["junkipedia_enqueued_at"], name: "index_social_media_accounts_on_junkipedia_enqueued_at"
     t.index ["person_id", "platform", "handle"], name: "idx_social_accounts_unique", unique: true
     t.index ["person_id"], name: "index_social_media_accounts_on_person_id"
     t.index ["platform"], name: "index_social_media_accounts_on_platform"

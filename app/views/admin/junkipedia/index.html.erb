@@ -1,0 +1,145 @@
+<% content_for :title, "Junkipedia Sync" %>
+
+<div class="px-4 sm:px-6 lg:px-8 py-6">
+  <div class="sm:flex sm:items-center sm:justify-between">
+    <div>
+      <h1 class="text-2xl font-semibold text-gray-900">Junkipedia Sync</h1>
+      <p class="mt-1 text-sm text-gray-600">
+        Track which validated social media accounts have been pushed to Junkipedia and resolved to a channel ID.
+      </p>
+    </div>
+    <div class="mt-4 sm:mt-0 flex gap-2">
+      <%= button_to admin_enqueue_all_junkipedia_path, method: :post,
+            data: { turbo_confirm: "Enqueue all #{@counts[:pending]} pending verified accounts?" },
+            class: "inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50",
+            disabled: @counts[:pending].zero? || !@api_token_configured do %>
+        Enqueue all pending
+      <% end %>
+      <%= button_to admin_resolve_all_junkipedia_path, method: :post,
+            data: { turbo_confirm: "Re-resolve channel IDs for all #{@counts[:enqueued]} enqueued accounts?" },
+            class: "inline-flex items-center px-3 py-2 border border-gray-300 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50",
+            disabled: @counts[:enqueued].zero? || !@api_token_configured do %>
+        Resolve missing IDs
+      <% end %>
+    </div>
+  </div>
+
+  <% unless @api_token_configured %>
+    <div class="mt-4 rounded-md bg-yellow-50 p-4 border border-yellow-200">
+      <p class="text-sm text-yellow-800">
+        <strong>JUNKIPEDIA_API_TOKEN is not configured.</strong>
+        Auto-enqueue on verification is disabled and the bulk buttons above are inactive until the token is set in environment variables.
+      </p>
+    </div>
+  <% end %>
+
+  <% if @default_list_id.blank? %>
+    <div class="mt-2 rounded-md bg-blue-50 p-3 border border-blue-200">
+      <p class="text-sm text-blue-800">
+        Optional: set <code>JUNKIPEDIA_DEFAULT_LIST_ID</code> to also auto-add resolved channels to a Junkipedia list.
+      </p>
+    </div>
+  <% end %>
+
+  <dl class="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-5">
+    <% [
+      ['pending',  'Pending',           @counts[:pending],  'bg-yellow-100 text-yellow-800'],
+      ['enqueued', 'Enqueued (no ID)',  @counts[:enqueued], 'bg-blue-100 text-blue-800'],
+      ['synced',   'Synced',            @counts[:synced],   'bg-green-100 text-green-800'],
+      ['errored',  'Errored',           @counts[:errored],  'bg-red-100 text-red-800'],
+      ['all',      'Total eligible',    @counts[:eligible], 'bg-gray-100 text-gray-800']
+    ].each do |key, label, count, badge_class| %>
+      <%= link_to admin_junkipedia_path(filter: key),
+            class: "block rounded-lg border #{@filter == key ? 'border-indigo-500 ring-2 ring-indigo-200' : 'border-gray-200'} bg-white p-4 hover:bg-gray-50" do %>
+        <dt class="text-sm font-medium text-gray-500"><%= label %></dt>
+        <dd class="mt-1 text-2xl font-semibold text-gray-900"><%= number_with_delimiter(count) %></dd>
+        <dd class="mt-1"><span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium <%= badge_class %>"><%= key %></span></dd>
+      <% end %>
+    <% end %>
+  </dl>
+
+  <%= form_with url: admin_junkipedia_path, method: :get, local: true, class: "mt-6 flex flex-wrap gap-3 items-end" do |f| %>
+    <%= hidden_field_tag :filter, @filter %>
+    <div>
+      <%= f.label :platform, "Platform", class: "block text-xs font-medium text-gray-700" %>
+      <%= f.select :platform, [['All', '']] + @platforms.map { |p| [p, p] }, { selected: params[:platform] }, class: "mt-1 block rounded-md border-gray-300 text-sm" %>
+    </div>
+    <div>
+      <%= f.label :state, "State", class: "block text-xs font-medium text-gray-700" %>
+      <%= f.text_field :state, value: params[:state], placeholder: "e.g. IL", class: "mt-1 block rounded-md border-gray-300 text-sm" %>
+    </div>
+    <%= f.submit "Filter", class: "px-3 py-2 bg-gray-800 text-white text-sm rounded-md hover:bg-gray-700" %>
+    <% if params[:platform].present? || params[:state].present? %>
+      <%= link_to "Clear", admin_junkipedia_path(filter: @filter), class: "px-3 py-2 text-sm text-gray-600 hover:text-gray-900" %>
+    <% end %>
+  <% end %>
+
+  <div class="mt-6 overflow-hidden shadow ring-1 ring-black ring-opacity-5 rounded-lg">
+    <table class="min-w-full divide-y divide-gray-300">
+      <thead class="bg-gray-50">
+        <tr>
+          <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Person</th>
+          <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Platform</th>
+          <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">URL / Handle</th>
+          <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+          <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Enqueued</th>
+          <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Channel ID</th>
+          <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Last Error</th>
+          <th class="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+        </tr>
+      </thead>
+      <tbody class="bg-white divide-y divide-gray-200">
+        <% @accounts.each do |account| %>
+          <tr>
+            <td class="px-3 py-2 text-sm text-gray-900">
+              <%= link_to account.person.full_name, admin_person_path(account.person), class: "hover:underline" %>
+              <div class="text-xs text-gray-500"><%= account.person.state_of_residence %></div>
+            </td>
+            <td class="px-3 py-2 text-sm text-gray-700"><%= account.platform %></td>
+            <td class="px-3 py-2 text-sm text-gray-700 max-w-xs truncate" title="<%= account.url %>">
+              <% if account.url.present? %>
+                <%= link_to account.url, account.url, target: "_blank", rel: "noopener", class: "text-indigo-600 hover:underline" %>
+              <% else %>
+                <span class="text-gray-400">—</span>
+              <% end %>
+              <% if account.handle.present? %>
+                <div class="text-xs text-gray-500">@<%= account.handle %></div>
+              <% end %>
+            </td>
+            <td class="px-3 py-2 text-sm">
+              <% status = account.junkipedia_sync_status %>
+              <% badge = case status
+                         when :synced   then 'bg-green-100 text-green-800'
+                         when :enqueued then 'bg-blue-100 text-blue-800'
+                         else                'bg-yellow-100 text-yellow-800'
+                         end %>
+              <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium <%= badge %>"><%= status %></span>
+            </td>
+            <td class="px-3 py-2 text-xs text-gray-500"><%= account.junkipedia_enqueued_at&.strftime("%Y-%m-%d %H:%M") || "—" %></td>
+            <td class="px-3 py-2 text-xs font-mono text-gray-700"><%= account.junkipedia_channel_id || "—" %></td>
+            <td class="px-3 py-2 text-xs text-red-700 max-w-xs truncate" title="<%= account.junkipedia_last_error %>">
+              <%= account.junkipedia_last_error&.truncate(60) %>
+            </td>
+            <td class="px-3 py-2 text-right text-sm space-x-2">
+              <%= button_to "Re-enqueue", admin_enqueue_junkipedia_path(account.id), method: :post,
+                    class: "inline-flex items-center px-2 py-1 text-xs border border-gray-300 rounded hover:bg-gray-50" %>
+              <% if account.junkipedia_enqueued_at.present? %>
+                <%= button_to "Re-resolve", admin_resolve_junkipedia_path(account.id), method: :post,
+                      class: "inline-flex items-center px-2 py-1 text-xs border border-gray-300 rounded hover:bg-gray-50" %>
+              <% end %>
+            </td>
+          </tr>
+        <% end %>
+        <% if @accounts.empty? %>
+          <tr>
+            <td colspan="8" class="px-3 py-8 text-center text-sm text-gray-500">No accounts match this filter.</td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="mt-4">
+    <%= paginate @accounts %>
+  </div>
+</div>

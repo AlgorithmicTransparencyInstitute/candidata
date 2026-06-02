@@ -32,6 +32,19 @@ class SocialMediaAccount < ApplicationRecord
   scope :core_platforms, -> { where(platform: CORE_PLATFORMS) }
   scope :fringe_platforms, -> { where(platform: FRINGE_PLATFORMS) }
 
+  scope :junkipedia_eligible, -> {
+    where(platform: JunkipediaService::SUPPORTED_PLATFORMS, account_inactive: false)
+      .where.not(url: [nil, ''])
+  }
+  scope :junkipedia_pending, -> { junkipedia_eligible.where(junkipedia_enqueued_at: nil) }
+  scope :junkipedia_unresolved, -> {
+    junkipedia_eligible.where.not(junkipedia_enqueued_at: nil).where(junkipedia_channel_id: [nil, ''])
+  }
+  scope :junkipedia_synced, -> { where.not(junkipedia_channel_id: [nil, '']) }
+  scope :junkipedia_errored, -> { where.not(junkipedia_last_error: [nil, '']) }
+
+  after_commit :enqueue_to_junkipedia_on_verification, on: [:create, :update]
+
   def active?
     !account_inactive?
   end
@@ -143,6 +156,30 @@ class SocialMediaAccount < ApplicationRecord
   def has_revisions?
     versions.count > 1
   end
+
+  def junkipedia_eligible?
+    JunkipediaService.supported_platform?(platform) && url.present? && !account_inactive?
+  end
+
+  def junkipedia_sync_status
+    return :synced  if junkipedia_channel_id.present?
+    return :enqueued if junkipedia_enqueued_at.present?
+    :pending
+  end
+
+  private
+
+  def enqueue_to_junkipedia_on_verification
+    return if ENV['JUNKIPEDIA_API_TOKEN'].blank?
+    return unless verified?
+    return unless saved_change_to_verified? || (previously_new_record? && verified?)
+    return unless junkipedia_eligible?
+    return if junkipedia_enqueued_at.present?
+
+    EnqueueJunkipediaChannelJob.perform_later(id)
+  end
+
+  public
 
   def self.prepopulate_for_person!(person, platforms: CORE_PLATFORMS, channel_type: 'Campaign')
     platforms.each do |platform|
