@@ -59,6 +59,18 @@ module Admin
                   notice: "Scheduled channel ID resolution for #{ids.size} accounts."
     end
 
+    # Search Junkipedia for matches across all pending (un-enqueued) accounts.
+    # Records previously pushed via the rake tasks are already in Junkipedia, so
+    # search will find them instantly — they get marked synced without the
+    # slower POST /channels round trip. The unmatched remainder stays pending
+    # for the regular enqueue path.
+    def preflight_resolve_all
+      ids = SocialMediaAccount.junkipedia_pending.pluck(:id)
+      ids.each { |id| ResolveJunkipediaChannelIdJob.perform_later(id) }
+      redirect_to admin_junkipedia_path(filter: 'pending'),
+                  notice: "Scheduled Junkipedia channel search for #{ids.size} pending accounts. Matched accounts will move to Synced; the rest stay Pending."
+    end
+
     private
 
     def set_account

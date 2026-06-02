@@ -8,7 +8,13 @@
         Track which validated social media accounts have been pushed to Junkipedia and resolved to a channel ID.
       </p>
     </div>
-    <div class="mt-4 sm:mt-0 flex gap-2">
+    <div class="mt-4 sm:mt-0 flex flex-wrap gap-2">
+      <%= button_to admin_preflight_resolve_all_junkipedia_path, method: :post,
+            data: { turbo_confirm: "Search Junkipedia for matches across all #{@counts[:pending]} pending accounts? Matches get marked synced without the slower enqueue call." },
+            class: "inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50",
+            disabled: @counts[:pending].zero? || !@api_token_configured do %>
+        Match existing channels
+      <% end %>
       <%= button_to admin_enqueue_all_junkipedia_path, method: :post,
             data: { turbo_confirm: "Enqueue all #{@counts[:pending]} pending verified accounts?" },
             class: "inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50",
