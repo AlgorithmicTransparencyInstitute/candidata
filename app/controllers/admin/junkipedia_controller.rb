@@ -46,7 +46,7 @@ module Admin
     end
 
     def enqueue_all
-      ids = SocialMediaAccount.junkipedia_pending.verified.pluck(:id)
+      ids = SocialMediaAccount.junkipedia_pending.pluck(:id)
       ids.each { |id| EnqueueJunkipediaChannelJob.perform_later(id) }
       redirect_to admin_junkipedia_path(filter: 'pending'),
                   notice: "Enqueued #{ids.size} verified accounts to Junkipedia."

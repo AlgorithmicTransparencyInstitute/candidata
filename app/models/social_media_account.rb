@@ -32,8 +32,11 @@ class SocialMediaAccount < ApplicationRecord
   scope :core_platforms, -> { where(platform: CORE_PLATFORMS) }
   scope :fringe_platforms, -> { where(platform: FRINGE_PLATFORMS) }
 
+  # The universe Junkipedia auto-sync operates on: validated handles with a
+  # syncable platform + URL on an active account. Anything outside this scope
+  # is intentionally invisible to the sync dashboard counts.
   scope :junkipedia_eligible, -> {
-    where(platform: JunkipediaService::SUPPORTED_PLATFORMS, account_inactive: false)
+    where(verified: true, account_inactive: false, platform: JunkipediaService::SUPPORTED_PLATFORMS)
       .where.not(url: [nil, ''])
   }
   scope :junkipedia_pending, -> { junkipedia_eligible.where(junkipedia_enqueued_at: nil) }
