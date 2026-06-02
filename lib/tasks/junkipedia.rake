@@ -325,6 +325,126 @@ namespace :junkipedia do
     end
   end
 
+  desc "Push all accounts to per-state lists, reusing existing Candidata - {STATE} Officials lists if present"
+  task push_all_idempotent: :environment do
+    dry_run = ENV['DRY_RUN'] == '1'
+    only_abbrev = ENV['ONLY']&.upcase
+    sleep_seconds = (ENV['SLEEP'] || '0.2').to_f
+
+    service = JunkipediaService.new
+    headers = service.instance_variable_get(:@headers)
+
+    puts "Fetching existing Junkipedia lists..."
+    all_lists = []
+    page = 1
+    loop do
+      resp = service.class.get("/lists?page=#{page}&per_page=100", headers: headers)
+      data = resp.parsed_response['data'] || []
+      break if data.empty?
+      all_lists.concat(data)
+      break if data.length < 100
+      page += 1
+    end
+
+    existing = {}
+    all_lists.each do |l|
+      name = l.dig('attributes', 'name').to_s
+      if name =~ /^Candidata - (.+) Officials$/
+        existing[$1] = l['id'].to_i
+      end
+    end
+    puts "Found #{existing.length} existing Candidata state lists: #{existing.keys.sort.join(', ')}"
+    puts ""
+
+    states_with_accounts = Person
+      .where.not(state_of_residence: [nil, ''])
+      .joins(:social_media_accounts)
+      .merge(SocialMediaAccount.active.where.not(url: [nil, '']))
+      .where(social_media_accounts: { platform: JunkipediaService::SUPPORTED_PLATFORMS })
+      .group(:state_of_residence)
+      .count
+      .sort_by { |_, v| -v }
+
+    states_with_accounts = states_with_accounts.select { |abbrev, _| abbrev == only_abbrev } if only_abbrev
+
+    grand_total = states_with_accounts.sum(&:last)
+    puts "States to push: #{states_with_accounts.length} | Total accounts: #{grand_total}"
+    puts "Mode: #{dry_run ? 'DRY RUN' : 'LIVE'} | sleep=#{sleep_seconds}s"
+    puts ""
+
+    overall = { succeeded: 0, failed: 0, skipped: 0, lists_created: 0, lists_reused: 0 }
+
+    states_with_accounts.each_with_index do |(abbrev, count), state_idx|
+      state = State.find_by(abbreviation: abbrev)
+      unless state
+        puts "[#{abbrev}] SKIP: no State record"
+        next
+      end
+
+      list_id = existing[state.name]
+      if list_id
+        overall[:lists_reused] += 1
+        puts "[#{state_idx + 1}/#{states_with_accounts.length}] #{abbrev} (#{state.name}): reusing list #{list_id} | #{count} accounts"
+      elsif dry_run
+        puts "[#{state_idx + 1}/#{states_with_accounts.length}] #{abbrev} (#{state.name}): DRY would create list | #{count} accounts"
+        next
+      else
+        result = service.create_list(
+          name: "Candidata - #{state.name} Officials",
+          description: "Social media accounts for #{state.name} elected officials and candidates, exported from Candidata"
+        )
+        list_id = result['id']
+        existing[state.name] = list_id
+        overall[:lists_created] += 1
+        puts "[#{state_idx + 1}/#{states_with_accounts.length}] #{abbrev} (#{state.name}): CREATED list #{list_id} | #{count} accounts"
+      end
+
+      next if dry_run
+
+      accounts = SocialMediaAccount.active
+        .where.not(url: [nil, ''])
+        .where(person: Person.where(state_of_residence: abbrev))
+        .where(platform: JunkipediaService::SUPPORTED_PLATFORMS)
+        .includes(:person)
+        .order(:platform, :id)
+
+      state_stats = { ok: 0, fail: 0, skip: 0 }
+      accounts.find_each.with_index do |account, i|
+        cid = JunkipediaService.component_id_for(account)
+        if cid.blank?
+          state_stats[:skip] += 1
+          next
+        end
+        begin
+          service.add_component(list_id: list_id, component_id: cid)
+          state_stats[:ok] += 1
+        rescue JunkipediaService::JunkipediaError => e
+          state_stats[:fail] += 1
+          puts "  [#{abbrev}] FAIL #{account.platform} #{cid.to_s[0..80]}: #{e.message.to_s[0..160]}"
+        end
+        sleep(sleep_seconds)
+        if (i + 1) % 50 == 0
+          puts "  [#{abbrev}] progress: #{i + 1}/#{accounts.size} ok=#{state_stats[:ok]} fail=#{state_stats[:fail]}"
+        end
+      end
+
+      overall[:succeeded] += state_stats[:ok]
+      overall[:failed] += state_stats[:fail]
+      overall[:skipped] += state_stats[:skip]
+      puts "[#{abbrev}] DONE: ok=#{state_stats[:ok]} fail=#{state_stats[:fail]} skip=#{state_stats[:skip]}"
+      puts ""
+    end
+
+    puts "=" * 60
+    puts "ALL STATES COMPLETE"
+    puts "  Lists reused:  #{overall[:lists_reused]}"
+    puts "  Lists created: #{overall[:lists_created]}"
+    puts "  Accounts OK:   #{overall[:succeeded]}"
+    puts "  Accounts FAIL: #{overall[:failed]}"
+    puts "  Skipped:       #{overall[:skipped]}"
+    puts "=" * 60
+  end
+
   desc "Show channels in a Junkipedia list"
   task :list_channels, [:list_id] => :environment do |_t, args|
     list_id = args[:list_id]
