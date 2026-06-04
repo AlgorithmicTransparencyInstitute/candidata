@@ -39,6 +39,18 @@
     </div>
   <% end %>
 
+  <% if @counts[:pending] > 1000 %>
+    <div class="mt-4 rounded-md bg-amber-50 p-4 border border-amber-200">
+      <p class="text-sm text-amber-900">
+        <strong>Rate-limit warning:</strong> Junkipedia caps API calls at <strong>5,000 / hour</strong>. The bulk buttons here fire jobs as fast as the async queue runs them, which will hit the limit on backfills of this size. For large backfills, run the throttled rake task instead — it watches the rate-limit headers and pauses when needed:
+      </p>
+      <pre class="mt-2 text-xs bg-amber-100 text-amber-900 rounded p-2 overflow-x-auto">heroku run --app candidata bin/rails junkipedia:match_pending</pre>
+      <p class="mt-2 text-xs text-amber-800">
+        Optional env: <code>RATE=1.2</code> (req/sec), <code>STATE=IL</code>, <code>LIMIT=500</code>, <code>INCLUDE_ERRORED=0</code>.
+      </p>
+    </div>
+  <% end %>
+
   <% if @default_list_id.blank? %>
     <div class="mt-2 rounded-md bg-blue-50 p-3 border border-blue-200">
       <p class="text-sm text-blue-800">

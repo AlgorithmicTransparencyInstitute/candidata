@@ -87,12 +87,13 @@ class JunkipediaService
     end
   end
 
-  # Search channels by URL, handle, or platform/UID. Returns matching channels;
-  # used to resolve a channel_id after enqueue_channel has had time to process.
-  def search_channel(url: nil, handle: nil, platform: nil, retries: 3)
-    query = {}
-    query[:url] = url if url.present?
-    query[:handle] = handle if handle.present?
+  # Search channels by handle (+ optional platform to disambiguate).
+  # Junkipedia's /channels/search accepts handle, platform, uid, or channel_ids
+  # — NOT url. Returns the parsed JSON:API response; use .first_channel_id to
+  # pull the id out.
+  def search_channel(handle:, platform: nil, retries: 3)
+    raise ArgumentError, "handle is required" if handle.blank?
+    query = { handle: handle }
     query[:platform] = platform if platform.present?
 
     attempts = 0
@@ -214,6 +215,50 @@ class JunkipediaService
     extract_channel_id('data' => records.first)
   end
 
+  # Derive a Junkipedia-style handle from a SocialMediaAccount. Returns nil
+  # when we can't extract one (e.g. Facebook profile.php?id=... — those need
+  # uid lookup, not handle search, and are skipped by the bulk match path).
+  def self.handle_from(account)
+    if account.handle.present? && !looks_like_url?(account.handle)
+      return account.handle.to_s.strip.sub(/\A@/, '')
+    end
+    extract_handle_from_url(account.url, account.platform)
+  end
+
+  def self.extract_handle_from_url(url, platform)
+    return nil if url.blank?
+    s = url.to_s.strip
+    case platform
+    when 'Twitter'
+      s[%r{(?:twitter|x)\.com/(?:#!/)?@?([A-Za-z0-9_]{1,15})}, 1]
+    when 'Facebook'
+      m = s[%r{facebook\.com/([^/?#]+)}, 1]
+      m && m != 'profile.php' ? m : nil
+    when 'Instagram'
+      s[%r{instagram\.com/([A-Za-z0-9_.]+?)(?:/|\?|$)}, 1]
+    when 'YouTube'
+      s[%r{youtube\.com/(?:@|channel/|c/|user/)([A-Za-z0-9_\-]+)}, 1]
+    when 'TikTok'
+      s[%r{tiktok\.com/@?([A-Za-z0-9_.]+)}, 1]
+    when 'BlueSky'
+      s[%r{bsky\.app/profile/([A-Za-z0-9_.\-]+)}, 1]
+    when 'TruthSocial'
+      s[%r{truthsocial\.com/@?([A-Za-z0-9_.]+)}, 1]
+    when 'Telegram'
+      s[%r{t\.me/([A-Za-z0-9_]+)}, 1]
+    when 'Threads'
+      s[%r{threads\.net/@?([A-Za-z0-9_.]+)}, 1]
+    when 'Rumble'
+      s[%r{rumble\.com/(?:user/|c/)?([A-Za-z0-9_.\-]+)}, 1]
+    when 'Gettr'
+      s[%r{gettr\.com/(?:user/)?([A-Za-z0-9_.]+)}, 1]
+    end
+  end
+
+  def self.looks_like_url?(s)
+    s.to_s =~ %r{\Ahttps?://|\Awww\.} ? true : false
+  end
+
   # Map Candidata platform name to Junkipedia platform name
   def self.junkipedia_platform(platform)
     PLATFORM_MAP[platform]
@@ -222,13 +267,52 @@ class JunkipediaService
   private
 
   def handle_response(response, action)
+    JunkipediaService.record_rate_limit(response)
     if response.success?
       response.parsed_response
+    elsif response.code == 429
+      retry_after = (response.headers['retry-after'] || response.headers['Retry-After']).to_s
+      reset_at    = response.headers['x-ratelimit-reset']
+      raise RateLimitError.new(
+        "Rate limited on #{action}: #{response.parsed_response.inspect}",
+        retry_after: retry_after,
+        reset_at: reset_at
+      )
     else
       error_body = response.parsed_response rescue response.body
       raise JunkipediaError, "Failed to #{action}: HTTP #{response.code} - #{error_body}"
     end
   end
 
+  # Cache of the most recent rate-limit headers so callers (esp. the bulk
+  # rake tasks) can pace themselves without re-parsing responses.
+  @rate_limit_remaining = nil
+  @rate_limit_reset     = nil
+  class << self
+    attr_reader :rate_limit_remaining, :rate_limit_reset
+
+    def record_rate_limit(response)
+      remaining = response.headers['x-ratelimit-remaining']
+      reset_at  = response.headers['x-ratelimit-reset']
+      @rate_limit_remaining = remaining.to_i if remaining
+      @rate_limit_reset     = reset_at.to_i  if reset_at
+    end
+  end
+
   class JunkipediaError < StandardError; end
+
+  class RateLimitError < JunkipediaError
+    attr_reader :retry_after_seconds, :reset_at_unix
+    def initialize(message, retry_after: nil, reset_at: nil)
+      super(message)
+      @retry_after_seconds = retry_after.to_s.to_i if retry_after.present?
+      @reset_at_unix       = reset_at.to_s.to_i    if reset_at.present?
+    end
+
+    def seconds_until_reset(now = Time.now)
+      return retry_after_seconds if retry_after_seconds&.positive?
+      return [reset_at_unix - now.to_i, 0].max if reset_at_unix&.positive?
+      60
+    end
+  end
 end

@@ -445,6 +445,119 @@ namespace :junkipedia do
     puts "=" * 60
   end
 
+  desc "Match Candidata pending accounts against existing Junkipedia channels (throttled, rate-limit aware)"
+  task match_pending: :environment do
+    target_rate    = (ENV['RATE'] || '1.2').to_f          # req/sec; 1.2 ≈ 4320/hour, under 5000/hour cap
+    floor_rate     = (ENV['FLOOR'] || '0.3').to_f         # never go below this (3.3s between calls) even when remaining is low
+    safety_buffer  = (ENV['BUFFER'] || '50').to_i         # pause when x-ratelimit-remaining falls below this
+    limit          = ENV['LIMIT']&.to_i
+    only_state     = ENV['STATE']&.upcase
+    include_errored = ENV['INCLUDE_ERRORED'] != '0'        # default: also retry rate-limited error rows
+
+    service = JunkipediaService.new
+
+    scope = SocialMediaAccount.junkipedia_pending
+    scope = scope.joins(:person).where(people: { state_of_residence: only_state }) if only_state
+    if include_errored
+      err_scope = SocialMediaAccount.junkipedia_eligible
+                    .where(junkipedia_channel_id: [nil, ''])
+                    .where.not(junkipedia_last_error: [nil, ''])
+      err_scope = err_scope.joins(:person).where(people: { state_of_residence: only_state }) if only_state
+      ids = (scope.pluck(:id) + err_scope.pluck(:id)).uniq
+    else
+      ids = scope.pluck(:id)
+    end
+    ids = ids.first(limit) if limit
+
+    total    = ids.size
+    started  = Time.now
+    matched  = 0
+    missed   = 0
+    skipped  = 0
+    errored  = 0
+
+    interval = 1.0 / target_rate
+    puts "=" * 70
+    puts "MATCH PENDING: #{total} accounts, target #{target_rate} req/sec (#{interval.round(2)}s between calls)"
+    puts "  STATE=#{only_state || 'all'} INCLUDE_ERRORED=#{include_errored} LIMIT=#{limit || 'none'}"
+    puts "=" * 70
+
+    ids.each_with_index do |id, i|
+      acct = SocialMediaAccount.find_by(id: id)
+      unless acct
+        skipped += 1
+        next
+      end
+
+      handle = JunkipediaService.handle_from(acct)
+      if handle.blank?
+        skipped += 1
+        acct.update_columns(junkipedia_last_error: "no derivable handle from url=#{acct.url}")
+      else
+        begin
+          resp = service.search_channel(
+            handle: handle,
+            platform: JunkipediaService.junkipedia_platform(acct.platform)
+          )
+          cid = JunkipediaService.first_channel_id(resp)
+          if cid
+            now = Time.current
+            updates = {
+              junkipedia_channel_id: cid,
+              junkipedia_id_collected_at: now,
+              junkipedia_last_error: nil
+            }
+            updates[:junkipedia_enqueued_at] = now if acct.junkipedia_enqueued_at.nil?
+            acct.update_columns(updates)
+            matched += 1
+          else
+            missed += 1
+            acct.update_columns(junkipedia_last_error: nil) if acct.junkipedia_last_error.present?
+          end
+        rescue JunkipediaService::RateLimitError => e
+          wait = [e.seconds_until_reset, 60].max
+          puts "  [#{i+1}/#{total}] RATE LIMITED — sleeping #{wait}s until window resets"
+          sleep wait
+          retry
+        rescue JunkipediaService::JunkipediaError => e
+          errored += 1
+          acct.update_columns(junkipedia_last_error: e.message.to_s.truncate(1000))
+        end
+      end
+
+      # Adaptive pace: if we're close to the cap, sleep until the window resets
+      remaining = JunkipediaService.rate_limit_remaining
+      reset_at  = JunkipediaService.rate_limit_reset
+      if remaining && remaining < safety_buffer && reset_at
+        wait = [reset_at - Time.now.to_i, 0].max + 5
+        puts "  [#{i+1}/#{total}] remaining=#{remaining} below buffer=#{safety_buffer} — sleeping #{wait}s"
+        sleep wait
+      else
+        sleep [interval, 1.0 / [target_rate, 0.001].max].max
+      end
+
+      if (i + 1) % 100 == 0 || i + 1 == total
+        elapsed = Time.now - started
+        rate = (i + 1) / elapsed
+        eta_min = ((total - i - 1) / [rate, 0.001].max / 60).round
+        rem_str = remaining ? "remaining=#{remaining}" : ""
+        puts "  [#{i+1}/#{total}] matched=#{matched} missed=#{missed} err=#{errored} skipped=#{skipped} | #{rate.round(2)}/s ETA=#{eta_min}min #{rem_str}"
+      end
+    end
+
+    puts "=" * 70
+    puts "DONE in #{((Time.now - started) / 60).round(1)} min"
+    puts "  matched=#{matched}  missed=#{missed}  errored=#{errored}  skipped=#{skipped}  of #{total}"
+    puts "=" * 70
+  end
+
+  desc "Clear junkipedia_last_error for all eligible accounts so they retry cleanly"
+  task clear_errors: :environment do
+    scope = SocialMediaAccount.where.not(junkipedia_last_error: [nil, ''])
+    n = scope.update_all(junkipedia_last_error: nil)
+    puts "Cleared junkipedia_last_error on #{n} rows"
+  end
+
   desc "Show channels in a Junkipedia list"
   task :list_channels, [:list_id] => :environment do |_t, args|
     list_id = args[:list_id]

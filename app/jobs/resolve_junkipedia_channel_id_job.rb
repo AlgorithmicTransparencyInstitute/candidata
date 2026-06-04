@@ -1,18 +1,25 @@
 class ResolveJunkipediaChannelIdJob < ApplicationJob
   queue_as :default
 
+  # Rate-limit hits get a long, header-driven wait so we don't burn retries
+  # while Junkipedia is refusing requests.
+  retry_on JunkipediaService::RateLimitError, attempts: 10 do |job, error|
+    wait = [error.seconds_until_reset, 5].max
+    job.class.set(wait: wait.seconds).perform_later(*job.arguments)
+  end
   retry_on JunkipediaService::JunkipediaError, wait: :polynomially_longer, attempts: 5
 
   def perform(social_media_account_id, force: false)
     account = SocialMediaAccount.find_by(id: social_media_account_id)
     return unless account
     return if account.junkipedia_channel_id.present? && !force
-    return unless account.url.present? || account.handle.present?
+
+    handle = JunkipediaService.handle_from(account)
+    return if handle.blank?
 
     service = JunkipediaService.new
     response = service.search_channel(
-      url: account.url,
-      handle: account.handle,
+      handle: handle,
       platform: JunkipediaService.junkipedia_platform(account.platform)
     )
 
