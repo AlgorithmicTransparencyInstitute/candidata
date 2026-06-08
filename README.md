@@ -1,20 +1,28 @@
 # Candidata
 
-A Ruby on Rails 8 application that integrates with Airtable for user authentication and dynamic form management.
+A Ruby on Rails 8 application that serves as a comprehensive database for managing US elected officials, candidates, elections, and their social media presence. Built for social-listening research: researchers gather and validate handles, then those handles are pushed to [Junkipedia](https://www.junkipedia.org) for ongoing post collection.
 
 ## Overview
 
-This application allows users to:
-- **Login** using email/password credentials stored in an Airtable base
-- **View assigned records** fetched from Airtable based on the logged-in user's email
-- **Submit form data** that gets pushed back to Airtable via API
+Three workspaces in one app:
+- **Admin** (`/admin`) — full CRUD over people, offices, elections, ballots, candidates, social accounts; bulk assignment creation; Junkipedia sync dashboard.
+- **Researcher** (`/researcher`) — guided data entry on assigned social media accounts.
+- **Verification** (`/verification`) — review and verify researcher-entered data; verification transitions auto-enqueue handles to Junkipedia.
+
+Notable scale (as of the latest production pull):
+- ~44k people, ~55k social media accounts across 11 platforms, 1.5k+ 2026 candidates, 42k+ officeholders.
+- Junkipedia integration auto-syncs verified handles to a shared list ("Candidata Imports", list id 10929).
 
 ## Tech Stack
 
-- **Ruby on Rails 8**
-- **PostgreSQL** - Database
-- **Tailwind CSS** - Styling
-- **Airtable API** - External data source for authentication and records
+- **Ruby on Rails 8.0** (Ruby 3.3)
+- **PostgreSQL 17** (Heroku Standard-0)
+- **Tailwind CSS** — styling
+- **Devise + omniauth** — Google OAuth2 + Microsoft Entra ID + invitation-only registration
+- **PaperTrail** — audit log on `SocialMediaAccount`
+- **HTTParty** — HTTP client for Airtable and Junkipedia
+- **Active Storage + S3** (Bucketeer add-on) for uploads in production
+- **Letter Opener** — email previews in development
 
 ## Setup
 
@@ -38,49 +46,54 @@ bin/dev
 
 ### Environment Variables
 
-You'll need to configure the following environment variables for Airtable integration:
+Required for development (typically lives in `.env`, gitignored):
 
 ```
-AIRTABLE_API_KEY=your_api_key
-AIRTABLE_BASE_ID=your_base_id
-AIRTABLE_USERS_TABLE=Users
-AIRTABLE_RECORDS_TABLE=Records
+# OAuth
+GOOGLE_CLIENT_ID=...
+GOOGLE_CLIENT_SECRET=...
+
+# Airtable (legacy import path)
+AIRTABLE_API_KEY=...
+AIRTABLE_BASE_ID=...
+
+# Junkipedia auto-sync (no-op if not set)
+JUNKIPEDIA_API_TOKEN=...
+JUNKIPEDIA_DEFAULT_LIST_ID=10929  # "Candidata Imports" list on production
+
+# Devise mailer
+DEVISE_MAILER_FROM=...
 ```
 
-### Airtable Data Import
+### Data Import Pipelines
 
-To import existing candidate data from Airtable:
+Several import pipelines feed Candidata. The main one in active use is the **2026 candidate CSV import** — see [`docs/CANDIDATE_CSV_IMPORT.md`](docs/CANDIDATE_CSV_IMPORT.md) for the full standard operating procedure.
+
+Brief command reference:
 
 ```bash
-# Set environment variables
-export AIRTABLE_API_KEY='your_api_key'
-export AIRTABLE_BASE_ID='your_base_id'
+# 2026 candidate CSV (per batch)
+bin/rails import:clean_candidates_2026_<batch>
+bin/rails import:candidates_2026_<batch>
 
-# Test connection
-bin/rails import:test_airtable
+# Legacy Airtable / GovProj imports
+bin/rails import_csv:all       # Stage Airtable CSVs into temp_* tables
+bin/rails govproj:download     # Pull GovProj officeholder data
+bin/rails import:airtable      # Full Airtable import
 
-# List available tables
-bin/rails import:list_tables
-
-# Import all data
-bin/rails import:airtable
+# Junkipedia sync (bulk match against existing channels — rate-limit aware)
+bin/rails junkipedia:match_pending
 ```
-
-The import service will:
-1. Import political parties
-2. Import people/candidates
-3. Import districts and offices
-4. Import ballots and contests
-5. Import candidate relationships
-6. Import officeholder records
 
 ## Documentation
 
-- [2026 Candidate CSV Import](docs/CANDIDATE_CSV_IMPORT.md) - Pipeline for cleaning and importing candidate data from researcher spreadsheets
-- [2026 Candidate Management Plan](docs/2026_CANDIDATE_MANAGEMENT_PLAN.md) - Implementation plan for admin/researcher workflow
-- [Junkipedia Integration](docs/JUNKIPEDIA_INTEGRATION.md) - Pushing social media accounts to Junkipedia for post collection
-- [Temp Data Analysis Report](docs/TEMP_DATA_ANALYSIS.md) - Analysis of staging tables with 2024 election data
-- [Rails 8 Upgrade](docs/RAILS_8_UPGRADE.md) - Rails 7.2 → 8.0 upgrade process and compatibility changes
+- [`CLAUDE.md`](CLAUDE.md) — repo guide and standard operating procedures (also read by Claude Code when working in this repo)
+- [`docs/CANDIDATE_CSV_IMPORT.md`](docs/CANDIDATE_CSV_IMPORT.md) — 2026 candidate CSV import pipeline (cleaning, importing, batch history). Source spreadsheets live in the [Primaries2026 Google Drive folder](https://drive.google.com/drive/folders/1aNZY0rWHRpwwAWMLsXtX0MOK-xBax_12).
+- [`docs/JUNKIPEDIA_INTEGRATION.md`](docs/JUNKIPEDIA_INTEGRATION.md) — auto-sync architecture, admin dashboard, rate limits, bulk backfill rake tasks.
+- [`docs/2026_CANDIDATE_MANAGEMENT_PLAN.md`](docs/2026_CANDIDATE_MANAGEMENT_PLAN.md) — admin/researcher workflow design.
+- [`docs/TEMP_DATA_ANALYSIS.md`](docs/TEMP_DATA_ANALYSIS.md) — staging-table analysis of 2024 election data.
+- [`docs/RAILS_8_UPGRADE.md`](docs/RAILS_8_UPGRADE.md) — Rails 7.2 → 8.0 upgrade notes.
+- [`docs/TESTING_PLAN.md`](docs/TESTING_PLAN.md) — test coverage strategy.
 
 ## Development
 

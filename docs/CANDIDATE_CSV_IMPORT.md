@@ -4,6 +4,12 @@
 
 Candidata tracks candidates for the 2026 election cycle. Researchers compile candidate data into spreadsheets (exported as CSVs) organized by state. This pipeline cleans the raw CSV data into a standardized format and imports it into the production database, creating Person, Ballot, Contest, Candidate, and SocialMediaAccount records.
 
+## Source
+
+The **canonical source** of 2026 primary spreadsheets is the [Primaries2026 Google Drive folder](https://drive.google.com/drive/folders/1aNZY0rWHRpwwAWMLsXtX0MOK-xBax_12) (owner: `mm11506@nyu.edu`). Each state has its own Excel workbook there. Export each workbook to CSV before placing it in `data/2026_states/<batch-folder>/` for cleaning.
+
+Workflow: when new state data is ready, audit the Drive folder against `data/2026_states/cleaned/` to see which states have already been processed, then pull the missing ones.
+
 ## How It Works
 
 ### 1. Raw Data Collection
@@ -15,7 +21,7 @@ CandidateName, Incumbent, Withdrew/Withdrawn, Party, Office, District,
 Race, Gender, Website, Twitter, Facebook, Instagram, YouTube, TikTok, BlueSky, Notes
 ```
 
-Raw CSVs are placed in `data/2026_states/<batch-folder>/` (e.g., `april7-states/`, `april15-states/`).
+Raw CSVs are placed in `data/2026_states/<batch-folder>/` (e.g., `april7-states/`, `april15-states/`). A given batch typically groups multiple states whose data became available together.
 
 ### 2. Cleaning
 
@@ -92,8 +98,12 @@ To add a new party, update the `PARTIES` constant in both `app/models/ballot.rb`
 
 ## Adding a New Batch
 
-1. Place raw CSVs in `data/2026_states/<new-batch-folder>/`
-2. Copy an existing cleaning script and update `STATE_MAP` and any new party/race/office mappings
-3. Create a new rake task file following the existing pattern
-4. Run the cleaner, then test locally against a fresh production database pull
-5. Commit cleaned CSVs + scripts + rake task, push to Heroku, run on production
+1. **Audit the [Primaries2026 Drive folder](https://drive.google.com/drive/folders/1aNZY0rWHRpwwAWMLsXtX0MOK-xBax_12)** against `data/2026_states/cleaned/` to identify which states are not yet processed.
+2. **Export Drive Excels to CSV** and place them in `data/2026_states/<new-batch-folder>/` — name the folder descriptively (e.g., `june-states/`).
+3. **Refresh local DB from production** (`heroku pg:pull`) so testing happens against current prod state.
+4. **Copy an existing cleaning script** from `lib/scripts/clean_*_states_2026.rb` and update `STATE_MAP` and any new party/race/office mappings.
+5. **Create a new rake task file** under `lib/tasks/import_<batch>_states_2026.rake` following the existing pattern.
+6. **Run the cleaner**, inspect the cleaned CSV, then **test the import locally** against the fresh production pull.
+7. **Capture a production DB backup** (`heroku pg:backups:capture --app candidata`), commit cleaned CSVs + scripts + rake task, push to Heroku, run on production.
+
+After the production import completes, the `SocialMediaAccount` after_commit hook auto-enqueues any **verified** handles to Junkipedia. (Imports typically create accounts as unverified pending researcher work, so the auto-sync fires later when the verification controller flips `verified` to true — not at import time.) See `docs/JUNKIPEDIA_INTEGRATION.md`.

@@ -4,15 +4,63 @@
 
 Candidata maintains a comprehensive database of social media accounts for US elected officials, candidates, and political figures across 11 platforms (Facebook, Twitter, Instagram, YouTube, TikTok, BlueSky, TruthSocial, Gettr, Rumble, Telegram, Threads). [Junkipedia](https://www.junkipedia.org) is a social listening platform that collects and archives posts from public social media accounts for research purposes.
 
-This integration pushes social media accounts from Candidata into Junkipedia as monitored channels, organized into per-state multi-platform lists. This ensures that posts from elected officials and candidates are being collected and available for research analysis.
+The integration pushes validated social media accounts from Candidata into Junkipedia as monitored channels, then stores the resulting Junkipedia channel id back on the Candidata record so the link is durable. Validated handles auto-sync — no manual push for normal day-to-day data flow.
 
-## How It Works
+## Architecture
 
-1. **Create a Junkipedia list** — One multi-platform list per state (e.g., "Candidata - Texas Officials")
-2. **Push accounts** — Each active social media account with a URL is added to the list via the Junkipedia API's `add_component` endpoint
-3. **Junkipedia begins collection** — Once added, Junkipedia starts collecting posts from those accounts on its regular schedule
+```
+SocialMediaAccount#verified flips false → true
+        │
+        ▼
+after_commit hook (app/models/social_media_account.rb)
+        │
+        ▼
+EnqueueJunkipediaChannelJob ──► POST /api/v2/channels { url: ... }
+                                       │
+                                       ▼
+                                Junkipedia ingests the URL (async on their side)
+                                       │
+                                       ▼
+ResolveJunkipediaChannelIdJob ──► GET /api/v2/channels/search?handle=…&platform=…
+                                       │
+                                       ▼
+                                channel_id captured on the SocialMediaAccount
+                                       │
+                                       ▼
+AddChannelToDefaultListJob ───► POST /api/v2/lists/{id}/add_channels
+```
 
-### Platform Mapping
+Background jobs run via Rails' `:async` adapter in production (in-memory thread pool — no worker dyno). Jobs lost on dyno restart are recoverable via the admin Junkipedia dashboard.
+
+### Tracking columns on `social_media_accounts`
+
+| Column | Purpose |
+|--------|---------|
+| `junkipedia_channel_id` | The Junkipedia channel id once resolved |
+| `junkipedia_enqueued_at` | When the POST /channels (or successful search match) happened |
+| `junkipedia_id_collected_at` | When the channel id was first stored |
+| `junkipedia_last_error` | Most recent failure message (cleared on success) |
+
+## Configuration
+
+Environment variables:
+
+| Variable | Where | Purpose |
+|----------|-------|---------|
+| `JUNKIPEDIA_API_TOKEN` | dev `.env` + Heroku config | API auth; auto-sync hook is a no-op without it |
+| `JUNKIPEDIA_DEFAULT_LIST_ID` | dev `.env` (optional) + Heroku config | Junkipedia list id resolved channels are added to. Production: `10929` ("Candidata Imports") |
+
+API tokens are generated in Junkipedia under User Account > Manage API Keys.
+
+```bash
+# Heroku production setup (one-time)
+heroku config:set JUNKIPEDIA_API_TOKEN=... --app candidata
+heroku run --app candidata 'bin/rails "junkipedia:create_list[Candidata Imports,Auto-synced from candidata.space when a handle is validated]"'
+# (the rake task prints a list id — capture it)
+heroku config:set JUNKIPEDIA_DEFAULT_LIST_ID=<id> --app candidata
+```
+
+## Platform Mapping
 
 | Candidata | Junkipedia |
 |-----------|------------|
@@ -28,116 +76,145 @@ This integration pushes social media accounts from Candidata into Junkipedia as 
 | Telegram | Telegram |
 | Threads | Threads |
 
-## Configuration
+## Admin Dashboard
 
-Set the API token in your environment:
+`https://candidata.space/admin/junkipedia` shows status counts and provides re-queue / re-resolve buttons:
 
-```bash
-# Local development (.env file, gitignored)
-JUNKIPEDIA_API_TOKEN=your_token_here
+- **Pending** — eligible (verified, active, supported platform, URL present) but `junkipedia_enqueued_at IS NULL`
+- **Enqueued (no ID)** — enqueued but no `junkipedia_channel_id` yet (waiting on resolve)
+- **Synced** — `junkipedia_channel_id` populated
+- **Errored** — `junkipedia_last_error` non-blank
+- **Total eligible** — universe of accounts that should sync
 
-# Heroku production
-heroku config:set JUNKIPEDIA_API_TOKEN=your_token_here --app candidata
-```
+Buttons:
+- **Match existing channels** — bulk preflight resolve (search-only, no POST /channels). Best to use the rake task instead for large counts (see below).
+- **Enqueue all pending** — POST /channels for every pending record.
+- **Resolve missing IDs** — GET /channels/search for enqueued-but-unresolved records.
+- Per-row **Re-enqueue** and **Re-resolve** for one-off retries.
 
-API tokens are generated in Junkipedia under User Account > Manage API Keys.
+The dashboard shows an amber warning when `pending > 1000` directing admins to the throttled rake task.
+
+## Rate Limit
+
+Junkipedia caps API calls at **5,000 requests / hour** on the Pro tier. The service:
+
+- Reads `x-ratelimit-limit`, `x-ratelimit-remaining`, `x-ratelimit-reset` from every response and caches the most recent values on `JunkipediaService.rate_limit_remaining` / `.rate_limit_reset`.
+- Raises `JunkipediaService::RateLimitError` on HTTP 429 with `seconds_until_reset` computed from the headers.
+- `ResolveJunkipediaChannelIdJob` catches RateLimitError and reschedules via `set(wait:)` so the retry lands after the window resets — it does not burn polynomial retries during a 429 storm.
 
 ## Rake Tasks
+
+### `junkipedia:match_pending` — the canonical bulk backfill
+
+Throttled, rate-limit aware. Searches Junkipedia for each pending account; matches get marked synced with no POST /channels round trip.
+
+```bash
+# Default rate: 1.2 req/sec (≈4320/hour, under the 5000/hour cap)
+heroku run --app candidata bin/rails junkipedia:match_pending
+
+# Tuning
+RATE=1.5         # target req/sec (capped by per-call latency)
+FLOOR=0.3        # minimum req/sec (floor when remaining is low)
+BUFFER=50        # pause when x-ratelimit-remaining drops below this
+STATE=IL         # restrict to one state's accounts
+LIMIT=500        # process at most N records
+INCLUDE_ERRORED=0  # skip records with prior errors (default: include them)
+```
+
+The task watches `x-ratelimit-remaining` after every request and, when within `BUFFER`, sleeps until `x-ratelimit-reset` plus a small grace.
+
+### `junkipedia:clear_errors`
+
+Wipes `junkipedia_last_error` so retries start clean.
+
+```bash
+heroku run --app candidata bin/rails junkipedia:clear_errors
+```
+
+### Legacy / per-state tasks
+
+Earlier per-state push tasks pre-date the auto-sync architecture. Still functional but not the recommended path for new work.
+
+```bash
+# Push one state into a freshly created list
+bin/rails 'junkipedia:push_state[TX]'
+
+# Push all states, reusing existing "Candidata - {STATE} Officials" lists
+bin/rails junkipedia:push_all_idempotent
+
+# Show channels in a Junkipedia list
+bin/rails 'junkipedia:list_channels[10929]'
+
+# Show all lists visible to the API token
+bin/rails junkipedia:lists
+```
 
 ### Preview
 
 ```bash
-# Show all pushable accounts by platform
+# What would be pushed if we enqueued everything pending right now
 bin/rails junkipedia:preview
-
-# Filter to a specific state
 STATE=TX bin/rails junkipedia:preview
 ```
 
-### Push a Single State
+## API Notes
 
-Creates a new Junkipedia list and pushes all active accounts for that state:
+### `GET /api/v2/channels/search`
 
-```bash
-bin/rails 'junkipedia:push_state[TX]'
+Accepts **`handle`** (+ optional `platform`), **`uid`**, or **`channel_ids`** as the identifier. Does **NOT** accept `url` — sending only `url` returns HTTP 422.
 
-# Dry run (no API calls)
-DRY_RUN=1 bin/rails 'junkipedia:push_state[TX]'
+Candidata uses `JunkipediaService.handle_from(account)` to extract a usable handle. It prefers `account.handle` when present and not itself a URL; otherwise it pattern-matches against `account.url` per-platform:
 
-# Resume into an existing list instead of creating a new one
-LIST_ID=10591 bin/rails 'junkipedia:push_state[TX]'
-```
+| Platform | URL → handle |
+|----------|--------------|
+| Twitter | `twitter.com/USER` or `x.com/USER` → `USER` |
+| Facebook | `facebook.com/USER` → `USER` (skip `profile.php?id=…`) |
+| Instagram | `instagram.com/USER/` → `USER` |
+| YouTube | `youtube.com/@HANDLE` or `/channel/UC...` or `/c/...` or `/user/...` → terminal segment |
+| TikTok | `tiktok.com/@USER` → `USER` |
+| BlueSky | `bsky.app/profile/USER` → `USER` |
+| TruthSocial | `truthsocial.com/@USER` → `USER` |
+| Telegram | `t.me/USER` → `USER` |
+| Threads | `threads.net/@USER` → `USER` |
+| Rumble | `rumble.com/user/USER` or `rumble.com/c/USER` → `USER` |
+| Gettr | `gettr.com/user/USER` → `USER` |
 
-### Push All States
+Facebook `profile.php?id=...` URLs return `nil` from `handle_from` — those would need uid lookup, which is not yet wired.
 
-```bash
-# Preview what would be pushed
-DRY_RUN=1 bin/rails junkipedia:push_all_states
+### `POST /api/v2/channels`
 
-# Actually push (requires confirmation)
-CONFIRM=1 bin/rails junkipedia:push_all_states
-```
+Accepts `{ url: … }`. Junkipedia ingests the URL asynchronously; the response may or may not include a usable channel id immediately. For URLs Junkipedia hasn't seen before, the channel id is resolved on a later `/channels/search` round trip.
 
-### List Management
+### `POST /api/v2/lists/{id}/add_channels`
 
-```bash
-# List all Junkipedia lists visible to your account
-bin/rails junkipedia:lists
-
-# Show channels in a specific list
-bin/rails 'junkipedia:list_channels[10591]'
-```
-
-### Push by Platform
-
-```bash
-# Push only Twitter accounts to a specific list
-bin/rails 'junkipedia:push_platform[10591,Twitter]'
-```
+Accepts `{ channel_ids: [...] }`. Used to add resolved channels into the default list (`JUNKIPEDIA_DEFAULT_LIST_ID`).
 
 ## Key Files
 
-- `app/services/junkipedia_service.rb` — API client with retry logic for the Junkipedia v2 API
-- `lib/tasks/junkipedia.rake` — Rake tasks for pushing accounts
+| File | Purpose |
+|------|---------|
+| `app/services/junkipedia_service.rb` | API client (enqueue, search, add_channels, list management). Caches rate-limit headers. Provides `handle_from(account)` extractor. |
+| `app/jobs/enqueue_junkipedia_channel_job.rb` | POST /channels for one account |
+| `app/jobs/resolve_junkipedia_channel_id_job.rb` | GET /channels/search → store channel id |
+| `app/jobs/add_channel_to_default_list_job.rb` | POST /lists/:id/add_channels |
+| `app/models/social_media_account.rb` | after_commit hook + scopes (`junkipedia_pending`, `junkipedia_unresolved`, `junkipedia_synced`, `junkipedia_errored`) |
+| `app/controllers/admin/junkipedia_controller.rb` | Admin dashboard + bulk actions |
+| `lib/tasks/junkipedia.rake` | `match_pending`, `clear_errors`, `create_list`, `push_state`, `push_all_idempotent`, etc. |
 
-## Current Status
+## Operational History
 
-### Completed Pushes
-
-| State | List ID | Channels Added | Date |
-|-------|---------|---------------|------|
-| Texas (TX) | 10591 | ~2,328 | 2026-03-13 |
-| Illinois (IL) | 10599 | ~1,326 (partial) | 2026-03-17 |
-
-### Remaining States (from target batch)
-
-IN, OH, KY, WV, MD, NC, AL, MS, AR, LA, NM — not yet started.
-
-### Account Totals by State
-
-As of the last production database pull (March 2026), 41,016 active accounts with URLs across 56 states/territories. Top states:
-
-| State | Accounts | State | Accounts |
-|-------|----------|-------|----------|
-| TX | 2,971 | MO | 892 |
-| CA | 1,878 | AL | 884 |
-| IL | 1,785 | MN | 877 |
-| NY | 1,730 | WI | 868 |
-| GA | 1,642 | VA | 828 |
-| NC | 1,540 | IN | 824 |
-| FL | 1,528 | MA | 791 |
-| PA | 1,410 | KS | 731 |
-| KY | 1,079 | CO | 694 |
-| OH | 1,077 | IA | 688 |
-| MI | 1,055 | NH | 687 |
-| TN | 1,016 | CT | 677 |
-| MD | 969 | AR | 655 |
-| LA | 920 | MS | 644 |
-| SC | 918 | OK | 610 |
+| Date | Action | Outcome |
+|------|--------|---------|
+| 2026-03-13 | Texas pushed via per-state rake task | List `10591`, ~2,328 channels |
+| 2026-03-17 | Illinois pushed (partial) | List `10599`, ~1,326 channels |
+| 2026-05-21 | Per-state push attempted for all 56 states/territories | ~25 successful adds/min via API (≈29h ETA); ~17.6% HTTP 500 rate; killed mid-run after 13 states. Pivoted to bulk-uploader .txt files. |
+| 2026-06-01 | Auto-sync architecture deployed | after_commit hook + admin dashboard + jobs. Default list `10929` created on production. |
+| 2026-06-03 | Bulk preflight rolled out | Initial run hit 5000/hour rate limit (~21k records errored), revealed `url` was an invalid search param. |
+| 2026-06-04 | Search fixed to use `handle` extracted from URL; rate-limit aware throttled rake task `match_pending` shipped. Probe at `LIMIT=30` showed 87% match rate. |
 
 ## Known Issues
 
-- **Junkipedia 500 errors** — Some accounts return HTTP 500 from Junkipedia's side. These are typically Facebook share links, personal profiles (e.g., `/dan.mims.1`), deleted accounts, or accounts Junkipedia can't resolve. Roughly 18% failure rate observed on the Texas push.
-- **Dirty Twitter handles** — Some handles in Candidata contain URL query parameters (e.g., `?lang=en`, `?ref_src=...`) or are not real handles (e.g., `highlights`). These should be cleaned up in Candidata's data.
-- **Rate limiting** — A 0.2s delay between API calls is used to avoid overwhelming Junkipedia. A full state like Texas (~3,000 accounts) takes about 10 minutes.
-- **Network timeouts** — The service includes retry logic (3 retries with exponential backoff) for transient network errors, but long machine sleep during a push can cause the process to stall.
+- **Facebook `profile.php?id=…`** URLs cannot be resolved via handle search. They need `uid` lookup, which is not yet wired in `JunkipediaService.search_channel`.
+- **Dirty handles** — Some `social_media_accounts.handle` values contain URL query parameters (e.g., `?lang=en`) or non-handle strings (`highlights`). The extractor handles common cases but new variants surface periodically.
+- **Async adapter durability** — Jobs are in-memory and lost on dyno restart. The admin dashboard's re-enqueue and re-resolve buttons (and the rake task) recover from this.
+- **First-time URLs not in Junkipedia** — POST /channels enqueues for ingestion, but Junkipedia may take time to process. The Resolve job may need to be retried via the dashboard after Junkipedia has had time to index.
