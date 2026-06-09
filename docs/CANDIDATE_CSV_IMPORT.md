@@ -59,6 +59,7 @@ The importer handles duplicate social media handles gracefully — if an existin
 | 2 | 2026-03 | AL, IN, LA, MD, NM, OH, WV | 204 | `import:candidates_2026_batch2` |
 | 3 | 2026-04-08 | GA, MT, NE, PA | 192 | `import:candidates_2026_april7` |
 | 4 | 2026-04-15 | CA, NV, NJ, OR | 430 | `import:candidates_2026_april15` |
+| 5 | 2026-06-09 | IA, ME, ND, OK, SC, SD, UT, VA (Senate-only) | 168 | `import:candidates_2026_may` |
 
 ## Running an Import
 
@@ -77,10 +78,10 @@ bin/rails import:test_candidates_2026_april15
 
 The Ballot and Contest models validate party names. Currently supported:
 
-- Democratic, Republican, Libertarian, Independent, Nonpartisan, Unaffiliated
-- Working Class, Legal Marijuana NOW, No Party Preference, Peace and Freedom
+- Democratic, Republican, Libertarian, Independent, Nonpartisan, Unaffiliated, Constitution, Forward
+- Working Class, Legal Marijuana NOW, No Party Preference, Peace and Freedom, Independent American
 
-To add a new party, update the `PARTIES` constant in both `app/models/ballot.rb` and `app/models/contest.rb`, and add a mapping in the cleaning script.
+To add a new party, update the `PARTIES` constant in both `app/models/ballot.rb` and `app/models/contest.rb`, and add a mapping in the cleaning script. **Watch out:** the importer's outer `rescue => e` block swallows validation failures from missing parties (they're logged to `@stats[:errors]` rather than raised), so the import will appear to succeed while silently dropping candidates whose party isn't in the constant. Cross-check candidate counts against cleaned-CSV counts after every import.
 
 ## Key Files
 
@@ -88,9 +89,11 @@ To add a new party, update the `PARTIES` constant in both `app/models/ballot.rb`
 |------|---------|
 | `lib/scripts/clean_april7_states_2026.rb` | Cleaner for batch 3 (GA, MT, NE, PA) |
 | `lib/scripts/clean_april15_states_2026.rb` | Cleaner for batch 4 (CA, NV, NJ, OR) |
+| `lib/scripts/clean_may_states_2026.rb` | Cleaner for batch 5 (IA, ME, ND, OK, SC, SD, UT, VA-Senate) |
 | `lib/scripts/clean_new_states_2026.rb` | Cleaner for batch 2 (AL, IN, LA, MD, NM, OH, WV) |
 | `lib/tasks/import_april7_states_2026.rake` | Rake tasks for batch 3 |
 | `lib/tasks/import_april15_states_2026.rake` | Rake tasks for batch 4 |
+| `lib/tasks/import_may_states_2026.rake` | Rake tasks for batch 5 (includes Election-record pre-flight guard) |
 | `lib/tasks/import_new_states_2026.rake` | Rake tasks for batch 2 |
 | `lib/importers/enhanced_candidate_2026_importer.rb` | Core import logic (shared across batches) |
 | `data/2026_states/cleaned/` | Cleaned CSV output (committed to repo) |
