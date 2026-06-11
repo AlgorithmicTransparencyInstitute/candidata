@@ -141,6 +141,30 @@ Researchers assign data gathering tasks to users via the Assignment model:
 - **DEVELOPMENT_RULES.md** - Code style preferences, documentation requirements
 - **README.md** - Setup instructions, deployment guide
 
+## Election Editor
+
+New UI for quick bulk candidate entry and election management. Accessible at `/admin/elections/:id/editor`.
+
+**Features (first pass):**
+- Ballot tabs (one per state + ballot type)
+- Contest sections showing candidates in tabular format
+- Inline editing: name, party, outcome, incumbent status
+- Add/remove buttons for ballots, contests, candidates (UI in place, backend integration next)
+- Social media quick-entry stub (11 platforms)
+- Form data collection to API (in progress)
+
+**Location:** `app/views/admin/elections/editor.html.erb`
+**Controller:** `admin/elections_controller.rb` → `:editor` action
+**Layout:** `app/views/layouts/election_editor.html.erb` (minimal, no site chrome)
+**JavaScript:** `app/javascript/controllers/election_editor_controller.js` (Stimulus)
+
+**Next steps:**
+- Wire up add/remove buttons to API calls
+- Implement form submission to create/update records
+- Add social media account entry integration
+- Keyboard shortcuts for faster entry
+- Validation and error handling
+
 ## Application Documentation
 
 Comprehensive documentation covering schema, architecture, features, and APIs. **Always update these docs when you make changes to keep them in sync with the codebase.**
