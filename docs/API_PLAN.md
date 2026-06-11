@@ -760,28 +760,43 @@ X-RateLimit-Reset: 1434949200
 
 ## Implementation Roadmap
 
-### Phase 1: Admin APIs (High Priority)
-- [x] People CRUD
-- [x] Social media accounts CRUD
-- [x] Assignments CRUD
-- [x] Elections/Ballots/Contests CRUD
-- [x] Users CRUD
-- [x] Junkipedia management
+### Phase 1: Core Resource APIs (✅ COMPLETE)
+- [✅] People CRUD — List, show, create, update; bulk assign
+- [✅] Social media accounts CRUD — List, show, create, update, mark_entered, mark_not_found, verify, reject
+- [✅] Elections CRUD — List, show, create, update, destroy
+- [✅] Ballots CRUD — List, show, create, update, destroy
+- [✅] Contests CRUD — List, show, create, update, destroy
+- [✅] Candidates CRUD — List, show, create, update, destroy
+- [✅] Offices (read-only) — List, show for contest selection
+- [✅] Parties (read-only) — List, show
+- [✅] States (read-only) — List, show
+- [✅] Base API controller — Authentication, error handling, pagination
 
-### Phase 2: Researcher/Verification APIs (Medium Priority)
-- [ ] Assignments list & detail
-- [ ] Account data entry (mark_entered, mark_not_found)
-- [ ] Account verification (verify, reject, revise)
+**Implementation:** `app/controllers/api/*_controller.rb` with JSON responses
 
-### Phase 3: Public APIs (Future)
+### Phase 2: Researcher/Verification APIs (Future)
+- [ ] Researcher assignments list & detail
+- [ ] Verification queue
+- [ ] Researcher account data entry (mark_entered, mark_not_found)
+- [ ] Verifier account review (verify, reject, revise)
+- [ ] Verification notes
+
+### Phase 3: Admin/Dashboard APIs (Future)
+- [ ] Users CRUD
+- [ ] Assignments CRUD
+- [ ] Junkipedia management (enqueue, resolve, status)
+- [ ] Analytics dashboard
+
+### Phase 4: Public APIs (Future)
 - [ ] Search
-- [ ] Elections browsing
-- [ ] People browsing
-- [ ] Offices browsing
+- [ ] Elections browsing (public)
+- [ ] People browsing (public)
+- [ ] Offices browsing (public)
 
-### Phase 4: Advanced Features (Future)
+### Phase 5: Advanced Features (Future)
 - [ ] Real-time updates via WebSocket
 - [ ] Bulk operations with job status tracking
 - [ ] Advanced filtering & sorting
 - [ ] CSV export
+- [ ] JWT token auth for public API
 
