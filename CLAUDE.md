@@ -141,6 +141,42 @@ Researchers assign data gathering tasks to users via the Assignment model:
 - **DEVELOPMENT_RULES.md** - Code style preferences, documentation requirements
 - **README.md** - Setup instructions, deployment guide
 
+## Application Documentation
+
+Comprehensive documentation covering schema, architecture, features, and APIs. **Always update these docs when you make changes to keep them in sync with the codebase.**
+
+| File | Purpose |
+|------|---------|
+| **docs/SCHEMA.md** | Complete database schema with all models, attributes, associations, validations, and scopes |
+| **docs/ARCHITECTURE.md** | Controllers, views, services, background jobs, request flows, and design patterns |
+| **docs/FEATURES.md** | User-facing features organized by role (public, researcher, verifier, admin) and workflow |
+| **docs/API_PLAN.md** | Planned internal/public APIs with request/response examples and status |
+
+### Documentation Maintenance Practice
+
+When implementing any changes—new models, controller actions, features, or APIs—update the relevant doc files:
+
+**When adding/changing a model:**
+- Update `docs/SCHEMA.md` with attributes, associations, validations, scopes, and instance methods
+
+**When adding/changing controllers or views:**
+- Update `docs/ARCHITECTURE.md` with new actions, purpose, and view mappings
+- Update `docs/FEATURES.md` if user-facing functionality changes
+
+**When building new features:**
+- Describe the workflow in `docs/FEATURES.md` (user perspective)
+- Document the technical implementation in `docs/ARCHITECTURE.md`
+
+**When building APIs:**
+- Document endpoints, request/response format, and parameters in `docs/API_PLAN.md`
+
+**Before committing feature work:**
+1. Implement the feature in code
+2. Update relevant doc file(s)
+3. Commit both code and docs together
+
+This keeps the docs authoritative and prevents drift between implementation and documentation.
+
 ## Office Categorization System
 
 Offices use a structured hierarchy:
