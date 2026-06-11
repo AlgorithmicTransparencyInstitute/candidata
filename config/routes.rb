@@ -20,6 +20,30 @@ Rails.application.routes.draw do
   get "service-worker" => "rails/pwa#service_worker", as: :pwa_service_worker
   get "manifest" => "rails/pwa#manifest", as: :pwa_manifest
 
+  # Internal APIs (for React frontend)
+  namespace :api do
+    resources :people do
+      collection do
+        post :bulk_assign
+      end
+    end
+    resources :elections
+    resources :ballots
+    resources :contests
+    resources :candidates
+    resources :social_media_accounts do
+      member do
+        post :mark_entered
+        post :mark_not_found
+        post :verify
+        post :reject
+      end
+    end
+    resources :offices, only: [:index, :show, :create, :update]
+    resources :parties, only: [:index, :show]
+    resources :states, only: [:index, :show]
+  end
+
   # Admin namespace
   namespace :admin do
     root "dashboard#index"
