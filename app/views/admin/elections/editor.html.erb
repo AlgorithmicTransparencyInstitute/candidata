@@ -22,7 +22,7 @@
             data-ballot-id="<%= ballot.id %>"
             data-tab-index="<%= idx %>"
           >
-            <%= ballot.state.abbreviation %> - <%= ballot.ballot_type.titleize %>
+            <%= ballot.state %> - <%= ballot.election_type.titleize %>
           </button>
         <% end %>
         <button
@@ -49,18 +49,18 @@
               <div>
                 <label class="block text-sm font-medium text-gray-700">State</label>
                 <select class="mt-2 w-full rounded-md border border-gray-300 px-3 py-2 text-sm" disabled>
-                  <option selected><%= ballot.state.name %></option>
+                  <option selected><%= ballot.state %></option>
                 </select>
               </div>
               <div>
                 <label class="block text-sm font-medium text-gray-700">Ballot Type</label>
                 <select class="mt-2 w-full rounded-md border border-gray-300 px-3 py-2 text-sm" disabled>
-                  <option selected><%= ballot.ballot_type.titleize %></option>
+                  <option selected><%= ballot.election_type.titleize %></option>
                 </select>
               </div>
               <div>
                 <label class="block text-sm font-medium text-gray-700">Date</label>
-                <input type="date" value="<%= ballot.ballot_date %>" class="mt-2 w-full rounded-md border border-gray-300 px-3 py-2 text-sm" disabled />
+                <input type="date" value="<%= ballot.date %>" class="mt-2 w-full rounded-md border border-gray-300 px-3 py-2 text-sm" disabled />
               </div>
             </div>
 

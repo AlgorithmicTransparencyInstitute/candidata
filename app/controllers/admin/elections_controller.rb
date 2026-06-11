@@ -60,7 +60,7 @@ module Admin
     end
 
     def editor
-      @ballots = @election.ballots.includes(:contests).order(:state_id, :ballot_type)
+      @ballots = @election.ballots.includes(:contests).order(:state, :election_type)
       @states = State.order(:name).all
       @offices = Office.where(level: [:state, :federal]).order(:category).all
       @parties = Party.order(:name).all
