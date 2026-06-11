@@ -100,6 +100,8 @@ export const GridRow = React.memo(function GridRow({
       <td>
         <select className="ee-cell" data-cell="party" value={row.party} onChange={e => onPatch(row.key, { party: e.target.value })}>
           <option value="">—</option>
+          {/* keep nonstandard stored values selectable instead of silently blanking */}
+          {row.party && !parties.includes(row.party) && <option value={row.party}>{row.party}</option>}
           {parties.map(party => <option key={party} value={party}>{party}</option>)}
         </select>
       </td>

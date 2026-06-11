@@ -48,7 +48,7 @@ module Admin
             lastName: person.last_name,
             fullName: person.full_name,
             state: person.state_of_residence,
-            party: person.primary_party&.name,
+            party: person.primary_party&.name&.sub(/ Party\z/, ""),
             gender: person.gender,
             race: person.race,
             inThisElection: person.candidates.any? { |c| election_contest_ids.include?(c.contest_id) },
@@ -136,7 +136,9 @@ module Admin
           back: admin_election_path(@election)
         },
         contests: contests.map { |c| contest_json(c) },
-        parties: Party.order(:name).map { |p| { id: p.id, name: p.name, abbreviation: p.abbreviation } },
+        # Party column uses the candidate vocabulary (party_at_time strings like
+        # "Democratic"), NOT the parties table's org names ("Democratic Party").
+        parties: (Contest::PARTIES + Candidate.distinct.pluck(:party_at_time).compact).uniq.sort,
         contestParties: Contest::PARTIES.sort,
         platforms: SocialMediaAccount::PLATFORMS,
         outcomes: Candidate::OUTCOMES,

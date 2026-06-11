@@ -30,7 +30,7 @@ export type Payload = {
   election: { id: number; label: string; state: string; year: number; type: string; date: string }
   urls: { save: string; people: string; offices: string; contests: string; back: string }
   contests: ContestOption[]
-  parties: { id: number; name: string; abbreviation: string }[]
+  parties: string[]
   contestParties: string[]
   platforms: string[]
   outcomes: string[]

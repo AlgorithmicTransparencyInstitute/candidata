@@ -30,7 +30,6 @@ export function EditorApp({ payload }: { payload: Payload }) {
   const typeaheadTimer = React.useRef<ReturnType<typeof setTimeout>>()
   const pendingFocus = React.useRef<{ key: string; cell: string } | null>(null)
 
-  const partyNames = React.useMemo(() => payload.parties.map(p => p.name), [payload.parties])
 
   // ---------- row mutation ----------
 
@@ -333,7 +332,7 @@ export function EditorApp({ payload }: { payload: Payload }) {
                 row={row}
                 visible={visibleKey(row)}
                 contests={contests}
-                parties={partyNames}
+                parties={payload.parties}
                 outcomes={payload.outcomes}
                 genders={payload.genders}
                 races={payload.races}
