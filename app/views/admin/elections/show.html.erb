@@ -11,7 +11,7 @@
       </div>
       <div class="flex items-center gap-2">
         <span class="px-3 py-1 text-sm rounded-full bg-purple-100 text-purple-800"><%= @election.election_type&.titleize %></span>
-        <%= link_to "Election Editor", admin_election_editor_path(@election), class: "px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 font-medium" %>
+        <%= link_to "Election Editor", "/admin/elections/#{@election.id}/editor", class: "px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 font-medium" %>
         <%= link_to "Edit", edit_admin_election_path(@election), class: "px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300" %>
       </div>
     </div>

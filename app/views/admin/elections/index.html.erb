@@ -58,7 +58,7 @@
             </td>
             <td class="px-6 py-4 text-gray-600"><%= election.ballots.count %></td>
             <td class="px-6 py-4 text-right space-x-4">
-              <%= link_to "Editor", admin_election_editor_path(election), class: "text-blue-600 hover:text-blue-800 font-medium" %>
+              <%= link_to "Editor", "/admin/elections/#{election.id}/editor", class: "text-blue-600 hover:text-blue-800 font-medium" %>
               <%= link_to "Edit", edit_admin_election_path(election), class: "text-blue-600 hover:text-blue-800" %>
             </td>
           </tr>
