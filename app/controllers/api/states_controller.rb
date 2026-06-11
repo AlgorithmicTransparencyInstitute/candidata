@@ -1,16 +1,23 @@
 module Api
   class StatesController < BaseController
+    # GET /api/states?state_type=
     def index
-      scope = State.all
+      scope = State.order(:name)
       scope = scope.where(state_type: params[:state_type]) if params[:state_type].present?
 
-      records, meta = paginate(scope.order(:name), page: params[:page], per_page: params[:per_page])
+      records, meta = paginate(scope)
       json_response(records.map { |s| state_json(s) }, meta: meta)
     end
 
     def show
       state = State.find(params[:id])
-      json_response(state_detail_json(state))
+      # districts/offices/ballots key on the state abbreviation string,
+      # not a state_id foreign key — query by abbreviation.
+      json_response(state_json(state).merge(
+        districts_count: District.where(state: state.abbreviation).count,
+        offices_count: Office.where(state: state.abbreviation).count,
+        ballots_count: Ballot.where(state: state.abbreviation).count
+      ))
     end
 
     private
@@ -22,19 +29,6 @@ module Api
         abbreviation: state.abbreviation,
         state_type: state.state_type,
         fips_code: state.fips_code
-      }
-    end
-
-    def state_detail_json(state)
-      {
-        id: state.id,
-        name: state.name,
-        abbreviation: state.abbreviation,
-        state_type: state.state_type,
-        fips_code: state.fips_code,
-        districts_count: state.districts.count,
-        offices_count: state.offices.count,
-        ballots_count: state.ballots.count
       }
     end
   end

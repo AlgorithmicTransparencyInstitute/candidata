@@ -1,15 +1,18 @@
 module Api
   class ContestsController < BaseController
-    before_action :find_contest, only: [:show, :update, :destroy]
-    before_action :authorize_admin!
+    before_action :require_admin!, only: [:create, :update, :destroy]
+    before_action :set_contest, only: [:show, :update, :destroy]
 
+    # GET /api/contests?ballot_id=&office_id=&contest_type=&party=&year=
     def index
-      scope = Contest.all
+      scope = Contest.order(date: :desc)
       scope = scope.where(ballot_id: params[:ballot_id]) if params[:ballot_id].present?
-      scope = scope.where(office_id: params[:office_id]) if params[:office_id].present?
+      scope = scope.for_office(params[:office_id]) if params[:office_id].present?
       scope = scope.where(contest_type: params[:contest_type]) if params[:contest_type].present?
+      scope = scope.for_party(params[:party]) if params[:party].present?
+      scope = scope.for_year(params[:year].to_i) if params[:year].present?
 
-      records, meta = paginate(scope.includes(:office, :ballot), page: params[:page], per_page: params[:per_page])
+      records, meta = paginate(scope.includes(:office, :ballot, :candidates))
       json_response(records.map { |c| contest_json(c) }, meta: meta)
     end
 
@@ -30,67 +33,62 @@ module Api
 
     def destroy
       @contest.destroy!
-      render json: {}, status: :no_content
+      head :no_content
     end
 
     private
 
-    def find_contest
+    def set_contest
       @contest = Contest.find(params[:id])
     end
 
-    def authorize_admin!
-      render json: { error: "Unauthorized", code: "FORBIDDEN" }, status: :forbidden unless current_user.admin?
-    end
-
     def contest_params
-      params.require(:contest).permit(:ballot_id, :office_id, :contest_type, :description, :total_votes, :number_of_seats)
+      params.require(:contest).permit(:date, :location, :contest_type, :party, :office_id, :ballot_id)
     end
 
     def contest_json(contest)
       {
         id: contest.id,
-        ballot_id: contest.ballot_id,
-        office_id: contest.office_id,
-        office_name: contest.office.category,
-        office_level: contest.office.level,
-        office_branch: contest.office.branch,
+        full_name: contest.full_name,
+        date: contest.date,
+        location: contest.location,
         contest_type: contest.contest_type,
-        candidates_count: contest.candidates.count,
-        total_votes: contest.total_votes
+        party: contest.party,
+        office_id: contest.office_id,
+        office_title: contest.office.display_name,
+        ballot_id: contest.ballot_id,
+        candidates_count: contest.candidates.size
       }
     end
 
     def contest_detail_json(contest)
-      {
-        id: contest.id,
-        ballot_id: contest.ballot_id,
-        office_id: contest.office_id,
+      contest_json(contest).merge(
         office: {
           id: contest.office.id,
-          category: contest.office.category,
+          title: contest.office.title,
+          seat: contest.office.seat,
           level: contest.office.level,
           branch: contest.office.branch,
-          body_name: contest.office.body_name
+          state: contest.office.state
         },
-        contest_type: contest.contest_type,
-        description: contest.description,
+        ballot: {
+          id: contest.ballot.id,
+          full_name: contest.ballot.full_name,
+          date: contest.ballot.date
+        },
         total_votes: contest.total_votes,
-        number_of_seats: contest.number_of_seats,
-        candidates: contest.candidates.map { |c| candidate_detail_json(c) }
-      }
-    end
-
-    def candidate_detail_json(candidate)
-      {
-        id: candidate.id,
-        person_id: candidate.person_id,
-        person_name: candidate.person.full_name,
-        outcome: candidate.outcome,
-        tally: candidate.tally,
-        incumbent: candidate.incumbent,
-        party_at_time: candidate.party_at_time
-      }
+        candidates: contest.candidates.includes(:person).map { |c|
+          {
+            id: c.id,
+            person_id: c.person_id,
+            person_name: c.person.full_name,
+            outcome: c.outcome,
+            tally: c.tally,
+            incumbent: c.incumbent,
+            party_at_time: c.party_at_time
+          }
+        }
+      )
     end
   end
 end

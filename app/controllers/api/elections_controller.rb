@@ -1,13 +1,16 @@
 module Api
   class ElectionsController < BaseController
-    before_action :find_election, only: [:show, :update, :destroy]
-    before_action :authorize_admin!
+    before_action :require_admin!, only: [:create, :update, :destroy]
+    before_action :set_election, only: [:show, :update, :destroy]
 
+    # GET /api/elections?year=&state=&election_type=
     def index
-      scope = Election.all
-      scope = scope.where(year: filter_year) if filter_year.present?
+      scope = Election.order(date: :desc)
+      scope = scope.by_year(params[:year]) if params[:year].present?
+      scope = scope.by_state(params[:state]) if params[:state].present?
+      scope = scope.where(election_type: params[:election_type]) if params[:election_type].present?
 
-      records, meta = paginate(scope.order(year: :desc), page: params[:page], per_page: params[:per_page])
+      records, meta = paginate(scope)
       json_response(records.map { |e| election_json(e) }, meta: meta)
     end
 
@@ -28,56 +31,52 @@ module Api
 
     def destroy
       @election.destroy!
-      render json: {}, status: :no_content
+      head :no_content
     end
 
     private
 
-    def find_election
+    def set_election
       @election = Election.find(params[:id])
     end
 
-    def authorize_admin!
-      render json: { error: "Unauthorized", code: "FORBIDDEN" }, status: :forbidden unless current_user.admin?
-    end
-
-    def filter_year
-      params[:year].presence
-    end
-
     def election_params
-      params.require(:election).permit(:year, :election_type, :description)
+      params.require(:election).permit(
+        :name, :state, :date, :election_type, :year,
+        :registration_deadline, :early_voting_start, :early_voting_end
+      )
     end
 
     def election_json(election)
       {
         id: election.id,
-        year: election.year,
+        name: election.name,
+        full_name: election.full_name,
+        state: election.state,
+        date: election.date,
         election_type: election.election_type,
-        ballots_count: election.ballots.count,
-        description: election.description
+        year: election.year,
+        ballots_count: election.ballots.size
       }
     end
 
     def election_detail_json(election)
-      {
-        id: election.id,
-        year: election.year,
-        election_type: election.election_type,
-        description: election.description,
-        ballots: election.ballots.map { |b| ballot_json(b) }
-      }
-    end
-
-    def ballot_json(ballot)
-      {
-        id: ballot.id,
-        state: ballot.state.abbreviation,
-        state_id: ballot.state_id,
-        ballot_type: ballot.ballot_type,
-        ballot_date: ballot.ballot_date,
-        contests_count: ballot.contests.count
-      }
+      election_json(election).merge(
+        registration_deadline: election.registration_deadline,
+        early_voting_start: election.early_voting_start,
+        early_voting_end: election.early_voting_end,
+        ballots: election.ballots.includes(:contests).map { |b|
+          {
+            id: b.id,
+            full_name: b.full_name,
+            state: b.state,
+            date: b.date,
+            election_type: b.election_type,
+            party: b.party,
+            contests_count: b.contests.size
+          }
+        }
+      )
     end
   end
 end

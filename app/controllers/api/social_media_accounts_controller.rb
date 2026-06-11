@@ -1,17 +1,24 @@
 module Api
   class SocialMediaAccountsController < BaseController
-    before_action :find_account, only: [:show, :update, :mark_entered, :mark_not_found, :verify, :reject]
-    before_action :authorize_admin!, except: [:show]
+    before_action :require_admin!, except: [:index, :show]
+    before_action :set_account, only: [:show, :update, :destroy, :mark_entered, :mark_not_found, :verify, :reject]
 
+    # GET /api/social_media_accounts?person_id=&platform=&research_status=&verified=&channel_type=&junkipedia=
     def index
-      scope = SocialMediaAccount.all
+      scope = SocialMediaAccount.order(id: :desc)
       scope = scope.where(person_id: params[:person_id]) if params[:person_id].present?
       scope = scope.by_platform(params[:platform]) if params[:platform].present?
       scope = scope.where(research_status: params[:research_status]) if params[:research_status].present?
-      scope = scope.where(verified: params[:verified] == 'true') if params[:verified].present?
+      scope = scope.where(verified: params[:verified] == "true") if params[:verified].present?
       scope = scope.where(channel_type: params[:channel_type]) if params[:channel_type].present?
+      case params[:junkipedia]
+      when "pending"    then scope = scope.junkipedia_pending
+      when "unresolved" then scope = scope.junkipedia_unresolved
+      when "synced"     then scope = scope.junkipedia_synced
+      when "errored"    then scope = scope.junkipedia_errored
+      end
 
-      records, meta = paginate(scope.includes(:person, :entered_by, :verified_by), page: params[:page], per_page: params[:per_page])
+      records, meta = paginate(scope.includes(:person, :entered_by, :verified_by))
       json_response(records.map { |a| account_json(a) }, meta: meta)
     end
 
@@ -21,6 +28,9 @@ module Api
 
     def create
       account = SocialMediaAccount.new(account_params)
+      account.entered_by ||= current_user
+      account.entered_at ||= Time.current
+      account.research_status = "entered" if account.research_status.blank? || account.research_status == "not_started"
       account.save!
       json_response(account_detail_json(account), status: :created)
     end
@@ -30,12 +40,14 @@ module Api
       json_response(account_detail_json(@account))
     end
 
+    def destroy
+      @account.destroy!
+      head :no_content
+    end
+
+    # POST /api/social_media_accounts/:id/mark_entered  { url:, handle: }
     def mark_entered
-      @account.mark_entered!(
-        current_user,
-        url: params[:url],
-        handle: params[:handle]
-      )
+      @account.mark_entered!(current_user, url: params[:url], handle: params[:handle])
       json_response(account_detail_json(@account))
     end
 
@@ -44,6 +56,8 @@ module Api
       json_response(account_detail_json(@account))
     end
 
+    # POST /api/social_media_accounts/:id/verify  { notes: }
+    # Verifying triggers the Junkipedia auto-enqueue hook (by design).
     def verify
       @account.verify!(current_user, notes: params[:notes])
       json_response(account_detail_json(@account))
@@ -56,17 +70,13 @@ module Api
 
     private
 
-    def find_account
+    def set_account
       @account = SocialMediaAccount.find(params[:id])
-    end
-
-    def authorize_admin!
-      render json: { error: "Unauthorized", code: "FORBIDDEN" }, status: :forbidden unless current_user.admin?
     end
 
     def account_params
       params.require(:social_media_account).permit(
-        :person_id, :platform, :handle, :url, :channel_type, :account_inactive, :pre_populated
+        :person_id, :platform, :channel_type, :url, :handle, :account_inactive
       )
     end
 
@@ -82,47 +92,34 @@ module Api
         research_status: account.research_status,
         verified: account.verified,
         account_inactive: account.account_inactive,
-        pre_populated: account.pre_populated,
-        entered_by: account.entered_by&.email,
-        entered_at: account.entered_at,
-        verified_by: account.verified_by&.email,
-        verified_at: account.verified_at,
-        version_count: account.version_count
+        junkipedia_sync_status: account.junkipedia_sync_status
       }
     end
 
     def account_detail_json(account)
-      {
-        id: account.id,
-        person_id: account.person_id,
-        person: {
-          id: account.person.id,
-          first_name: account.person.first_name,
-          last_name: account.person.last_name,
-          full_name: account.person.full_name,
-          state_of_residence: account.person.state_of_residence
-        },
-        platform: account.platform,
-        handle: account.handle,
-        url: account.url,
-        channel_type: account.channel_type,
-        account_inactive: account.account_inactive,
+      account_json(account).merge(
         pre_populated: account.pre_populated,
-        research_status: account.research_status,
-        verified: account.verified,
-        entered_by: account.entered_by ? { id: account.entered_by.id, email: account.entered_by.email } : nil,
+        entered_by: user_ref(account.entered_by),
         entered_at: account.entered_at,
-        verified_by: account.verified_by ? { id: account.verified_by.id, email: account.verified_by.email } : nil,
+        verified_by: user_ref(account.verified_by),
         verified_at: account.verified_at,
         verification_notes: account.verification_notes,
-        previous_url: account.previous_url,
+        research_notes: account.research_notes,
         needs_secondary_verification: account.needs_secondary_verification,
+        modified_during_validation: account.modified_during_validation,
+        previous_url: account.previous_url,
         version_count: account.version_count,
         junkipedia_channel_id: account.junkipedia_channel_id,
-        junkipedia_sync_status: account.junkipedia_sync_status,
         junkipedia_enqueued_at: account.junkipedia_enqueued_at,
+        junkipedia_id_collected_at: account.junkipedia_id_collected_at,
         junkipedia_last_error: account.junkipedia_last_error
-      }
+      )
+    end
+
+    def user_ref(user)
+      return nil unless user
+
+      { id: user.id, email: user.email, name: user.name }
     end
   end
 end

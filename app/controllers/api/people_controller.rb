@@ -1,15 +1,22 @@
 module Api
   class PeopleController < BaseController
-    before_action :find_person, only: [:show, :update]
-    before_action :authorize_admin!, except: [:show, :index]
+    before_action :require_admin!, only: [:create, :update, :bulk_assign]
+    before_action :set_person, only: [:show, :update]
 
+    # GET /api/people?q=&state=&party_id=&page=&per_page=
     def index
-      scope = Person.all
-      scope = scope.where("CONCAT(first_name, ' ', last_name) ILIKE ?", "%#{search_query}%") if search_query.present?
-      scope = scope.by_state(filter_state) if filter_state.present?
-      scope = scope.by_party(filter_party) if filter_party.present?
+      scope = Person.order(:last_name, :first_name)
 
-      records, meta = paginate(scope, page: params[:page], per_page: params[:per_page])
+      if params[:q].present?
+        params[:q].split(/\s+/).each do |term|
+          pattern = "%#{Person.sanitize_sql_like(term)}%"
+          scope = scope.where("first_name ILIKE :p OR last_name ILIKE :p OR middle_name ILIKE :p", p: pattern)
+        end
+      end
+      scope = scope.by_state(params[:state]) if params[:state].present?
+      scope = scope.by_party(params[:party_id]) if params[:party_id].present?
+
+      records, meta = paginate(scope.includes(:social_media_accounts, person_parties: :party))
       json_response(records.map { |p| person_json(p) }, meta: meta)
     end
 
@@ -20,62 +27,62 @@ module Api
     def create
       person = Person.new(person_params)
       person.save!
+      apply_primary_party(person)
       json_response(person_detail_json(person), status: :created)
     end
 
     def update
       @person.update!(person_params)
+      apply_primary_party(@person)
       json_response(person_detail_json(@person))
     end
 
+    # POST /api/people/bulk_assign
+    # { person_ids: [], user_id:, task_type: "data_collection", notes: "" }
     def bulk_assign
-      authorize_admin!
-      people = Person.where(id: params[:person_ids])
-      user = User.find(params[:user_id])
+      user = User.find(params.require(:user_id))
+      people = Person.where(id: Array(params.require(:person_ids)))
+      task_type = params[:task_type].presence || "data_collection"
 
-      assignments = people.map do |person|
-        Assignment.create!(
-          person: person,
-          user: user,
-          assigned_by: current_user,
-          assignment_type: params[:assignment_type] || 'data_collection',
-          notes: params[:notes]
+      created = []
+      skipped = []
+      people.each do |person|
+        assignment = Assignment.new(
+          person: person, user: user, assigned_by: current_user,
+          task_type: task_type, status: "pending", notes: params[:notes]
         )
+        if assignment.save
+          created << assignment
+        else
+          skipped << { person_id: person.id, errors: assignment.errors.full_messages }
+        end
       end
 
       json_response(
-        assignments.map { |a| assignment_json(a) },
-        meta: { created: assignments.length }
+        created.map { |a| assignment_json(a) },
+        meta: { created: created.size, skipped: skipped.size, skipped_details: skipped }
       )
     end
 
     private
 
-    def find_person
+    def set_person
       @person = Person.find(params[:id])
-    end
-
-    def authorize_admin!
-      render json: { error: "Unauthorized", code: "FORBIDDEN" }, status: :forbidden unless current_user.admin?
-    end
-
-    def search_query
-      params[:q].presence
-    end
-
-    def filter_state
-      params[:state].presence
-    end
-
-    def filter_party
-      params[:party_id].presence
     end
 
     def person_params
       params.require(:person).permit(
-        :first_name, :last_name, :middle_name, :suffix, :gender, :date_of_birth,
-        :place_of_birth, :state_of_residence, :website, :bio, :primary_party_id
+        :first_name, :last_name, :middle_name, :suffix, :gender, :race,
+        :birth_date, :state_of_residence, :photo_url,
+        :website_official, :website_campaign, :website_personal
       )
+    end
+
+    def apply_primary_party(person)
+      return unless params[:person]&.key?(:primary_party_id)
+
+      party_id = params[:person][:primary_party_id]
+      person.primary_party = party_id.present? ? Party.find(party_id) : nil
     end
 
     def person_json(person)
@@ -85,10 +92,11 @@ module Api
         last_name: person.last_name,
         full_name: person.full_name,
         state_of_residence: person.state_of_residence,
-        primary_party: person.primary_party ? { id: person.primary_party.id, name: person.primary_party.name } : nil,
-        needs_secondary_verification: person.needs_secondary_verification,
-        current_offices_count: person.current_offices.count,
-        social_media_accounts_count: person.social_media_accounts.count
+        gender: person.gender,
+        race: person.race,
+        primary_party: party_ref(person.person_parties.find(&:is_primary)&.party),
+        social_media_accounts_count: person.social_media_accounts.size,
+        needs_secondary_verification: person.needs_secondary_verification
       }
     end
 
@@ -101,72 +109,61 @@ module Api
         suffix: person.suffix,
         full_name: person.full_name,
         gender: person.gender,
-        date_of_birth: person.date_of_birth,
-        place_of_birth: person.place_of_birth,
+        race: person.race,
+        birth_date: person.birth_date,
         state_of_residence: person.state_of_residence,
-        website: person.website,
-        bio: person.bio,
+        photo_url: person.photo_url,
+        website_official: person.website_official,
+        website_campaign: person.website_campaign,
+        website_personal: person.website_personal,
         person_uuid: person.person_uuid,
-        airtable_id: person.airtable_id,
         needs_secondary_verification: person.needs_secondary_verification,
-        primary_party: person.primary_party ? { id: person.primary_party.id, name: person.primary_party.name, abbreviation: person.primary_party.abbreviation } : nil,
-        parties: person.parties.map { |p| { id: p.id, name: p.name, abbreviation: p.abbreviation, is_primary: person.person_parties.find_by(party: p)&.is_primary? } },
-        current_offices: person.current_offices.map { |o| office_json(o, person) },
-        former_offices: person.officeholders.former.map { |oh| { id: oh.office.id, category: oh.office.category, state: oh.office.district&.state&.abbreviation, start_date: oh.start_date, end_date: oh.end_date } },
-        candidates: person.candidates.includes(:contest).map { |c| candidate_json(c) },
-        social_media_accounts: person.social_media_accounts.map { |a| account_json(a) },
+        primary_party: party_ref(person.primary_party),
+        parties: person.person_parties.includes(:party).map { |pp|
+          party_ref(pp.party).merge(is_primary: pp.is_primary)
+        },
+        current_offices: person.current_offices.map { |o|
+          { id: o.id, title: o.title, level: o.level, branch: o.branch, state: o.state, seat: o.seat }
+        },
+        candidacies: person.candidates.includes(contest: [:office, :ballot]).map { |c|
+          {
+            id: c.id,
+            contest_id: c.contest_id,
+            contest: c.contest.full_name,
+            outcome: c.outcome,
+            tally: c.tally,
+            incumbent: c.incumbent,
+            party_at_time: c.party_at_time
+          }
+        },
+        social_media_accounts: person.social_media_accounts.map { |a|
+          {
+            id: a.id, platform: a.platform, handle: a.handle, url: a.url,
+            channel_type: a.channel_type, verified: a.verified,
+            research_status: a.research_status, account_inactive: a.account_inactive
+          }
+        },
         assignments: person.assignments.map { |a| assignment_json(a) }
-      }
-    end
-
-    def office_json(office, person)
-      officeholder = person.officeholders.find_by(office: office)
-      {
-        id: office.id,
-        category: office.category,
-        level: office.level,
-        branch: office.branch,
-        body_name: office.body_name,
-        state: office.district&.state&.abbreviation,
-        start_date: officeholder&.start_date,
-        end_date: officeholder&.end_date
-      }
-    end
-
-    def candidate_json(candidate)
-      {
-        id: candidate.id,
-        contest_id: candidate.contest.id,
-        contest_name: candidate.contest.office.category,
-        outcome: candidate.outcome,
-        tally: candidate.tally,
-        incumbent: candidate.incumbent
-      }
-    end
-
-    def account_json(account)
-      {
-        id: account.id,
-        platform: account.platform,
-        handle: account.handle,
-        url: account.url,
-        channel_type: account.channel_type,
-        verified: account.verified,
-        research_status: account.research_status,
-        verified_at: account.verified_at
       }
     end
 
     def assignment_json(assignment)
       {
         id: assignment.id,
-        assignment_type: assignment.assignment_type,
-        status: assignment.status,
-        user_id: assignment.user_id,
         person_id: assignment.person_id,
-        started_at: assignment.started_at,
+        user_id: assignment.user_id,
+        assigned_by_id: assignment.assigned_by_id,
+        task_type: assignment.task_type,
+        status: assignment.status,
+        notes: assignment.notes,
         completed_at: assignment.completed_at
       }
+    end
+
+    def party_ref(party)
+      return nil unless party
+
+      { id: party.id, name: party.name, abbreviation: party.abbreviation }
     end
   end
 end

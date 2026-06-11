@@ -20,18 +20,18 @@ Rails.application.routes.draw do
   get "service-worker" => "rails/pwa#service_worker", as: :pwa_service_worker
   get "manifest" => "rails/pwa#manifest", as: :pwa_manifest
 
-  # Internal APIs (for React frontend)
+  # Internal APIs (session-authenticated; mutations require admin + X-CSRF-Token)
   namespace :api do
-    resources :people do
+    resources :people, only: [:index, :show, :create, :update] do
       collection do
         post :bulk_assign
       end
     end
-    resources :elections
-    resources :ballots
-    resources :contests
-    resources :candidates
-    resources :social_media_accounts do
+    resources :elections, only: [:index, :show, :create, :update, :destroy]
+    resources :ballots, only: [:index, :show, :create, :update, :destroy]
+    resources :contests, only: [:index, :show, :create, :update, :destroy]
+    resources :candidates, only: [:index, :show, :create, :update, :destroy]
+    resources :social_media_accounts, only: [:index, :show, :create, :update, :destroy] do
       member do
         post :mark_entered
         post :mark_not_found
