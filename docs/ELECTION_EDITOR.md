@@ -1,322 +1,101 @@
 # Election Editor
 
-Work-in-progress bulk candidate entry interface for managing elections, contests, and candidates with integrated social media handles.
+Spreadsheet-style bulk candidate entry for a single election: create, review, and edit
+candidates — with party, outcome, demographics, and one social handle per platform —
+in a flat grid. Built for fast first-pass data entry before the full handle
+collection/verification workflow runs.
 
-## Current Status (WIP)
-
-**UI/UX:** ✅ Complete  
-**API Integration:** ⏳ In Progress  
-**Data Persistence:** ⏳ Pending  
-
----
-
-## What's Been Built
-
-### Architecture
-
-- **Route:** `/admin/elections/:id/editor`
-- **Controller:** `admin/elections_controller.rb` → `:editor` action
-- **View:** `app/views/admin/elections/editor.html.erb`
-- **Layout:** `app/views/layouts/election_editor.html.erb` (minimal, no site chrome)
-- **JavaScript:** `app/javascript/controllers/election_editor_controller.js` (Stimulus controller)
-
-### UI Components
-
-**Spreadsheet Table:**
-```
-┌─────────┬────────┬─────────┬───────────┬──────────┬─────────┬───────────┬─────────────┐
-│ Name    │ Party  │ Outcome │ Incumbent │ Facebook │ Twitter │ Instagram │ ... + 8 more│
-├─────────┼────────┼─────────┼───────────┼──────────┼─────────┼───────────┼─────────────┤
-│ [Input] │ [Drop] │ [Drop]  │ [Check]   │ [@input] │ [@input]│ [@input]  │ [@input]    │
-├─────────┼────────┼─────────┼───────────┼──────────┼─────────┼───────────┼─────────────┤
-│ [Input] │ [Drop] │ [Drop]  │ [Check]   │ [@input] │ [@input]│ [@input]  │ [@input]    │
-└─────────┴────────┴─────────┴───────────┴──────────┴─────────┴───────────┴─────────────┘
-```
-
-**11 Social Media Platforms:**
-- Facebook, Twitter, Instagram, YouTube, TikTok
-- BlueSky, TruthSocial, Gettr, Rumble, Telegram, Threads
-
-**Control Flow:**
-1. **State Selector** → Choose state/jurisdiction
-2. **Ballot Type Selector** → Choose primary/general/special/runoff
-3. **Contest Selector** → Choose race (office/position)
-4. **Spreadsheet Table** → Edit candidate details inline
-5. **Add Row Button** → Add new candidate
-6. **Delete Button** → Remove candidate from entry
-7. **Save Button** → Submit all changes
-
-### Input Types
-
-| Column | Type | Component |
-|--------|------|-----------|
-| Name | Text | `<input type="text">` |
-| Party | Select | `<select>` with all parties |
-| Outcome | Select | Dropdown: Won/Lost/Pending/Withdrawn |
-| Incumbent | Checkbox | `<input type="checkbox">` |
-| Social Media | Text | `<input type="text">` with @handle placeholder |
+**Status: functional end-to-end** (load → edit → save → reload), server-tested.
 
 ---
 
-## Current Functionality (Stimulus Controller)
+## Where everything lives
 
-### Working Features
+| Piece | Path |
+|---|---|
+| Page (grid) | `GET /admin/elections/:id/editor` |
+| Controller | `app/controllers/admin/election_editor_controller.rb` |
+| Save service | `app/services/election_editor_save.rb` |
+| View | `app/views/admin/election_editor/show.html.erb` |
+| Layout (chromeless) | `app/views/layouts/election_editor.html.erb` |
+| JS grid | `app/javascript/controllers/election_editor_controller.js` (Stimulus) |
+| Routes | `config/routes.rb` → `admin` namespace, `election_editor` block |
 
-✅ **Add Row**
-- Click "+ Add Candidate Row" to add editable row
-- Auto-focus on name field
-- Placeholder disappears when first row added
+Entry points: "Editor" link on `/admin/elections` rows and the election show page.
 
-✅ **Delete Row**
-- Click "Delete" button on any row
-- Confirmation dialog to prevent accidents
-- Updates row count
+## Endpoints
 
-✅ **Form Data Collection**
-- Collects all field values from table
-- Handles text inputs, dropdowns, checkboxes
-- Maps social media handles to platform names
-- Returns structured candidate object with nested socialMedia
+All admin-only (`Admin::BaseController` → `require_admin`).
 
-✅ **Row Counter**
-- Shows "X candidates" at bottom of table
-- Updates when rows added/deleted
+| Route | Purpose |
+|---|---|
+| `GET  .../editor` | Full page. **All data embedded as JSON** in the page (election, contests grouped by ballot, parties, platforms, gender/race vocab, candidate rows with socials) — no fetch on load. |
+| `POST .../editor/save` | Bulk upsert. Body: `{rows: [...], deletedCandidateIds: [...]}`. Returns per-row results keyed by client row key. |
+| `GET  .../editor/people?q=` | Person typeahead (links rows to existing Person records; returns their socials for prefill). |
+| `GET  .../editor/offices?q=` | Office typeahead for the new-contest dialog (scoped to the election's state). |
+| `POST .../editor/contests` | Find-or-create ballot (state/date/type/party) + contest for an office. |
 
----
+## Save semantics (`ElectionEditorSave`)
 
-## What's Not Yet Done (Next Phase)
+One transaction **per row** — a bad row reports errors without losing the rest.
 
-### 1. API Integration for Selections
+Per row:
+1. **Person** — `personId` present → load + update (name/gender/race); absent → create
+   (`state_of_residence` defaults from the election). The typeahead is the dup guard;
+   no fuzzy matching happens on save.
+2. **Candidate** — `find_or_initialize_by(person, contest)` (matches the DB unique
+   index), sets `outcome` (default `pending`), `party_at_time` (party name string),
+   `incumbent`. Contest must belong to this election.
+3. **Socials** — one cell per platform, accepts `handle`, `@handle`, or full URL
+   (normalized both ways: handle ⇄ canonical URL via per-platform templates):
+   - no account + value → create (`channel_type: Campaign`, `research_status: entered`,
+     `entered_by`/`entered_at` stamped, **`verified: false`** — never triggers the
+     Junkipedia auto-enqueue hook)
+   - account + changed value → update; if it was verified → `verified: false`,
+     `research_status: revised` + warning (existing re-verification flow)
+   - account + cleared value → destroy **only if unverified**; verified accounts are
+     never destroyed from the grid (warning returned, cell restored client-side)
 
-**Status:** ⏳ Pending
+Deletions remove the **candidacy only** — person and social accounts are kept.
 
-**What's needed:**
-```javascript
-onContestChange(event) {
-  const contestId = event.target.value
-  
-  // TODO: Fetch existing candidates from API
-  // GET /api/contests/:id/candidates
-  // Populate table with existing candidates
-  
-  // TODO: Pre-fill social media accounts for each candidate
-  // GET /api/people/:person_id/social_media_accounts
-}
-```
+Response per row: `{key, ok, candidateId, personId, socials: {Platform: {accountId, handle, url, verified}}, errors, warnings}` — the grid binds new ids so re-saving is idempotent.
 
-**Endpoint to build:**
-- `GET /api/contests/:id` — Return contest with candidates, people, social accounts pre-loaded
+## Grid features (JS)
 
-### 2. Save/Persist Data to Database
-
-**Status:** ⏳ Pending
-
-**What's needed:**
-```javascript
-async saveAll(event) {
-  // TODO: For each candidate row:
-  
-  // If new candidate:
-  //   POST /api/candidates
-  //   POST /api/social_media_accounts (11 per candidate)
-  
-  // If existing candidate:
-  //   PATCH /api/candidates/:id
-  //   PATCH /api/social_media_accounts/:id (for each platform)
-  
-  // Return success/error feedback
-}
-```
-
-**API Endpoints Needed:**
-- `POST /api/candidates` — Create candidate
-- `PATCH /api/candidates/:id` — Update candidate
-- `POST /api/social_media_accounts` — Create account
-- `PATCH /api/social_media_accounts/:id` — Update account
-
-**Current Status:** API controllers exist but save logic not wired to Stimulus controller
-
-### 3. Error Handling & Validation
-
-**Status:** ⏳ Pending
-
-**Needs:**
-- Required field validation (name, party, outcome)
-- Social media handle validation (must start with @, be valid format)
-- API error feedback (show which rows failed, why)
-- Duplicate candidate detection
-- Loading state during save
-- Success notification
-
-### 4. Load Existing Candidates
-
-**Status:** ⏳ Pending
-
-**Needs:**
-- When contest selected, fetch all candidates for that contest
-- Populate table with existing data
-- Mark rows with existing candidate IDs (not new-xxxxx)
-- Fetch social media accounts per candidate
-- Display existing handles in social media columns
-
-**Implementation:**
-```javascript
-async loadCandidates(contestId) {
-  const response = await fetch(`/api/contests/${contestId}`)
-  const { data } = await response.json()
-  
-  // Clear table
-  this.clearTable()
-  
-  // For each candidate in data:
-  // - Clone row template
-  // - Populate fields from candidate object
-  // - Add social media handles from linked accounts
-  // - Mark with candidate.id (not new-xxx)
-}
-```
-
-### 5. Keyboard Shortcuts
-
-**Status:** ⏳ Pending
-
-**Nice-to-have:**
-- `Tab` → Move to next field (already works in HTML)
-- `Shift+Tab` → Move to previous field (already works)
-- `Enter` in last column → Add new row
-- `Cmd/Ctrl+S` → Save (prevent page unload)
-- `Delete` key → Delete current row (risky, needs confirmation)
-
-### 6. Performance Optimization
-
-**Status:** ⏳ Pending
-
-**For large contests (100+ candidates):**
-- Virtualization (render only visible rows)
-- Debounced saves (save as user types, not on every keystroke)
-- Batch API requests (POST 50 candidates at once instead of 50 requests)
-
-### 7. Social Media Handle Validation
-
-**Status:** ⏳ Pending
-
-**Needs:**
-- Validate handle format per platform
-  - Twitter/BlueSky: no @, alphanumeric + underscore
-  - TikTok: alphanumeric + underscore, 2-24 chars
-  - Instagram: alphanumeric + underscore + period, 1-30 chars
-  - YouTube: can be channel name or ID
-  - Telegram: alphanumeric + underscore, 5-32 chars
-  - etc.
-- Show validation error inline on blur
-- Highlight invalid fields
-
----
-
-## Data Model (What Gets Saved)
-
-When user clicks "Save All Changes", the Stimulus controller collects:
-
-```javascript
-{
-  candidates: [
-    {
-      id: null,                    // new row
-      contest_id: 123,
-      name: "Jane Smith",
-      party_id: 1,
-      outcome: "won",
-      incumbent: true,
-      socialMedia: {
-        facebook: "janesmith",
-        twitter: "jane_smith",
-        instagram: "@janesmith",
-        youtube: "JaneSmith",
-        tiktok: "janesmith",
-        bluesky: "jane.smith",
-        truthsocial: "janesmith",
-        gettr: "janesmith",
-        rumble: "janesmith",
-        telegram: "janesmith",
-        threads: "janesmith"
-      }
-    }
-  ]
-}
-```
-
-**For each candidate, needs to:**
-1. Find or create Person (by name)
-2. Create/update Candidate (person + contest)
-3. Create/update 11 SocialMediaAccount records (one per platform)
-
----
-
-## File Structure
-
-```
-app/
-├── views/
-│   ├── layouts/
-│   │   └── election_editor.html.erb          [Minimal layout, no site chrome]
-│   └── admin/elections/
-│       └── editor.html.erb                   [Spreadsheet table + selectors]
-├── controllers/
-│   └── admin/
-│       └── elections_controller.rb           [editor action]
-├── javascript/
-│   └── controllers/
-│       └── election_editor_controller.js     [Stimulus: add/delete/save]
-```
-
----
-
-## Next Steps (Recommended Order)
-
-1. **Wire Selection to Load Data** (1-2 hours)
-   - Implement `onContestChange` to fetch and populate existing candidates
-   - Update loadCandidates() to create row elements from API response
-
-2. **Implement Save to API** (1-2 hours)
-   - Add fetch calls in `saveAll()` to POST/PATCH candidates and social media accounts
-   - Add error handling and success feedback
-   - Test with actual data persistence
-
-3. **Add Validation** (1 hour)
-   - Required field checks
-   - Social media handle format validation
-   - Show inline error messages
-
-4. **Handle Existing Data** (30 min)
-   - Differentiate between new rows (new-xxx) and existing (has ID)
-   - Update PATCH vs POST logic
-
-5. **Keyboard Shortcuts** (30 min)
-   - Add key handlers for Tab, Enter, Cmd+S
-
-6. **Performance** (2-3 hours, if needed)
-   - Add virtualization for 100+ row contests
-   - Batch saves
-
----
+- Flat table: status dot · Contest (grouped dropdown) · First/Last · Party · Incumbent ·
+  Outcome · Gender · Race · 11 platform columns · delete. Sticky header + sticky first
+  four columns; rows render via one `innerHTML` pass + event delegation (fast at scale).
+- **Dirty tracking** per row via baseline snapshots: blue=new, amber=modified,
+  green=just saved, red=error (tooltip carries messages), gray=clean. Save button shows
+  pending count; `beforeunload` guard; toast feedback.
+- **Person typeahead** on name cells (new rows only): linking fills demographics +
+  existing socials (with accountIds, verified flags) for review; shows
+  "already in this election" badge.
+- **Social cells**: show handle (URL in tooltip), accept pasted URLs, charset warning
+  styling, green ✓ on verified accounts.
+- **Keyboard**: Enter/Shift+Enter move down/up a column, Enter on last row adds a row,
+  ⌘S/Ctrl+S saves, Esc closes the typeahead.
+- **Filter bar**: contest dropdown + name search (client-side); new rows inherit the
+  filtered contest.
+- **New contest dialog**: office typeahead + party select (required for primaries);
+  creates the ballot if needed and refreshes every contest dropdown in place.
 
 ## Testing
 
-**Manual Testing Checklist:**
-- [ ] Navigate to `/admin/elections/1/editor`
-- [ ] Select state, ballot type, contest from dropdowns
-- [ ] Click "+ Add Candidate Row" — row appears, name field focused
-- [ ] Enter candidate data across all columns
-- [ ] Click "Delete" on a row — confirmation, row removed
-- [ ] Add multiple rows, verify row count updates
-- [ ] Click "Save All Changes" — data logs to console
-- [ ] Refresh page — verify data persisted (once API wired)
+Service tested end-to-end via `rails runner` in a rolled-back transaction (new
+person/candidate/socials with all three input forms; idempotent re-save; clear-destroys-
+unverified; verified-clear refused; verified-edit → revised; per-row validation errors;
+existing-candidate edit; delete keeps person). Re-run pattern: see git history for the
+runner script, or test in browser at `/admin/elections/22/editor` (SD 2026 primary,
+2 contests, 3 candidates).
 
----
+## Known limitations / future work
 
-## Related Documentation
-
-- `docs/API_PLAN.md` — API endpoints (search for "elections", "candidates", "social_media_accounts")
-- `docs/ARCHITECTURE.md` — Admin election controller details
-- `docs/SCHEMA.md` — Candidate, SocialMediaAccount, Person models
-
+- One social account shown per platform (Campaign > Official Office > Personal priority);
+  people with multiple accounts per platform edit the priority one.
+- No middle name / suffix columns (full name visible in typeahead results).
+- No row virtualization — fine for hundreds of rows; revisit past ~1k.
+- No multi-cell paste from Excel (deliberate: this is the clean-entry UI; CSV import
+  pipeline handles bulk spreadsheets).
+- The generic `/api/*` controllers (earlier scaffold) have schema drift and are not used
+  by the editor — see note in `docs/API_PLAN.md`.

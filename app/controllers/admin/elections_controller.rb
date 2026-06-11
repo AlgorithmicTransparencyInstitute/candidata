@@ -1,6 +1,6 @@
 module Admin
   class ElectionsController < Admin::BaseController
-    before_action :set_election, only: [:show, :edit, :update, :destroy, :editor]
+    before_action :set_election, only: [:show, :edit, :update, :destroy]
 
     def index
       @elections = Election.order(date: :asc)
@@ -57,14 +57,6 @@ module Admin
     def destroy
       @election.destroy
       redirect_to admin_elections_path, notice: "Election deleted."
-    end
-
-    def editor
-      @ballots = @election.ballots.includes(:contests).order(:state, :election_type)
-      @states = State.order(:name).all
-      @offices = Office.where(level: [:state, :federal]).order(:category).all
-      @parties = Party.order(:name).all
-      render layout: 'election_editor'
     end
 
     private

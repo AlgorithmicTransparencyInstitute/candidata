@@ -141,35 +141,19 @@ Researchers assign data gathering tasks to users via the Assignment model:
 - **DEVELOPMENT_RULES.md** - Code style preferences, documentation requirements
 - **README.md** - Setup instructions, deployment guide
 
-## Election Editor (WIP)
+## Election Editor
 
-**Spreadsheet-style bulk candidate entry interface.** Accessible at `/admin/elections/:id/editor`.
+**Spreadsheet-style bulk candidate entry, functional end-to-end.** `/admin/elections/:id/editor` (chromeless layout, linked from the admin elections list/show pages).
 
-**Current Status:** UI/UX ✅ Complete | API Integration ⏳ In Progress
+One flat grid per election: rows are candidates; columns are contest (grouped dropdown), first/last name (typeahead links existing People and prefills their socials), party, incumbent, outcome, gender, race, and one cell per social platform (accepts `handle`, `@handle`, or full URL — normalized both ways). Dirty tracking, per-row save status/errors, Enter/⌘S keyboard flow, contest filter, inline new-contest dialog (find-or-creates ballot + contest).
 
-**Features Completed:**
-- ✅ Spreadsheet table (rows=candidates, columns=attributes + 11 social media platforms)
-- ✅ State/Ballot Type/Contest selectors
-- ✅ Inline editing: name (text), party (dropdown), outcome (dropdown), incumbent (checkbox)
-- ✅ Social media fields (11 platforms: Facebook, Twitter, Instagram, YouTube, TikTok, BlueSky, TruthSocial, Gettr, Rumble, Telegram, Threads)
-- ✅ Add/Delete row buttons with row counter
-- ✅ Form data collection to console (structured candidate objects)
+Key code:
+- `app/controllers/admin/election_editor_controller.rb` — page + save/people/offices/contests endpoints (all data embedded on load, no fetch)
+- `app/services/election_editor_save.rb` — per-row transactional upsert (Person → Candidate → SocialMediaAccounts). Editor-created accounts are `Campaign`/`entered`/**unverified** (never triggers Junkipedia auto-enqueue). Verified accounts: edits flag `revised`+unverified with a warning; clearing is refused.
+- `app/javascript/controllers/election_editor_controller.js` — the grid (event delegation, baseline-snapshot dirty tracking)
+- `app/views/admin/election_editor/show.html.erb`, `app/views/layouts/election_editor.html.erb`
 
-**What's Left:**
-1. Wire selections to load existing candidates from API
-2. Implement save to create/update Candidates + SocialMediaAccounts
-3. Add validation (required fields, handle format)
-4. Error handling & success feedback
-5. Keyboard shortcuts (Tab to next, Enter to add row)
-6. Performance optimization (virtualization for 100+ rows)
-
-**Documentation:** `docs/ELECTION_EDITOR.md` (detailed current state, architecture, next steps)
-
-**Location:**
-- Route: `/admin/elections/:id/editor`
-- View: `app/views/admin/elections/editor.html.erb`
-- Controller: `app/controllers/admin/elections_controller.rb` → `:editor` action
-- JavaScript: `app/javascript/controllers/election_editor_controller.js` (Stimulus)
+See `docs/ELECTION_EDITOR.md` for save semantics, endpoint contracts, and known limitations.
 
 ## Application Documentation
 

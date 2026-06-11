@@ -2,6 +2,13 @@
 
 Design document for internal API endpoints supporting the React frontend and future public API.
 
+> **Status note (2026-06):** The Phase-1 controllers in `app/controllers/api/` were
+> scaffolded against assumed column names and have schema drift (e.g. ballots use
+> `state`/`date`/`election_type`, not `state_id`/`ballot_date`/`ballot_type`; offices use
+> `title`, not `category`; people use `birth_date`). They need a correctness pass before
+> use. The **election editor does not use them** — it has dedicated, tested endpoints
+> under `/admin/elections/:id/editor/*` (see `docs/ELECTION_EDITOR.md`).
+
 ---
 
 ## API Architecture

@@ -63,11 +63,14 @@ Rails.application.routes.draw do
     resources :districts
     resources :bodies
     resources :offices
-    resources :elections do
-      member do
-        get :editor
-      end
-    end
+    resources :elections
+
+    # Election editor (spreadsheet bulk candidate entry)
+    get  'elections/:id/editor',          to: 'election_editor#show',           as: :election_editor
+    post 'elections/:id/editor/save',     to: 'election_editor#save',           as: :election_editor_save
+    get  'elections/:id/editor/people',   to: 'election_editor#people_search',  as: :election_editor_people
+    get  'elections/:id/editor/offices',  to: 'election_editor#offices_search', as: :election_editor_offices
+    post 'elections/:id/editor/contests', to: 'election_editor#create_contest', as: :election_editor_contests
     resources :ballots
     resources :contests
     resources :candidates
