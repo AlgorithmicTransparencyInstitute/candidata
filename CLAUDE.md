@@ -143,17 +143,31 @@ Researchers assign data gathering tasks to users via the Assignment model:
 
 ## Election Editor
 
-**Spreadsheet-style bulk candidate entry, functional end-to-end.** `/admin/elections/:id/editor` (chromeless layout, linked from the admin elections list/show pages).
+**Spreadsheet-style bulk candidate entry, functional end-to-end — the app's first React feature.** `/admin/elections/:id/editor` (chromeless layout, linked from the admin elections list/show pages).
 
 One flat grid per election: rows are candidates; columns are contest (grouped dropdown), first/last name (typeahead links existing People and prefills their socials), party, incumbent, outcome, gender, race, and one cell per social platform (accepts `handle`, `@handle`, or full URL — normalized both ways). Dirty tracking, per-row save status/errors, Enter/⌘S keyboard flow, contest filter, inline new-contest dialog (find-or-creates ballot + contest).
 
 Key code:
 - `app/controllers/admin/election_editor_controller.rb` — page + save/people/offices/contests endpoints (all data embedded on load, no fetch)
 - `app/services/election_editor_save.rb` — per-row transactional upsert (Person → Candidate → SocialMediaAccounts). Editor-created accounts are `Campaign`/`entered`/**unverified** (never triggers Junkipedia auto-enqueue). Verified accounts: edits flag `revised`+unverified with a warning; clearing is refused.
-- `app/javascript/controllers/election_editor_controller.js` — the grid (event delegation, baseline-snapshot dirty tracking)
+- `app/javascript/react/` — React app (entry `election_editor.tsx`, grid in `editor/`, shadcn-pattern primitives in `components/ui/`)
 - `app/views/admin/election_editor/show.html.erb`, `app/views/layouts/election_editor.html.erb`
 
 See `docs/ELECTION_EDITOR.md` for save semantics, endpoint contracts, and known limitations.
+
+## Frontend Build (React + esbuild)
+
+The app is importmap + Stimulus for classic pages, **plus** an esbuild-bundled React island for complex UI (currently the election editor):
+
+- React/TSX source: `app/javascript/react/` (`@/` alias via `tsconfig.json`); shadcn-pattern components in `components/ui/`
+- Build: `yarn build` (minified) → `app/assets/builds/election_editor.js` (Sprockets serves it; the layout uses `javascript_include_tag "election_editor"`). `bin/dev` runs `yarn build:watch` via Procfile.dev.
+- **The built bundle is committed to git** — Heroku deploys need no Node build step. After changing React code: `yarn build`, commit the bundle with the source.
+- Tailwind v4 auto-scans `.tsx` files — no config needed for new classes.
+- New React features: add an entrypoint in `app/javascript/react/`, extend the esbuild script in `package.json` to include it, mount from a view with an embedded-JSON payload (see the election editor pattern).
+
+## Internal API (`/api/*`)
+
+Session-authenticated JSON API (reads: any signed-in user; mutations: admin + `X-CSRF-Token`). All endpoints documented in `docs/API_PLAN.md` and verified by `bin/rails runner lib/scripts/api_verify.rb` (52 checks, self-cleaning) — **run it after changing API controllers**. No unauthenticated mode (local DB holds production data); future curl/public access will use token auth.
 
 ## Application Documentation
 
