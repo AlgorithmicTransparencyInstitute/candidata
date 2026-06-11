@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input"
 import { NativeSelect } from "@/components/ui/native-select"
 import { useToast } from "@/components/ui/toast"
 import { getJSON, postJSON } from "./api"
-import { GridRow } from "./GridRow"
+import { contestOptionLabel, GridRow } from "./GridRow"
 import { NewContestDialog } from "./NewContestDialog"
 import { PersonTypeahead, type TypeaheadState } from "./PersonTypeahead"
 import {
@@ -29,6 +29,24 @@ export function EditorApp({ payload }: { payload: Payload }) {
   const tableRef = React.useRef<HTMLTableElement>(null)
   const typeaheadTimer = React.useRef<ReturnType<typeof setTimeout>>()
   const pendingFocus = React.useRef<{ key: string; cell: string } | null>(null)
+
+  // Row tint per contest, keyed by ballot party: Dem blue, Rep red, other
+  // parties pick up distinct hues in order of appearance.
+  const contestTints = React.useMemo(() => {
+    const PARTY_TINTS: Record<string, string> = { Democratic: "#eff6ff", Republican: "#fff1f2" }
+    const EXTRA_TINTS = ["#f0fdf4", "#faf5ff", "#fffbeb", "#ecfeff", "#f7fee7", "#fdf2f8"]
+    const byParty = new Map<string, string>()
+    const map = new Map<number, string>()
+    let nextExtra = 0
+    for (const contest of contests) {
+      if (!contest.party) { map.set(contest.id, "#ffffff"); continue }
+      if (!byParty.has(contest.party)) {
+        byParty.set(contest.party, PARTY_TINTS[contest.party] ?? EXTRA_TINTS[nextExtra++ % EXTRA_TINTS.length])
+      }
+      map.set(contest.id, byParty.get(contest.party)!)
+    }
+    return map
+  }, [contests])
 
 
   // ---------- row mutation ----------
@@ -283,9 +301,7 @@ export function EditorApp({ payload }: { payload: Payload }) {
           <NativeSelect className="h-8 w-auto" value={contestFilter} onChange={e => setContestFilter(e.target.value)}>
             <option value="">All contests</option>
             {contests.map(contest => (
-              <option key={contest.id} value={contest.id}>
-                {(contest.party || payload.election.type)} · {contest.label}
-              </option>
+              <option key={contest.id} value={contest.id}>{contestOptionLabel(contest)}</option>
             ))}
           </NativeSelect>
           <Button variant="link" size="sm" onClick={() => setDialogOpen(true)}>+ New contest</Button>
@@ -331,6 +347,7 @@ export function EditorApp({ payload }: { payload: Payload }) {
                 key={row.key}
                 row={row}
                 visible={visibleKey(row)}
+                tint={contestTints.get(row.contestId ?? -1) ?? "#ffffff"}
                 contests={contests}
                 parties={payload.parties}
                 outcomes={payload.outcomes}

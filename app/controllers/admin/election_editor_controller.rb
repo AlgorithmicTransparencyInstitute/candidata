@@ -138,7 +138,7 @@ module Admin
         contests: contests.map { |c| contest_json(c) },
         # Party column uses the candidate vocabulary (party_at_time strings like
         # "Democratic"), NOT the parties table's org names ("Democratic Party").
-        parties: (Contest::PARTIES + Candidate.distinct.pluck(:party_at_time).compact).uniq.sort,
+        parties: party_options,
         contestParties: Contest::PARTIES.sort,
         platforms: SocialMediaAccount::PLATFORMS,
         outcomes: Candidate::OUTCOMES,
@@ -148,12 +148,34 @@ module Admin
       }
     end
 
+    # Short display codes for the candidate party vocabulary; the full value is
+    # what gets stored in candidates.party_at_time.
+    PARTY_CODES = {
+      "Democratic" => "DEM", "Republican" => "REP", "Libertarian" => "LIB",
+      "Independent" => "IND", "Independent American" => "IAP",
+      "Constitution" => "CST", "Forward" => "FWD", "Legal Marijuana NOW" => "LMN",
+      "No Party Preference" => "NPP", "Nonpartisan" => "NON",
+      "Peace and Freedom" => "PFP", "Unaffiliated" => "UNA", "Working Class" => "WCP"
+    }.freeze
+
+    def party_code(name)
+      return nil if name.blank?
+
+      PARTY_CODES[name] || name[0, 3].upcase
+    end
+
+    def party_options
+      values = (Contest::PARTIES + Candidate.distinct.pluck(:party_at_time).compact).uniq.sort
+      values.map { |value| { value: value, code: party_code(value) } }
+    end
+
     def contest_json(contest)
       {
         id: contest.id,
         label: contest.office.display_name,
         ballotLabel: contest.ballot.full_name,
-        party: contest.party
+        party: contest.party,
+        partyCode: party_code(contest.party)
       }
     end
 

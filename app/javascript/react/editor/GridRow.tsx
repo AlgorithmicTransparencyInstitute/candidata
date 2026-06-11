@@ -1,13 +1,14 @@
 import * as React from "react"
-import { X } from "lucide-react"
-import type { ContestOption, RowState } from "./types"
+import { Check, ExternalLink, X } from "lucide-react"
+import type { ContestOption, PartyOption, RowState } from "./types"
 import { isBlankNewRow, isDirty, suspiciousHandle } from "./rows"
 
 type GridRowProps = {
   row: RowState
   visible: boolean
+  tint: string
   contests: ContestOption[]
-  parties: string[]
+  parties: PartyOption[]
   outcomes: string[]
   genders: string[]
   races: string[]
@@ -28,6 +29,10 @@ function statusFor(row: RowState, platforms: string[]): { color: string; title: 
       : { color: "#3b82f6", title: "New — unsaved" }
   }
   return { color: "#d1d5db", title: "Saved" }
+}
+
+export function contestOptionLabel(contest: ContestOption): string {
+  return contest.partyCode ? `${contest.partyCode} · ${contest.label}` : contest.label
 }
 
 function ContestSelect({ value, contests, onChange }: {
@@ -51,7 +56,7 @@ function ContestSelect({ value, contests, onChange }: {
       {[...groups.entries()].map(([ballotLabel, options]) => (
         <optgroup key={ballotLabel} label={ballotLabel}>
           {options.map(option => (
-            <option key={option.id} value={option.id}>{option.label}</option>
+            <option key={option.id} value={option.id}>{contestOptionLabel(option)}</option>
           ))}
         </optgroup>
       ))}
@@ -60,13 +65,18 @@ function ContestSelect({ value, contests, onChange }: {
 }
 
 export const GridRow = React.memo(function GridRow({
-  row, visible, contests, parties, outcomes, genders, races, platforms,
+  row, visible, tint, contests, parties, outcomes, genders, races, platforms,
   onPatch, onPatchSocial, onDelete, onNameInput
 }: GridRowProps) {
   const status = statusFor(row, platforms)
+  const knownParty = parties.some(p => p.value === row.party)
 
   return (
-    <tr data-key={row.key} className={row.errors.length ? "ee-row-error" : undefined} style={visible ? undefined : { display: "none" }}>
+    <tr
+      data-key={row.key}
+      className={row.errors.length ? "ee-row-error" : undefined}
+      style={{ ...(visible ? {} : { display: "none" }), "--row-bg": tint } as React.CSSProperties}
+    >
       <td className="ee-c0">
         <span
           className="ee-status-dot"
@@ -98,11 +108,14 @@ export const GridRow = React.memo(function GridRow({
         />
       </td>
       <td>
-        <select className="ee-cell" data-cell="party" value={row.party} onChange={e => onPatch(row.key, { party: e.target.value })}>
+        <select
+          className="ee-cell" data-cell="party" value={row.party} title={row.party || "Party"}
+          onChange={e => onPatch(row.key, { party: e.target.value })}
+        >
           <option value="">—</option>
           {/* keep nonstandard stored values selectable instead of silently blanking */}
-          {row.party && !parties.includes(row.party) && <option value={row.party}>{row.party}</option>}
-          {parties.map(party => <option key={party} value={party}>{party}</option>)}
+          {row.party && !knownParty && <option value={row.party}>{row.party.slice(0, 3).toUpperCase()}</option>}
+          {parties.map(party => <option key={party.value} value={party.value}>{party.code}</option>)}
         </select>
       </td>
       <td className="text-center align-middle">
@@ -134,21 +147,35 @@ export const GridRow = React.memo(function GridRow({
       </td>
       {platforms.map(platform => {
         const cell = row.socials[platform]
-        const suspicious = suspiciousHandle(cell.value)
-        const title = cell.verified
-          ? `Verified — editing will flag for re-verification${cell.url ? `\n${cell.url}` : ""}`
-          : suspicious
-            ? "Unusual characters for a handle — double-check (saves anyway)"
-            : cell.url || platform
+        const value = cell.value
+        const suspicious = suspiciousHandle(value)
+        const href = cell.url || (/^https?:\/\//i.test(value.trim()) ? value.trim() : null)
+        const title = [
+          cell.verified ? "Verified — editing will flag for re-verification" : null,
+          suspicious ? "Unusual characters for a handle — double-check (saves anyway)" : null,
+          href
+        ].filter(Boolean).join("\n") || platform
         return (
-          <td key={platform} className={`ee-social-cell${cell.verified ? " ee-social-verified" : ""}`}>
+          <td key={platform} className="ee-social-cell">
             <input
               type="text" data-cell={`social-${platform}`}
               className={`ee-cell${suspicious ? " ee-cell-invalid" : ""}`}
-              placeholder="@" autoComplete="off" spellCheck={false}
-              value={cell.value} title={title}
+              placeholder="@ or URL" autoComplete="off" spellCheck={false}
+              value={value} title={title}
               onChange={e => onPatchSocial(row.key, platform, e.target.value)}
             />
+            {cell.verified && (
+              <Check className="pointer-events-none absolute right-6 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-green-600" />
+            )}
+            {href && (
+              <a
+                href={href} target="_blank" rel="noopener noreferrer" tabIndex={-1}
+                className="absolute right-1 top-1/2 -translate-y-1/2 rounded p-0.5 text-gray-400 hover:bg-blue-100 hover:text-blue-700"
+                title={`Open ${href} in a new tab`}
+              >
+                <ExternalLink className="h-3.5 w-3.5" />
+              </a>
+            )}
           </td>
         )
       })}

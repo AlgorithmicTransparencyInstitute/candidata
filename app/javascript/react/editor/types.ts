@@ -24,13 +24,19 @@ export type ContestOption = {
   label: string
   ballotLabel: string
   party: string | null
+  partyCode: string | null
+}
+
+export type PartyOption = {
+  value: string
+  code: string
 }
 
 export type Payload = {
   election: { id: number; label: string; state: string; year: number; type: string; date: string }
   urls: { save: string; people: string; offices: string; contests: string; back: string }
   contests: ContestOption[]
-  parties: string[]
+  parties: PartyOption[]
   contestParties: string[]
   platforms: string[]
   outcomes: string[]

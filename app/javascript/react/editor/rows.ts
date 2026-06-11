@@ -8,7 +8,7 @@ export function makeRow(payload: Partial<RowPayload>, platforms: string[]): RowS
     const cell = payload.socials?.[platform]
     socials[platform] = {
       accountId: cell?.accountId ?? null,
-      value: cell?.handle || cell?.url || "",
+      value: cell?.url || cell?.handle || "",
       url: cell?.url ?? null,
       verified: !!cell?.verified
     }
@@ -66,7 +66,7 @@ export function linkPerson(row: RowState, person: PersonResult, platforms: strin
     if (existing && !next.socials[platform].value.trim()) {
       next.socials[platform] = {
         accountId: existing.accountId,
-        value: existing.handle || existing.url || "",
+        value: existing.url || existing.handle || "",
         url: existing.url,
         verified: !!existing.verified
       }
@@ -83,7 +83,7 @@ export function applySaveResult(row: RowState, result: SaveRowResult, platforms:
   next.warnings = result.warnings ?? []
   for (const [platform, cell] of Object.entries(result.socials ?? {})) {
     next.socials[platform] = cell
-      ? { accountId: cell.accountId, value: cell.handle || cell.url || "", url: cell.url, verified: !!cell.verified }
+      ? { accountId: cell.accountId, value: cell.url || cell.handle || "", url: cell.url, verified: !!cell.verified }
       : { accountId: null, value: "", url: null, verified: false }
   }
   next.baseline = snapshot(next, platforms)
