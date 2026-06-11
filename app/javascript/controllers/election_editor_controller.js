@@ -1,86 +1,174 @@
 import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
-  static targets = ["form"]
+  static targets = [""]
 
   connect() {
-    console.log("Election editor connected")
+    this.currentContestId = null
+    this.candidatesData = {}
+    this.socialMediaPlatforms = [
+      'facebook', 'twitter', 'instagram', 'youtube', 'tiktok',
+      'bluesky', 'truthsocial', 'gettr', 'rumble', 'telegram', 'threads'
+    ]
   }
 
-  switchBallot(event) {
-    const ballotId = event.currentTarget.dataset.ballotId
-    const tabIndex = event.currentTarget.dataset.tabIndex
+  // Handle state selection
+  onStateChange(event) {
+    const stateId = event.target.value
+    this.clearSelections()
+  }
 
-    // Hide all panels
-    this.element.querySelectorAll('[data-ballot-panel]').forEach(panel => {
-      panel.classList.add('hidden')
-    })
+  // Handle ballot type selection
+  onBallotTypeChange(event) {
+    this.clearSelections()
+  }
 
-    // Show selected panel
-    const selectedPanel = this.element.querySelector(`[data-ballot-panel="${ballotId}"]`)
-    if (selectedPanel) {
-      selectedPanel.classList.remove('hidden')
+  // Handle contest selection
+  onContestChange(event) {
+    const contestId = event.target.value
+    this.currentContestId = contestId
+
+    if (!contestId) {
+      this.clearTable()
+      return
     }
 
-    // Update tab styles
-    this.element.querySelectorAll('[role="tab"]').forEach((tab, idx) => {
-      if (idx == tabIndex) {
-        tab.classList.remove('border-transparent', 'text-gray-600')
-        tab.classList.add('border-blue-500', 'text-blue-600')
-      } else {
-        tab.classList.remove('border-blue-500', 'text-blue-600')
-        tab.classList.add('border-transparent', 'text-gray-600')
+    // Load candidates for this contest
+    this.loadCandidates(contestId)
+  }
+
+  async loadCandidates(contestId) {
+    try {
+      // For now, we'll just clear and let users add rows
+      // In the next phase, we'll fetch actual candidates from API
+      this.clearTable()
+      this.updateRowCount()
+    } catch (error) {
+      console.error('Error loading candidates:', error)
+      alert('Error loading candidates')
+    }
+  }
+
+  addCandidateRow(event) {
+    event.preventDefault()
+
+    const template = document.getElementById('candidate-row-template')
+    const tbody = document.querySelector('[data-tbody="candidates"]')
+
+    // Clear placeholder row if it exists
+    const placeholderRow = tbody.querySelector('tr:has(td[colspan])')
+    if (placeholderRow) {
+      placeholderRow.remove()
+    }
+
+    // Clone template and add to table
+    const newRow = template.content.cloneNode(true)
+    const rowElement = newRow.querySelector('tr')
+    rowElement.dataset.candidateId = `new-${Date.now()}`
+
+    tbody.appendChild(newRow)
+    this.updateRowCount()
+
+    // Focus on the name field
+    const nameInput = rowElement.querySelector('[data-field="name"]')
+    if (nameInput) {
+      nameInput.focus()
+    }
+  }
+
+  deleteRow(event) {
+    event.preventDefault()
+    const row = event.target.closest('tr')
+
+    if (confirm('Delete this candidate row?')) {
+      row.remove()
+      this.updateRowCount()
+    }
+  }
+
+  clearTable() {
+    const tbody = document.querySelector('[data-tbody="candidates"]')
+    const rows = tbody.querySelectorAll('tr:not(:has(td[colspan]))')
+    rows.forEach(row => row.remove())
+
+    // Show placeholder if no candidates
+    if (tbody.querySelectorAll('tr').length === 0) {
+      tbody.innerHTML = `
+        <tr class="hover:bg-gray-50">
+          <td colspan="16" class="px-4 py-8 text-center text-gray-500">
+            No candidates yet. Click "Add Candidate Row" to get started.
+          </td>
+        </tr>
+      `
+    }
+
+    this.updateRowCount()
+  }
+
+  clearSelections() {
+    this.currentContestId = null
+    this.clearTable()
+  }
+
+  updateRowCount() {
+    const tbody = document.querySelector('[data-tbody="candidates"]')
+    const rows = tbody.querySelectorAll('tr:not(:has(td[colspan]))')
+    const count = document.querySelector('[data-count="row-count"]')
+    if (count) {
+      count.textContent = `${rows.length} candidate${rows.length !== 1 ? 's' : ''}`
+    }
+  }
+
+  async saveAll(event) {
+    event.preventDefault()
+
+    if (!this.currentContestId) {
+      alert('Please select a contest first')
+      return
+    }
+
+    const tbody = document.querySelector('[data-tbody="candidates"]')
+    const rows = tbody.querySelectorAll('tr:not(:has(td[colspan]))')
+
+    const candidates = Array.from(rows).map(row => {
+      const candidateId = row.dataset.candidateId
+
+      const getData = (field) => {
+        const input = row.querySelector(`[data-field="${field}"]`)
+        if (!input) return null
+
+        if (input.type === 'checkbox') {
+          return input.checked
+        }
+        return input.value || null
+      }
+
+      return {
+        id: candidateId.startsWith('new-') ? null : candidateId,
+        contest_id: this.currentContestId,
+        name: getData('name'),
+        party_id: getData('party'),
+        outcome: getData('outcome'),
+        incumbent: getData('incumbent'),
+        socialMedia: {
+          facebook: getData('facebook'),
+          twitter: getData('twitter'),
+          instagram: getData('instagram'),
+          youtube: getData('youtube'),
+          tiktok: getData('tiktok'),
+          bluesky: getData('bluesky'),
+          truthsocial: getData('truthsocial'),
+          gettr: getData('gettr'),
+          rumble: getData('rumble'),
+          telegram: getData('telegram'),
+          threads: getData('threads')
+        }
       }
     })
-  }
 
-  addBallot(event) {
-    alert("Add ballot feature coming soon")
-  }
+    console.log('Saving candidates:', candidates)
 
-  addContest(event) {
-    const ballotId = event.currentTarget.dataset.ballotId
-    alert(`Add contest to ballot ${ballotId} - coming soon`)
-  }
-
-  addCandidate(event) {
-    const contestId = event.currentTarget.dataset.contestId
-    alert(`Add candidate to contest ${contestId} - coming soon`)
-  }
-
-  save(event) {
-    event.preventDefault()
-    alert("Save feature coming soon - collecting form data")
-
-    // Collect all form data
-    const ballots = []
-    this.element.querySelectorAll('[data-ballot-id]').forEach(ballotPanel => {
-      const ballotId = ballotPanel.dataset.ballotId
-      const contests = []
-
-      ballotPanel.querySelectorAll('table').forEach(table => {
-        const candidates = []
-        table.querySelectorAll('tbody tr:not(:last-child)').forEach(row => {
-          const nameInput = row.querySelector('input[type="text"]')
-          const partySelect = row.querySelector('select:nth-of-type(1)')
-          const outcomeSelect = row.querySelector('select:nth-of-type(2)')
-          const incumbentCheckbox = row.querySelector('input[type="checkbox"]')
-
-          if (nameInput && nameInput.value) {
-            candidates.push({
-              name: nameInput.value,
-              party: partySelect?.value,
-              outcome: outcomeSelect?.value,
-              incumbent: incumbentCheckbox?.checked
-            })
-          }
-        })
-        contests.push({ candidates })
-      })
-
-      ballots.push({ ballotId, contests })
-    })
-
-    console.log("Collected data:", ballots)
+    // TODO: Send to API
+    alert(`Ready to save ${candidates.length} candidates. API integration coming next!`)
   }
 }
