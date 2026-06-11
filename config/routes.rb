@@ -63,7 +63,11 @@ Rails.application.routes.draw do
     resources :districts
     resources :bodies
     resources :offices
-    resources :elections
+    resources :elections do
+      member do
+        get :editor
+      end
+    end
     resources :ballots
     resources :contests
     resources :candidates

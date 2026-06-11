@@ -1,0 +1,194 @@
+<div class="space-y-6" data-controller="election-editor">
+  <!-- Election Header -->
+  <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+    <div class="space-y-4">
+      <div>
+        <h2 class="text-xl font-bold text-gray-900"><%= @election.year %> <%= @election.election_type.titleize %> Election</h2>
+        <p class="text-sm text-gray-500 mt-1">Edit ballots, contests, and candidates</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Ballot Tabs -->
+  <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+    <div class="border-b border-gray-200">
+      <div class="flex overflow-x-auto px-6 py-0" role="tablist">
+        <% @ballots.each_with_index do |ballot, idx| %>
+          <button
+            type="button"
+            role="tab"
+            class="px-4 py-3 border-b-2 font-medium text-sm whitespace-nowrap transition-colors <%= idx == 0 ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-600 hover:text-gray-900' %>"
+            data-action="click->election-editor#switchBallot"
+            data-ballot-id="<%= ballot.id %>"
+            data-tab-index="<%= idx %>"
+          >
+            <%= ballot.state.abbreviation %> - <%= ballot.ballot_type.titleize %>
+          </button>
+        <% end %>
+        <button
+          type="button"
+          class="px-4 py-3 border-b-2 border-transparent text-gray-600 hover:text-gray-900 font-medium text-sm whitespace-nowrap transition-colors"
+          data-action="click->election-editor#addBallot"
+        >
+          + Add Ballot
+        </button>
+      </div>
+    </div>
+
+    <!-- Ballot Content -->
+    <div class="divide-y divide-gray-200">
+      <% @ballots.each_with_index do |ballot, idx| %>
+        <div
+          class="<%= idx == 0 ? '' : 'hidden' %>"
+          data-ballot-id="<%= ballot.id %>"
+          data-ballot-panel="<%= ballot.id %>"
+        >
+          <div class="p-6 space-y-6">
+            <!-- Ballot Info -->
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-700">State</label>
+                <select class="mt-2 w-full rounded-md border border-gray-300 px-3 py-2 text-sm" disabled>
+                  <option selected><%= ballot.state.name %></option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700">Ballot Type</label>
+                <select class="mt-2 w-full rounded-md border border-gray-300 px-3 py-2 text-sm" disabled>
+                  <option selected><%= ballot.ballot_type.titleize %></option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700">Date</label>
+                <input type="date" value="<%= ballot.ballot_date %>" class="mt-2 w-full rounded-md border border-gray-300 px-3 py-2 text-sm" disabled />
+              </div>
+            </div>
+
+            <!-- Contests Tabs -->
+            <div class="border-t pt-6">
+              <div class="flex items-center justify-between mb-4">
+                <h3 class="font-semibold text-gray-900">Contests</h3>
+                <button
+                  type="button"
+                  class="inline-flex items-center px-3 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+                  data-action="click->election-editor#addContest"
+                  data-ballot-id="<%= ballot.id %>"
+                >
+                  + Add Contest
+                </button>
+              </div>
+
+              <div class="space-y-6">
+                <% ballot.contests.each_with_index do |contest, contest_idx| %>
+                  <div class="border border-gray-200 rounded-lg p-4 bg-gray-50">
+                    <div class="flex items-center justify-between mb-4">
+                      <h4 class="font-semibold text-gray-900"><%= contest.office.category %></h4>
+                      <button type="button" class="text-red-600 hover:text-red-800 text-sm font-medium">Remove</button>
+                    </div>
+
+                    <!-- Candidates Table -->
+                    <div class="overflow-x-auto">
+                      <table class="w-full text-sm">
+                        <thead>
+                          <tr class="border-b border-gray-300 bg-gray-100">
+                            <th class="px-4 py-2 text-left font-semibold text-gray-700">Name</th>
+                            <th class="px-4 py-2 text-left font-semibold text-gray-700">Party</th>
+                            <th class="px-4 py-2 text-left font-semibold text-gray-700">Outcome</th>
+                            <th class="px-4 py-2 text-left font-semibold text-gray-700">Incumbent</th>
+                            <th class="px-4 py-2 text-right font-semibold text-gray-700">Actions</th>
+                          </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-200">
+                          <% contest.candidates.each do |candidate| %>
+                            <tr class="hover:bg-white">
+                              <td class="px-4 py-3">
+                                <input
+                                  type="text"
+                                  value="<%= candidate.person.full_name %>"
+                                  placeholder="Person name"
+                                  class="w-full rounded border border-gray-300 px-2 py-1"
+                                  data-candidate-id="<%= candidate.id %>"
+                                />
+                              </td>
+                              <td class="px-4 py-3">
+                                <select class="w-full rounded border border-gray-300 px-2 py-1">
+                                  <option value="">-- Select Party --</option>
+                                  <% @parties.each do |party| %>
+                                    <option value="<%= party.id %>" <%= 'selected' if candidate.party_at_time == party.name %>>
+                                      <%= party.name %>
+                                    </option>
+                                  <% end %>
+                                </select>
+                              </td>
+                              <td class="px-4 py-3">
+                                <select class="w-full rounded border border-gray-300 px-2 py-1">
+                                  <option value="pending" <%= 'selected' if candidate.outcome == 'pending' %>>Pending</option>
+                                  <option value="won" <%= 'selected' if candidate.outcome == 'won' %>>Won</option>
+                                  <option value="lost" <%= 'selected' if candidate.outcome == 'lost' %>>Lost</option>
+                                </select>
+                              </td>
+                              <td class="px-4 py-3">
+                                <input type="checkbox" <%= 'checked' if candidate.incumbent %> class="rounded border-gray-300" />
+                              </td>
+                              <td class="px-4 py-3 text-right">
+                                <button class="text-red-600 hover:text-red-800 text-sm font-medium">Delete</button>
+                              </td>
+                            </tr>
+                          <% end %>
+                          <tr class="hover:bg-white">
+                            <td colspan="5" class="px-4 py-3">
+                              <button
+                                type="button"
+                                class="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                                data-action="click->election-editor#addCandidate"
+                                data-contest-id="<%= contest.id %>"
+                              >
+                                + Add Candidate
+                              </button>
+                            </td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+
+                    <!-- Social Media Accounts -->
+                    <div class="mt-4 pt-4 border-t border-gray-200">
+                      <h5 class="font-semibold text-gray-900 mb-3">Quick Social Media Entry</h5>
+                      <div class="space-y-2 text-sm text-gray-600">
+                        <p>For each candidate listed above, add social media handles:</p>
+                        <div class="grid grid-cols-2 gap-2">
+                          <% SocialMediaAccount::PLATFORMS.each do |platform| %>
+                            <div class="flex items-center gap-2">
+                              <input type="text" placeholder="<%= platform %>" class="flex-1 rounded border border-gray-300 px-2 py-1 text-xs" />
+                            </div>
+                          <% end %>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                <% end %>
+              </div>
+            </div>
+          </div>
+        </div>
+      <% end %>
+    </div>
+  </div>
+
+  <!-- Save Actions -->
+  <div class="flex gap-3 sticky bottom-6">
+    <button
+      type="button"
+      class="flex-1 inline-flex justify-center items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700"
+      data-action="click->election-editor#save"
+    >
+      Save Changes
+    </button>
+    <a
+      href="<%= admin_elections_path %>"
+      class="inline-flex justify-center items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+    >
+      Cancel
+    </a>
+  </div>
+</div>
