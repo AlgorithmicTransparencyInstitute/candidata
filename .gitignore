@@ -36,6 +36,8 @@
 
 /app/assets/builds/*
 !/app/assets/builds/.keep
+# React bundle is committed so Heroku deploys need no Node build step
+!/app/assets/builds/election_editor.js
 /node_modules
 
 # macOS

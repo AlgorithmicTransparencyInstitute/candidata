@@ -1,7 +1,7 @@
 <% content_for :title, "Editor — #{@payload[:election][:label]}" %>
 
 <style>
-  /* Spreadsheet grid styles (kept here — classes generated in JS) */
+  /* Spreadsheet grid styles (cell classes are generated in the React bundle) */
   .ee-grid { border-collapse: separate; border-spacing: 0; }
   .ee-grid th, .ee-grid td {
     border-right: 1px solid #e5e7eb;
@@ -45,92 +45,7 @@
   }
 
   .ee-status-dot { width: 10px; height: 10px; border-radius: 9999px; margin: 0 auto; display: block; }
-
-  .ee-typeahead {
-    position: absolute; z-index: 100; min-width: 320px; max-width: 420px;
-    background: #fff; border: 1px solid #d1d5db; border-radius: 8px;
-    box-shadow: 0 10px 25px -5px rgb(0 0 0 / 0.2); overflow: hidden;
-  }
-  .ee-typeahead-item { padding: 8px 12px; cursor: pointer; font-size: 13px; }
-  .ee-typeahead-item:hover, .ee-typeahead-item.ee-active { background: #eff6ff; }
-  .ee-typeahead-item .ee-meta { color: #6b7280; font-size: 11px; }
 </style>
 
-<div data-controller="election-editor">
-  <script type="application/json" data-election-editor-target="data"><%= raw @payload.to_json %></script>
-
-  <!-- Toolbar -->
-  <div class="flex flex-wrap items-center gap-3 mb-4">
-    <div class="flex items-center gap-2">
-      <label class="text-sm font-medium text-gray-600">Contest</label>
-      <select data-election-editor-target="contestFilter"
-              data-action="change->election-editor#applyFilter"
-              class="rounded-md border-gray-300 text-sm py-1.5"></select>
-      <button type="button"
-              data-action="click->election-editor#openContestDialog"
-              class="text-sm font-medium text-blue-600 hover:text-blue-800 whitespace-nowrap">+ New contest</button>
-    </div>
-    <input type="search" placeholder="Search names…"
-           data-election-editor-target="search"
-           data-action="input->election-editor#applyFilter"
-           class="rounded-md border-gray-300 text-sm py-1.5 w-56" />
-    <div class="flex-1"></div>
-    <span class="text-sm text-gray-500" data-election-editor-target="counts"></span>
-    <button type="button"
-            data-action="click->election-editor#saveAll"
-            data-election-editor-target="saveButton"
-            class="inline-flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed">
-      Save
-    </button>
-  </div>
-
-  <!-- Grid -->
-  <div class="bg-white rounded-lg border border-gray-200 shadow-sm overflow-auto" style="max-height: calc(100vh - 180px);">
-    <table class="ee-grid w-full" data-election-editor-target="table">
-      <thead data-election-editor-target="thead"></thead>
-      <tbody data-election-editor-target="tbody"></tbody>
-    </table>
-  </div>
-
-  <!-- Footer -->
-  <div class="flex items-center gap-3 mt-3">
-    <button type="button"
-            data-action="click->election-editor#addRow"
-            class="inline-flex items-center px-3 py-1.5 rounded-md border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
-      + Add row
-    </button>
-    <span class="text-xs text-gray-400">Enter ↵ next row · Shift+Enter ↑ · ⌘S save · type a name to link an existing person</span>
-  </div>
-
-  <!-- New contest dialog -->
-  <dialog data-election-editor-target="contestDialog" class="rounded-lg shadow-xl border border-gray-200 p-0 w-[440px] backdrop:bg-black/30">
-    <div class="p-5 space-y-4">
-      <h3 class="font-semibold text-gray-900">New contest</h3>
-      <div>
-        <label class="block text-sm font-medium text-gray-700 mb-1">Office</label>
-        <input type="text" placeholder="Search offices… (e.g. Governor, U.S. House)"
-               data-election-editor-target="officeSearch"
-               data-action="input->election-editor#searchOffices"
-               class="w-full rounded-md border-gray-300 text-sm" autocomplete="off" />
-        <div data-election-editor-target="officeResults" class="mt-1 border border-gray-200 rounded-md divide-y divide-gray-100 max-h-48 overflow-auto hidden"></div>
-        <input type="hidden" data-election-editor-target="officeId" />
-      </div>
-      <div data-election-editor-target="contestPartyWrap">
-        <label class="block text-sm font-medium text-gray-700 mb-1">Party (primary ballots)</label>
-        <select data-election-editor-target="contestParty" class="w-full rounded-md border-gray-300 text-sm"></select>
-      </div>
-      <p class="text-sm text-red-600 hidden" data-election-editor-target="contestError"></p>
-      <div class="flex justify-end gap-2 pt-1">
-        <button type="button" data-action="click->election-editor#closeContestDialog"
-                class="px-3 py-1.5 rounded-md border border-gray-300 text-sm font-medium text-gray-700 hover:bg-gray-50">Cancel</button>
-        <button type="button" data-action="click->election-editor#createContest"
-                data-election-editor-target="contestCreateButton"
-                class="px-3 py-1.5 rounded-md bg-blue-600 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50">Create</button>
-      </div>
-    </div>
-  </dialog>
-
-  <!-- Toast -->
-  <div data-election-editor-target="toast"
-       class="fixed bottom-5 right-5 z-50 hidden max-w-sm rounded-lg px-4 py-3 text-sm font-medium text-white shadow-lg"></div>
-</div>
+<script type="application/json" id="editor-data"><%= raw @payload.to_json %></script>
+<div id="election-editor-root"></div>

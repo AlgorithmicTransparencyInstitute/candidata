@@ -1,5 +1,21 @@
 {
+  "scripts": {
+    "build": "esbuild app/javascript/react/election_editor.tsx --bundle --minify --sourcemap --format=iife --outdir=app/assets/builds --define:process.env.NODE_ENV='\"production\"'",
+    "build:watch": "esbuild app/javascript/react/election_editor.tsx --bundle --sourcemap --format=iife --outdir=app/assets/builds --define:process.env.NODE_ENV='\"development\"' --watch"
+  },
   "dependencies": {
-    "@tailwindcss/forms": "^0.5.11"
+    "@radix-ui/react-dialog": "^1.1.16",
+    "@tailwindcss/forms": "^0.5.11",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "lucide-react": "^1.17.0",
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7",
+    "tailwind-merge": "^3.6.0"
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.17",
+    "@types/react-dom": "^19.2.3",
+    "esbuild": "^0.28.0"
   }
 }
