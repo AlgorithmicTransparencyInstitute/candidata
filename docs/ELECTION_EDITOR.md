@@ -108,10 +108,40 @@ Row deletion removes **only the candidacy** — person and socials are kept.
 - Browser sanity check: `/admin/elections/31/editor` (UT 2026 primary — 16 contests,
   40 candidates) or any SD/small state for a lighter page.
 
+## Next pass — TODOs (queued 2026-06-12, after first user testing round)
+
+The tool is deployed and users are testing it. Collect their feedback before starting;
+these are the known items from Cameron's first review:
+
+1. **Cell readability.** Individual items (race, party, outcome, etc.) are hard to
+   read at current sizing — improve visibility/typography of the dropdown cells
+   (larger/darker text, possibly wider columns or higher-contrast selected values).
+
+2. **Social cell display: truncate to the handle part.** Cells show the full URL but
+   columns are too narrow to see the handle. Plan: display a truncated form that
+   strips the platform root (e.g. `facebook.com/` → show `tomcottonar`,
+   `youtube.com/@x` → `@x`), and reveal the full URL on click/focus for editing.
+   The external-link icon already opens the real URL; keep that. Implementation
+   note: the server already extracts canonical handles (`ElectionEditorSave#handle_from_url`)
+   — display can derive from `cell.url` vs `cell.handle` without new parsing.
+
+3. **Multiple accounts per platform (Campaign / Official Office / Personal).**
+   Current behavior (documented so the next pass starts informed):
+   - *Loading*: `socials_map` shows ONE account per platform, picked by channel-type
+     priority Campaign > Official Office > Personal > nil; other accounts on that
+     platform are invisible in the grid.
+   - *Creating*: handles entered in the grid create accounts with
+     `channel_type: "Campaign"`.
+   - *Editing*: edits apply to whichever account the cell is bound to (`accountId`).
+   Needed: a design for displaying/editing more than one account per platform —
+   options to consider: a channel-type row-expander per candidate, a badge/count on
+   the cell with a popover editor, or a channel-type toggle on the toolbar that
+   switches which account tier the whole grid shows.
+
+4. **Collect user-testing feedback** and fold their feature requests into this list
+   before scheduling the pass.
+
 ## Known limitations / future work
 
-- One account shown per platform (Campaign > Official Office > Personal priority).
 - No middle name/suffix columns; no row virtualization (fine to ~1k rows); no
   multi-cell Excel paste (CSV import pipeline covers bulk spreadsheets).
-- Legacy Stimulus implementation (`app/javascript/controllers/election_editor_controller.js`)
-  is retired but kept until the React version is browser-verified — delete after confirming.
