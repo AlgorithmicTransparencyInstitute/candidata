@@ -16,6 +16,10 @@ class ApplicationController < ActionController::Base
   # Track visits with Ahoy
   before_action :track_ahoy_visit
 
+  # PaperTrail: attribute every tracked change to the signed-in user
+  # (versions.whodunnit = current_user.id for the duration of the request)
+  before_action :set_paper_trail_whodunnit
+
   # Track user sign-ins
   after_action :track_sign_in, if: -> { user_signed_in? && session[:just_signed_in] }
 

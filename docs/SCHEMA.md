@@ -4,7 +4,7 @@ Models, columns, associations, validations, and scopes — **generated from `db/
 
 Conventions worth knowing up front:
 - **Geography is string-keyed.** `ballots.state`, `contests.location`, `districts.state`, `offices.state`, `bodies.state`, `elections.state`, and `people.state_of_residence` hold the **state abbreviation string** (e.g. `"SD"`), not a `state_id` FK. The `states` table is a reference table; `State has_many :districts/:offices/:ballots` declarations exist but are broken (no `state_id` columns) — query by abbreviation instead.
-- Most core models use **PaperTrail** (`has_paper_trail`) for version history.
+- Most core models use **PaperTrail** (`has_paper_trail`) for version history. Every change is attributed via `versions.whodunnit`: web edits store the user id (`ApplicationController` sets `set_paper_trail_whodunnit`), background jobs store `"job:ClassName"` (`ApplicationJob`), and rake/console/CLI contexts store `"rake:task"`/`"console:user"`/`"cli:…"` (`config/initializers/paper_trail.rb`). Versions created before June 2026 have `whodunnit: nil`.
 - `airtable_id` columns track import provenance (unique, nullable).
 
 ---

@@ -165,6 +165,10 @@ The app is importmap + Stimulus for classic pages, **plus** an esbuild-bundled R
 - Tailwind v4 auto-scans `.tsx` files — no config needed for new classes.
 - New React features: add an entrypoint in `app/javascript/react/`, extend the esbuild script in `package.json` to include it, mount from a view with an embedded-JSON payload (see the election editor pattern).
 
+## Change Tracking (PaperTrail)
+
+All core models are versioned, and **every change is attributed** via `versions.whodunnit`: user id for web edits (`set_paper_trail_whodunnit` in ApplicationController), `"job:ClassName"` for background jobs (ApplicationJob `around_perform`), `"rake:task"`/`"console:user"`/`"cli:…"` for everything else (`config/initializers/paper_trail.rb`). Versions before June 2026 are unattributed (`nil`). The accounts API exposes `last_change` (at/event/by, with user ids resolved to names).
+
 ## Internal API (`/api/*`)
 
 Session-authenticated JSON API (reads: any signed-in user; mutations: admin + `X-CSRF-Token`). All endpoints documented in `docs/API_PLAN.md` and verified by `bin/rails runner lib/scripts/api_verify.rb` (52 checks, self-cleaning) — **run it after changing API controllers**. No unauthenticated mode (local DB holds production data); future curl/public access will use token auth.

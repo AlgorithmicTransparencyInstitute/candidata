@@ -112,7 +112,8 @@ module Api
         junkipedia_channel_id: account.junkipedia_channel_id,
         junkipedia_enqueued_at: account.junkipedia_enqueued_at,
         junkipedia_id_collected_at: account.junkipedia_id_collected_at,
-        junkipedia_last_error: account.junkipedia_last_error
+        junkipedia_last_error: account.junkipedia_last_error,
+        last_change: last_change_json(account)
       )
     end
 
@@ -120,6 +121,23 @@ module Api
       return nil unless user
 
       { id: user.id, email: user.email, name: user.name }
+    end
+
+    def last_change_json(record)
+      version = record.versions.last
+      return nil unless version
+
+      { at: version.created_at, event: version.event, by: whodunnit_label(version.whodunnit) }
+    end
+
+    # whodunnit is a user id for web edits, or a context label like
+    # "job:EnqueueJunkipediaChannelJob" / "rake:import:..." / nil (legacy).
+    def whodunnit_label(whodunnit)
+      return nil if whodunnit.blank?
+      return whodunnit unless whodunnit.match?(/\A\d+\z/)
+
+      user = User.find_by(id: whodunnit)
+      user ? (user.name.presence || user.email) : "user:#{whodunnit}"
     end
   end
 end
