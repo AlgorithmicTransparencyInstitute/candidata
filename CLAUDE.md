@@ -183,6 +183,12 @@ Comprehensive documentation covering schema, architecture, features, and APIs. *
 | **docs/ARCHITECTURE.md** | Controllers, views, services, background jobs, request flows, and design patterns |
 | **docs/FEATURES.md** | User-facing features organized by role (public, researcher, verifier, admin) and workflow |
 | **docs/API_PLAN.md** | Planned internal/public APIs with request/response examples and status |
+| **docs/VERIFICATION_WORKFLOW.md** | The data collection → validation → secondary verification system: state machine, completion gates, four-eyes rule, design record |
+| **docs/ELECTION_EDITOR.md** | Spreadsheet bulk candidate entry: architecture, endpoints, save semantics, next-pass TODOs |
+
+## Tests
+
+RSpec + FactoryBot (`spec/`). Run with `bundle exec rspec` (test DB: `candidata_test`, create via `RAILS_ENV=test bin/rails db:create db:schema:load`). The verification workflow (four-eyes rule, completion gates, secondary verification) is pinned by request/model specs — **keep these green** and add specs when changing workflow behavior. The `/api` layer has a separate integration check: `bin/rails runner lib/scripts/api_verify.rb` (runs against the dev DB).
 
 ### Documentation Maintenance Practice
 
@@ -308,7 +314,8 @@ Key gotchas:
 When a `SocialMediaAccount` transitions to `verified = true` (via `verify!` or any path that flips the column), an `after_commit` hook enqueues `EnqueueJunkipediaChannelJob`, which `POST /channels` to Junkipedia. A separate `ResolveJunkipediaChannelIdJob` calls `GET /channels/search` (using the extracted handle + platform) to retrieve the channel id; the resolved id is stored on the account and the channel is added to the default list (`JUNKIPEDIA_DEFAULT_LIST_ID=10929`, "Candidata Imports").
 
 Key facts:
-- **Rate limit**: Junkipedia caps API calls at **5,000 / hour** (Pro tier). Response headers expose `x-ratelimit-remaining` and `x-ratelimit-reset` — `JunkipediaService` caches these and `RateLimitError#seconds_until_reset` returns precise back-off durations.
+- **Rate limit**: Junkipedia raised our cap to **1,000,000 / hour** in June 2026 (was 5,000/hour Pro tier — throttled rake defaults still assume the old cap). Response headers expose `x-ratelimit-remaining` and `x-ratelimit-reset` — `JunkipediaService` caches these and `RateLimitError#seconds_until_reset` returns precise back-off durations.
+- **Channel creation**: `POST /channels` requires **`channel_url`** (not `url`) and can return HTTP 200 with a body-level `errors` array (e.g. org lacks channel-creation permission / daily limit reached — currently the case as of June 2026). See "Channel Creation Gotchas" in `docs/JUNKIPEDIA_INTEGRATION.md`.
 - **Search shape**: `/channels/search` accepts `handle` (+ optional `platform`). It does **NOT** accept `url`. Use `JunkipediaService.handle_from(account)` to extract a usable handle.
 - **For bulk backfills** (more than a few hundred records), use the throttled rake task `junkipedia:match_pending` — not the dashboard buttons. The task watches rate-limit headers and pauses when within the safety buffer.
 

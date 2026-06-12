@@ -57,8 +57,12 @@
       <!-- Action Buttons (only show when assignment is in progress) -->
       <% if @assignment.in_progress? %>
         <div class="flex items-center gap-2 shrink-0">
-          <!-- Verify Button (checkmark icon) -->
-          <% if !is_verified %>
+          <!-- Verify Button (checkmark icon) — hidden for your own entries (four-eyes rule) -->
+          <% if !is_verified && !account.verifiable_by?(current_user) %>
+            <span class="px-2 py-0.5 text-xs rounded-full bg-amber-100 text-amber-800 shrink-0 group relative cursor-help" title="You entered this account — another user must verify it. Completing this task will flag it for secondary verification.">
+              Awaiting another verifier
+            </span>
+          <% elsif !is_verified %>
             <%= button_to verify_verification_account_path(account), method: :patch, class: "p-1.5 rounded hover:bg-green-100 text-green-600 hover:text-green-700 transition-colors group relative", title: "Verify as accurate" do %>
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>

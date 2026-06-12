@@ -81,3 +81,6 @@ end
 # Performance profiling (available in all environments, configured to show for admins only)
 gem "rack-mini-profiler"
 
+
+gem "rspec-rails", "~> 8.0", groups: [:development, :test]
+gem "factory_bot_rails", "~> 6.5", groups: [:development, :test]

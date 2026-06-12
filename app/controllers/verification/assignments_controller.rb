@@ -6,7 +6,7 @@ module Verification
     before_action :set_assignment, only: [:show, :start, :complete, :reopen]
 
     def index
-      @assignments = current_user.assignments.data_validation.active.includes(person: :social_media_accounts).order(created_at: :asc)
+      @assignments = current_user.assignments.verification_tasks.active.includes(person: :social_media_accounts).order(created_at: :asc)
     end
 
     def show
@@ -24,19 +24,16 @@ module Verification
       redirect_to verification_assignment_path(@assignment), notice: "Verification started."
     end
 
+    # Completion gate: only accounts the completer is ALLOWED to verify block
+    # completion (four-eyes rule — you can't resolve your own entries, so they
+    # don't trap you). Self-entered leftovers are flagged for secondary
+    # verification so another user picks them up via the admin queue.
     def complete
-      incomplete = @assignment.person.social_media_accounts.needs_verification.count
-      if incomplete > 0
-        redirect_to verification_assignment_path(@assignment), alert: "#{incomplete} accounts still need verification."
-        return
+      if @assignment.task_type == 'secondary_verification'
+        complete_secondary_verification
+      else
+        complete_data_validation
       end
-
-      @assignment.complete!
-
-      # Check if any accounts were modified during validation and mark for secondary verification
-      @assignment.person.mark_for_secondary_verification_if_needed!
-
-      redirect_to verification_queue_path, notice: "Verification completed!"
     end
 
     def reopen
@@ -46,8 +43,49 @@ module Verification
 
     private
 
+    def complete_data_validation
+      pending = @assignment.person.social_media_accounts.needs_verification.to_a
+      blocking = pending.select { |account| account.verifiable_by?(current_user) }
+
+      if blocking.any?
+        redirect_to verification_assignment_path(@assignment), alert: "#{blocking.size} accounts still need verification."
+        return
+      end
+
+      @assignment.complete!
+
+      leftover = pending - blocking # accounts the completer entered (non-admin)
+      if leftover.any?
+        SocialMediaAccount.where(id: leftover.map(&:id)).update_all(needs_secondary_verification: true)
+        @assignment.person.update!(needs_secondary_verification: true)
+      end
+
+      # Flag accounts whose existing data was modified during validation
+      @assignment.person.mark_for_secondary_verification_if_needed!
+
+      notice = if leftover.any?
+        "Verification completed! #{leftover.size} #{'account'.pluralize(leftover.size)} you added will be verified by another user."
+      else
+        "Verification completed!"
+      end
+      redirect_to verification_queue_path, notice: notice
+    end
+
+    def complete_secondary_verification
+      unresolved = @assignment.person.social_media_accounts.needs_secondary_verification.needs_verification.count
+      if unresolved > 0
+        redirect_to verification_assignment_path(@assignment),
+                    alert: "#{unresolved} flagged #{'account'.pluralize(unresolved)} still need resolution (verify, reject, or mark not found)."
+        return
+      end
+
+      @assignment.complete!
+      @assignment.person.clear_secondary_verification!
+      redirect_to verification_queue_path, notice: "Secondary verification completed!"
+    end
+
     def set_assignment
-      @assignment = current_user.assignments.data_validation.find(params[:id])
+      @assignment = current_user.assignments.verification_tasks.find(params[:id])
     end
 
     def require_researcher_or_admin

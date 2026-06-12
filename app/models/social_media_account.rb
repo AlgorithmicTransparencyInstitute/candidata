@@ -56,9 +56,18 @@ class SocialMediaAccount < ApplicationRecord
     handle.present? ? "@#{handle}" : url
   end
 
+  # Four-eyes rule: the user who entered an account may not verify it.
+  # Admins are exempt (escape hatch, visible in the audit trail).
+  def verifiable_by?(user)
+    user.admin? || entered_by_id.nil? || entered_by_id != user.id
+  end
+
   def mark_entered!(user, url: nil, handle: nil)
-    # Check if this is a modification (URL changed from existing value)
-    is_modification = persisted? && (self.url != url || self.research_status == 'verified')
+    # A modification means overwriting real previous data — an existing URL or a
+    # verified status. First entry into a blank prepopulated stub is NOT a
+    # modification (it used to be, which falsely flagged researcher first
+    # entries for secondary verification).
+    is_modification = persisted? && ((self.url.present? && self.url != url) || self.research_status == 'verified')
 
     update!(
       url: url,

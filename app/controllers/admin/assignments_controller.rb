@@ -183,9 +183,19 @@ module Admin
 
       created = 0
       skipped = 0
+      ineligible = 0
 
       person_ids.each do |pid|
         person = Person.find(pid)
+
+        # Four-eyes rule: secondary verification must go to someone other than the
+        # user whose pending entries are the reason the person is flagged.
+        if task_type == 'secondary_verification' &&
+           person.social_media_accounts.needs_secondary_verification.needs_verification.where(entered_by_id: user.id).exists?
+          ineligible += 1
+          next
+        end
+
         assignment = person.assignments.find_or_initialize_by(user: user, task_type: task_type)
 
         if assignment.new_record?

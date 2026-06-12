@@ -15,10 +15,11 @@ SocialMediaAccount#verified flips false → true
 after_commit hook (app/models/social_media_account.rb)
         │
         ▼
-EnqueueJunkipediaChannelJob ──► POST /api/v2/channels { url: ... }
+EnqueueJunkipediaChannelJob ──► POST /api/v2/channels { channel_url: ... }
                                        │
                                        ▼
-                                Junkipedia ingests the URL (async on their side)
+                                Junkipedia creates the channel in real time and
+                                returns the record (the existing one if known)
                                        │
                                        ▼
 ResolveJunkipediaChannelIdJob ──► GET /api/v2/channels/search?handle=…&platform=…
@@ -94,9 +95,15 @@ Buttons:
 
 The dashboard shows an amber warning when `pending > 1000` directing admins to the throttled rake task.
 
+## Channel Creation Gotchas (June 2026)
+
+- `POST /api/v2/channels` requires the **`channel_url`** parameter. The service originally sent `{ url: ... }`, which the API rejects with HTTP 422 "Channel URL is required" — meaning historical enqueues never succeeded (the failures were masked by 429 rate-limit errors). Fixed in `JunkipediaService#enqueue_channel`.
+- The endpoint can return **HTTP 200 with an `errors` array in the body** instead of an error status — notably `"You cannot create new channels because your organization does not have this permission or you have reached the daily limit."` The service now treats a body-level `errors` array as a failure. As of 2026-06-11 channel creation is blocked for our org token; Junkipedia needs to grant the permission / raise the daily creation limit before bulk enqueue can work.
+- API docs: <https://www.junkipedia.org/api-docs/v2/swagger.yaml>
+
 ## Rate Limit
 
-Junkipedia caps API calls at **5,000 requests / hour** on the Pro tier. The service:
+Junkipedia raised our API cap to **1,000,000 requests / hour** (verified via `x-ratelimit-limit`, June 2026; previously 5,000/hour on the Pro tier — throttled task defaults still assume the old cap and can be tuned up via `RATE`). The service:
 
 - Reads `x-ratelimit-limit`, `x-ratelimit-remaining`, `x-ratelimit-reset` from every response and caches the most recent values on `JunkipediaService.rate_limit_remaining` / `.rate_limit_reset`.
 - Raises `JunkipediaService::RateLimitError` on HTTP 429 with `seconds_until_reset` computed from the headers.

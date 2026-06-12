@@ -18,6 +18,8 @@ class Assignment < ApplicationRecord
   scope :data_collection, -> { where(task_type: 'data_collection') }
   scope :data_validation, -> { where(task_type: 'data_validation') }
   scope :secondary_verification, -> { where(task_type: 'secondary_verification') }
+  # Both task types worked in the Verification workspace
+  scope :verification_tasks, -> { where(task_type: %w[data_validation secondary_verification]) }
   scope :for_user, ->(user) { where(user: user) }
   scope :active, -> { where(status: %w[pending in_progress]) }
 

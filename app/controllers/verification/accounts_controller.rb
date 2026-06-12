@@ -61,6 +61,8 @@ module Verification
     end
 
     def verify_with_changes
+      return unless enforce_four_eyes!
+
       # This allows editing AND verifying in one action
       # Update the data
       url_changed = @account.url != account_params[:url]
@@ -121,6 +123,8 @@ module Verification
     end
 
     def verify
+      return unless enforce_four_eyes!
+
       @account.verify!(current_user, notes: nil)
 
       respond_to do |format|
@@ -178,8 +182,17 @@ module Verification
       @account = SocialMediaAccount.find(params[:id])
     end
 
+    # Four-eyes rule: you can't verify what you entered (admins exempt).
+    def enforce_four_eyes!
+      return true if @account.verifiable_by?(current_user)
+
+      redirect_to verification_assignment_path(@assignment),
+                  alert: "You entered this account — another user must verify it. It will be flagged for secondary verification when you complete this task."
+      false
+    end
+
     def verify_assignment
-      @assignment = current_user.assignments.data_validation.active.find_by(person_id: @account.person_id)
+      @assignment = current_user.assignments.verification_tasks.active.find_by(person_id: @account.person_id)
       unless @assignment
         redirect_to verification_assignments_path, alert: "You don't have an active verification assignment for this person."
       end
@@ -195,7 +208,7 @@ module Verification
 
     def verify_assignment_for_create
       person = Person.find(params[:person_id])
-      @assignment = current_user.assignments.data_validation.active.find_by(person_id: person.id)
+      @assignment = current_user.assignments.verification_tasks.active.find_by(person_id: person.id)
       unless @assignment
         redirect_to verification_assignments_path, alert: "You don't have an active verification assignment for this person."
       end

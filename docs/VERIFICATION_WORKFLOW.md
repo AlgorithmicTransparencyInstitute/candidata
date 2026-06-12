@@ -1,5 +1,12 @@
 # Verification Workflow — Current State & Redesign Proposal
 
+> **Status: IMPLEMENTED 2026-06-12** (branch `feature/verification-four-eyes`). The
+> "Final implementation plan" below was built test-first — see `spec/requests/
+> verification_flow_spec.rb`, `spec/requests/admin_secondary_assignment_spec.rb`,
+> `spec/models/social_media_account_spec.rb` (25 examples). Run `bundle exec rspec`
+> before changing this flow. The "Current state" sections below describe the system
+> BEFORE this change and remain as the design record; quirks #1–#4 are now fixed.
+
 Written 2026-06-12 while investigating the **completion deadlock**: a verifier who adds
 a new account during a validation task cannot complete the task, because the account
 they added needs verification, and policy says they can't verify their own entry.
@@ -184,19 +191,38 @@ model specs pinning each scenario **before** changing behavior:
 
 ---
 
-## Open questions (answer before implementation)
+## Decisions (Cameron, 2026-06-12)
 
-1. Should the four-eyes rule bind **admins** too, or can admins self-verify as an
-   escape hatch?
-2. Is it acceptable to **reuse `needs_secondary_verification`** for "new entry awaiting
-   first peer review," or should that be distinct from "verified data was modified"?
-   (Reuse = one queue, one admin flow; distinct = cleaner semantics, more machinery.)
-3. When a completion strands self-entered accounts, should the system **auto-create**
-   the secondary_verification assignment (needs an assignee-picking rule) or leave
-   creation to admins via the existing filter (recommended: manual, admins balance
-   workloads)?
-4. For **D**, do we also backfill (clear flags set by first-entries), or fix
-   go-forward only? Backfill changes what admins currently see in the
-   needs-secondary-verification queue (496 people today).
-5. Test framework: confirm **RSpec + FactoryBot** (per TESTING_PLAN.md) vs Rails
-   default Minitest. The verification flow specs above are the starting suite either way.
+1. **Four-eyes rule: admins exempt.** Researchers cannot verify accounts they entered;
+   admins can verify anything (escape hatch, visible in the audit trail).
+2. **Reuse `needs_secondary_verification`** for "new entry awaiting first peer review" —
+   one flag, one admin filter, one task type.
+3. **Manual assignment**: completion flags the person; admins find them via the
+   existing needs-secondary-verification filter and choose the assignee. No auto-create.
+4. **Flag fix is go-forward only** — no backfill of the 496 currently-flagged people.
+5. Test framework: **RSpec + FactoryBot** (matches `docs/TESTING_PLAN.md` intent).
+
+## Final implementation plan
+
+1. **Test infrastructure first**: rspec-rails + factory_bot_rails, factories for
+   User/Person/Assignment/SocialMediaAccount, request specs pinning the full scenario
+   matrix above (target behavior) before changing code.
+2. **A′ — enforce four-eyes (admins exempt)**: `SocialMediaAccount#verifiable_by?(user)`
+   (`user.admin? || entered_by_id != user.id`); guard `verify`/`verify_with_changes`
+   server-side; hide the Verify button with an explanatory badge in the row partial.
+3. **B — completion gate**: block only on `needs_verification` accounts the completer
+   is allowed to verify. On completion, any leftover self-entered pending accounts get
+   `needs_secondary_verification: true` (account + person) and the flash explains the
+   hand-off.
+4. **C — secondary tasks workable**: Verification workspace (dashboard/queue/index/
+   show/accounts guard) serves `data_validation` + `secondary_verification`; researcher
+   index routes secondary tasks to the verification namespace; secondary completion
+   gate = no flagged-account still `needs_verification` (same verifiable-by logic);
+   completing calls `Person#clear_secondary_verification!`.
+5. **D — go-forward flag fix**: `mark_entered!` counts a modification only when the
+   account had a previous URL or was verified (first entry into a blank stub no longer
+   flags `modified_during_validation`).
+6. **E — admin guard**: creating a `secondary_verification` assignment skips people
+   whose pending flagged accounts were entered by the chosen assignee (reported in the
+   flash as skipped).
+7. Docs + in-app guides updated (this doc, admin guide §6, verification guide partial).

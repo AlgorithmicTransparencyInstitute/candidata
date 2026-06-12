@@ -166,20 +166,25 @@
             <li><strong>First Validation:</strong> Researcher B reviews the accounts
               <ul class="list-disc list-inside ml-6 mt-2 space-y-1">
                 <li>If Researcher B just verifies without changes → No secondary verification needed</li>
-                <li>If Researcher B modifies the URL or marks as "not found" → Flagged for secondary verification</li>
+                <li>If Researcher B modifies an existing URL or clears entered data → Flagged for secondary verification</li>
+                <li>If Researcher B <strong>adds a new account</strong> → They cannot verify their own entry (the row shows "Awaiting another verifier"); it's flagged for secondary verification when they complete the task</li>
               </ul>
             </li>
-            <li><strong>Assignment Completion:</strong> When Researcher B marks the assignment complete, modified accounts are automatically flagged</li>
+            <li><strong>Assignment Completion:</strong> Researcher B can complete the task even when their own additions are still unverified — those accounts (and the person) are automatically flagged. Accounts entered by <em>someone else</em> still block completion until resolved.</li>
             <li><strong>Visual Indicators:</strong> Accounts needing secondary verification show with a <span class="px-2 py-0.5 bg-purple-100 text-purple-700 rounded text-xs">Purple "Needs Secondary Verification" badge</span></li>
           </ol>
 
-          <h3 class="text-lg font-semibold text-gray-900 mt-6 mb-3">Finding People Needing Secondary Verification:</h3>
+          <h3 class="text-lg font-semibold text-gray-900 mt-6 mb-3">Finding &amp; Assigning Secondary Verification:</h3>
           <ol class="list-decimal list-inside space-y-3 text-gray-700">
-            <li><strong>Go to <%= link_to "People", admin_people_path, target: "_blank", class: "text-blue-600 hover:text-blue-800" %></strong></li>
-            <li><strong>Apply filter:</strong> Look for people with the "Needs Secondary Verification" flag</li>
-            <li><strong>Review accounts:</strong> Click into each person to see which accounts need secondary verification</li>
-            <li><strong>Create assignments:</strong> Assign these people to a third researcher for secondary verification</li>
+            <li><strong>Go to <%= link_to "New Assignment", new_admin_assignment_path(task_type: 'secondary_verification'), target: "_blank", class: "text-blue-600 hover:text-blue-800" %></strong> and choose the Secondary Verification task type</li>
+            <li><strong>Apply filter:</strong> "Needs secondary verification" shows flagged people; combine with "No secondary verification assignment" to find unassigned ones</li>
+            <li><strong>Pick the assignee:</strong> The system automatically skips people whose flagged accounts were entered by the chosen user — secondary verification always goes to a different person</li>
+            <li><strong>The task appears in the assignee's Verification workspace</strong> alongside regular validation tasks. Completing it requires resolving every flagged account (verify, reject, or not found), which clears the person's flag.</li>
           </ol>
+
+          <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 my-4 text-sm text-blue-900">
+            <strong>Note:</strong> Admins are exempt from the "can't verify your own entry" rule and can verify anything directly — use sparingly; the audit trail records who verified each account.
+          </div>
 
           <h3 class="text-lg font-semibold text-gray-900 mt-6 mb-3">Account Types & Channel Types:</h3>
           <p class="text-gray-700 mb-3">Researchers work with three types of social media account classifications:</p>

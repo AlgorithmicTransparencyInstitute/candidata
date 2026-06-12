@@ -22,7 +22,7 @@
       <div class="divide-y divide-gray-200">
         <% @assignments.each do |assignment| %>
           <%
-            assignment_path = assignment.task_type == 'data_validation' ? verification_assignment_path(assignment) : researcher_assignment_path(assignment)
+            assignment_path = assignment.task_type == 'data_collection' ? researcher_assignment_path(assignment) : verification_assignment_path(assignment)
           %>
           <%= link_to assignment_path, class: "block px-6 py-4 hover:bg-gray-50 transition-colors" do %>
             <div class="flex justify-between items-center">

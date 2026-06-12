@@ -63,11 +63,13 @@ class JunkipediaService
     handle_response(response, "get channels for list #{list_id}")
   end
 
-  # Enqueue a channel for ingestion by URL. Junkipedia processes asynchronously;
-  # the channel_id may not be available in the response and must be resolved later
-  # via search_channel.
+  # Create (or fetch) a channel by URL. POST /channels expects `channel_url`
+  # (not `url`) and creates in real time, returning the channel record — the
+  # existing one if it's already known. Failures can come back as HTTP 200
+  # with an `errors` array in the body (e.g. the org lacks channel-creation
+  # permission or hit its daily limit), so a 2xx alone is not success.
   def enqueue_channel(url:, retries: 3)
-    body = { url: url }
+    body = { channel_url: url }
     attempts = 0
     begin
       attempts += 1
@@ -77,7 +79,12 @@ class JunkipediaService
         body: body.to_json,
         timeout: 30
       )
-      handle_response(response, "enqueue channel '#{url}'")
+      parsed = handle_response(response, "enqueue channel '#{url}'")
+      if parsed.is_a?(Hash) && parsed["errors"].present?
+        details = Array(parsed["errors"]).filter_map { |err| err["detail"] }.join("; ")
+        raise JunkipediaError, "Failed to enqueue channel '#{url}': #{details.presence || parsed['errors'].inspect}"
+      end
+      parsed
     rescue Net::OpenTimeout, Net::ReadTimeout, Errno::ECONNRESET, Errno::ECONNREFUSED => e
       if attempts <= retries
         sleep(2 ** attempts)
