@@ -141,6 +141,8 @@ module Admin
         parties: party_options,
         contestParties: Contest::PARTIES.sort,
         platforms: SocialMediaAccount::PLATFORMS,
+        # Reuses SocialMediaHelper#platform_icon (same SVGs/colors as the rest of the app)
+        platformIcons: SocialMediaAccount::PLATFORMS.index_with { |p| helpers.platform_icon(p, size: 14) },
         outcomes: Candidate::OUTCOMES,
         genders: Person::GENDERS,
         races: Person.distinct.where.not(race: [nil, '']).pluck(:race).sort,

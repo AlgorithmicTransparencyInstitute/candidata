@@ -39,6 +39,7 @@ export type Payload = {
   parties: PartyOption[]
   contestParties: string[]
   platforms: string[]
+  platformIcons: Record<string, string>
   outcomes: string[]
   genders: string[]
   races: string[]

@@ -1,5 +1,5 @@
 import * as React from "react"
-import { Plus } from "lucide-react"
+import { ArrowDown, ArrowUp, Plus } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { NativeSelect } from "@/components/ui/native-select"
@@ -25,6 +25,8 @@ export function EditorApp({ payload }: { payload: Payload }) {
   const [saving, setSaving] = React.useState(false)
   const [dialogOpen, setDialogOpen] = React.useState(false)
   const [typeahead, setTypeahead] = React.useState<TypeaheadState | null>(null)
+  const [sort, setSort] = React.useState<{ key: string; dir: 1 | -1 } | null>(null)
+  const [rowOrder, setRowOrder] = React.useState<string[] | null>(null)
 
   const tableRef = React.useRef<HTMLTableElement>(null)
   const typeaheadTimer = React.useRef<ReturnType<typeof setTimeout>>()
@@ -270,6 +272,75 @@ export function EditorApp({ payload }: { payload: Payload }) {
     }
   }
 
+  // ---------- sorting ----------
+  // Sorting snapshots an order of row keys rather than live-sorting, so rows
+  // don't jump around while the user is typing. Click a header again to
+  // re-apply (toggles direction). New rows append at the bottom.
+
+  const sortValueFor = (row: RowState, key: string): string | number => {
+    switch (key) {
+      case "contest": {
+        const contest = contests.find(c => c.id === row.contestId)
+        return contest ? contestOptionLabel(contest) : ""
+      }
+      case "incumbent": return row.incumbent ? 0 : 1
+      case "firstName": return row.firstName
+      case "lastName": return row.lastName
+      case "party": return row.party
+      case "outcome": return row.outcome
+      case "gender": return row.gender
+      case "race": return row.race
+      default: return row.socials[key]?.value ?? ""
+    }
+  }
+
+  const applySort = (key: string) => {
+    const dir: 1 | -1 = sort?.key === key && sort.dir === 1 ? -1 : 1
+    const sorted = [...rowsRef.current].sort((a, b) => {
+      const av = sortValueFor(a, key)
+      const bv = sortValueFor(b, key)
+      const aEmpty = av === ""
+      const bEmpty = bv === ""
+      if (aEmpty !== bEmpty) return aEmpty ? 1 : -1 // blanks last either direction
+      if (typeof av === "number" && typeof bv === "number") return dir * (av - bv)
+      return dir * String(av).localeCompare(String(bv), undefined, { sensitivity: "base" })
+    })
+    setSort({ key, dir })
+    setRowOrder(sorted.map(r => r.key))
+  }
+
+  const displayRows = React.useMemo(() => {
+    if (!rowOrder) return rows
+    const byKey = new Map(rows.map(r => [r.key, r]))
+    const ordered: RowState[] = []
+    for (const key of rowOrder) {
+      const row = byKey.get(key)
+      if (row) { ordered.push(row); byKey.delete(key) }
+    }
+    for (const row of rows) if (byKey.has(row.key)) ordered.push(row)
+    return ordered
+  }, [rows, rowOrder])
+
+  const SortableTh = ({ sortKey, className, children }: {
+    sortKey: string
+    className?: string
+    children: React.ReactNode
+  }) => (
+    <th className={className}>
+      <button
+        type="button"
+        className="flex w-full items-center gap-1 uppercase tracking-[0.03em] text-gray-600 hover:text-gray-900"
+        title="Sort"
+        onClick={() => applySort(sortKey)}
+      >
+        {children}
+        {sort?.key === sortKey && (sort.dir === 1
+          ? <ArrowUp className="h-3 w-3 shrink-0 text-blue-600" />
+          : <ArrowDown className="h-3 w-3 shrink-0 text-blue-600" />)}
+      </button>
+    </th>
+  )
+
   // ---------- contest creation ----------
 
   const handleContestCreated = (contest: ContestOption) => {
@@ -323,15 +394,23 @@ export function EditorApp({ payload }: { payload: Payload }) {
           <thead>
             <tr>
               <th className="ee-c0"></th>
-              <th className="ee-c1">Contest</th>
-              <th className="ee-c2">First name</th>
-              <th className="ee-c3">Last name</th>
-              <th>Party</th>
-              <th className="text-center">Inc.</th>
-              <th>Outcome</th>
-              <th>Gender</th>
-              <th>Race</th>
-              {platforms.map(platform => <th key={platform} className="bg-blue-50/70">{platform}</th>)}
+              <SortableTh sortKey="contest" className="ee-c1">Contest</SortableTh>
+              <SortableTh sortKey="firstName" className="ee-c2">First name</SortableTh>
+              <SortableTh sortKey="lastName" className="ee-c3">Last name</SortableTh>
+              <SortableTh sortKey="party">Party</SortableTh>
+              <SortableTh sortKey="incumbent" className="text-center">Inc.</SortableTh>
+              <SortableTh sortKey="outcome">Outcome</SortableTh>
+              <SortableTh sortKey="gender">Gender</SortableTh>
+              <SortableTh sortKey="race">Race</SortableTh>
+              {platforms.map(platform => (
+                <SortableTh key={platform} sortKey={platform} className="bg-blue-50/70">
+                  <span
+                    className="shrink-0"
+                    dangerouslySetInnerHTML={{ __html: payload.platformIcons[platform] ?? "" }}
+                  />
+                  {platform}
+                </SortableTh>
+              ))}
               <th></th>
             </tr>
           </thead>
@@ -342,7 +421,7 @@ export function EditorApp({ payload }: { payload: Payload }) {
                   No contests in this election yet — click “+ New contest” to create one, then add candidates.
                 </td>
               </tr>
-            ) : rows.map(row => (
+            ) : displayRows.map(row => (
               <GridRow
                 key={row.key}
                 row={row}
