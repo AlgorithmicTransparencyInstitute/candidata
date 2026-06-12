@@ -202,12 +202,18 @@ When implementing any changes—new models, controller actions, features, or API
 **When building APIs:**
 - Document endpoints, request/response format, and parameters in `docs/API_PLAN.md`
 
+**When user-facing functionality changes, ALSO update the in-app user guides:**
+- `app/views/admin/guide/show.html.erb` — admin guide (`/admin/guide`): assignments, record management, election editor, change history. Keep the table of contents + section numbering in sync.
+- `app/views/researcher/guide/show.html.erb` + `app/views/shared/_researcher_guide_content.html.erb` — researcher workflow guide
+- `app/views/shared/_verification_guide.html.erb` — verification workflow guide
+- `app/views/help/*.html.erb` — public help pages (data model, sources, coverage)
+
 **Before committing feature work:**
 1. Implement the feature in code
-2. Update relevant doc file(s)
-3. Commit both code and docs together
+2. Update relevant repo doc file(s) AND the in-app guide(s) if the change is user-facing
+3. Commit code, repo docs, and guide updates together
 
-This keeps the docs authoritative and prevents drift between implementation and documentation.
+This keeps the docs authoritative and prevents drift between implementation, repo documentation, and what users are told in the app.
 
 ## Office Categorization System
 

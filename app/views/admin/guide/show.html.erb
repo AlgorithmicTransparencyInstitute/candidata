@@ -18,7 +18,9 @@
           <a href="#secondary-verification" class="block text-blue-700 hover:text-blue-900">6. Understanding Secondary Verification</a>
           <a href="#uncompleting" class="block text-blue-700 hover:text-blue-900">7. Un-completing Assignments</a>
           <a href="#managing-records" class="block text-blue-700 hover:text-blue-900">8. Managing Records</a>
-          <a href="#faqs" class="block text-blue-700 hover:text-blue-900">9. FAQs</a>
+          <a href="#election-editor" class="block text-blue-700 hover:text-blue-900">9. Election Editor (Bulk Candidate Entry)</a>
+          <a href="#change-history" class="block text-blue-700 hover:text-blue-900">10. Change History &amp; Audit Trail</a>
+          <a href="#faqs" class="block text-blue-700 hover:text-blue-900">11. FAQs</a>
         </nav>
       </div>
 
@@ -282,9 +284,49 @@
         </div>
       </section>
 
-      <!-- Section 9: FAQs -->
+      <!-- Section 9: Election Editor -->
+      <section id="election-editor" class="mb-8">
+        <h2 class="text-2xl font-bold text-gray-900 mb-4">9. Election Editor (Bulk Candidate Entry)</h2>
+        <div class="prose prose-sm max-w-none">
+          <p class="text-gray-700 mb-4">The Election Editor is a spreadsheet-style screen for quickly building out the candidate list for an election — names, party, outcome, demographics, and a first pass of social media handles — all in one grid. Open it from the <strong>Editor</strong> link on the <%= link_to "Elections", admin_elections_path, target: "_blank", class: "text-blue-600" %> list or from an election's detail page.</p>
+
+          <h3 class="text-lg font-semibold text-gray-900 mt-6 mb-3">Working in the grid:</h3>
+          <ul class="list-disc list-inside space-y-2 text-gray-700">
+            <li><strong>Each row is a candidate.</strong> Pick the contest (rows are color-tinted by party ballot — blue for Democratic, red for Republican), enter the name, and fill in party, incumbent, outcome, gender, and race using the dropdowns.</li>
+            <li><strong>Linking existing people:</strong> as you type a name, matching people in the database appear — selecting one links the row to that person and pre-fills their demographics and known social accounts (avoiding duplicates).</li>
+            <li><strong>Social handles:</strong> paste a full profile URL or type a handle in any platform column. The link icon opens the profile in a new tab; a green check marks verified accounts. Handles entered here start <em>unverified</em> and flow into the normal research/verification workflow.</li>
+            <li><strong>Saving:</strong> the Save button shows how many rows have unsaved changes (also ⌘S / Ctrl+S). Each row's status dot shows its state — blue new, amber modified, green just saved, red error (hover for the message).</li>
+            <li><strong>Sorting & filtering:</strong> click any column header to sort; use the contest dropdown and name search to narrow the grid.</li>
+            <li><strong>New contests:</strong> "+ New contest" creates a race (and its party ballot if needed) without leaving the editor.</li>
+            <li><strong>Deleting a row</strong> removes only the candidacy — the person and their social accounts are kept.</li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- Section 10: Change History -->
+      <section id="change-history" class="mb-8">
+        <h2 class="text-2xl font-bold text-gray-900 mb-4">10. Change History &amp; Audit Trail</h2>
+        <div class="prose prose-sm max-w-none">
+          <p class="text-gray-700 mb-4">Every edit to core records (people, candidates, elections, ballots, contests, offices, social media accounts, assignments) is automatically recorded with its full before/after values, a timestamp, and <strong>who made the change</strong>.</p>
+
+          <h3 class="text-lg font-semibold text-gray-900 mt-6 mb-3">How attribution works:</h3>
+          <ul class="list-disc list-inside space-y-2 text-gray-700">
+            <li><strong>Edits in the app</strong> (admin pages, election editor, researcher and verification workspaces) are attributed to the signed-in user.</li>
+            <li><strong>Automated changes</strong> are labeled by their source: background jobs (e.g. Junkipedia sync) appear as <code class="bg-gray-100 px-1 rounded">job:…</code>, data imports as <code class="bg-gray-100 px-1 rounded">rake:…</code>, and console maintenance as <code class="bg-gray-100 px-1 rounded">console:…</code>.</li>
+            <li><strong>Social media accounts</strong> additionally track who entered and who verified each handle, with timestamps, shown on the account's detail page.</li>
+          </ul>
+
+          <h3 class="text-lg font-semibold text-gray-900 mt-6 mb-3">Notes:</h3>
+          <ul class="list-disc list-inside space-y-2 text-gray-700">
+            <li>Changes made before June 2026 were recorded without user attribution (shown as unattributed).</li>
+            <li>Nothing is ever silently overwritten — verifiers can compare a researcher's entry against previous values during review.</li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- Section 11: FAQs -->
       <section id="faqs" class="mb-8">
-        <h2 class="text-2xl font-bold text-gray-900 mb-4">9. Frequently Asked Questions</h2>
+        <h2 class="text-2xl font-bold text-gray-900 mb-4">11. Frequently Asked Questions</h2>
         <div class="space-y-6">
           <div>
             <h3 class="text-lg font-semibold text-gray-900 mb-2">Q: How many assignments should I give each researcher?</h3>
