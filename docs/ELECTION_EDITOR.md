@@ -141,6 +141,38 @@ these are the known items from Cameron's first review:
 4. **Collect user-testing feedback** and fold their feature requests into this list
    before scheduling the pass.
 
+### Candidate-creation gaps (surfaced 2026-06-17 reviewing what "add a name" does)
+
+Two creation paths exist. **Path 1** — type a name and pick a typeahead match: links
+the existing Person (no dup), auto-fills gender/race/party into *empty* cells only, and
+populates empty social cells from that person's real accounts (bound to account ids,
+verified ✓ preserved). **Path 2** — type a name and never pick a suggestion: on save
+the server creates a fresh Person (name + gender/race; `state_of_residence` from the
+election), Candidate (`outcome` default "pending", party → `party_at_time`, incumbent),
+and a `Campaign` social account per filled platform cell (unverified — no Junkipedia).
+Gaps to decide on next pass:
+
+5. **Duplicate risk (Path 2).** The typeahead is the ONLY dedup guard — there is no
+   server-side name matching on save. Ignore the dropdown and you get a second
+   "Tom Cotton". Consider: a soft on-save duplicate check/confirm, or a stronger
+   "did you mean an existing person?" nudge. (Was a deliberate no-fuzzy-match choice;
+   revisit now that real users are entering data.)
+
+6. **No person↔party link.** Party only lands on the candidacy (`party_at_time`); the
+   `PersonParty` association is never written, so an editor-created person shows no
+   party on their profile page. Decide whether grid party entry should also set the
+   person's primary party.
+
+7. **No blank account stubs.** Unlike the admin data-collection flow
+   (`SocialMediaAccount.prepopulate_for_person!` makes 6 core-platform placeholders),
+   the editor only creates accounts for platforms with a typed handle. Fine for entry
+   speed, but means editor-created people don't start with the standard research
+   placeholders — decide if that matters for the downstream verification pipeline.
+
+8. **No assignments created.** Editor-entered people enter the verification pipeline
+   only when an admin later assigns a data_validation task. Consider an optional
+   "queue for verification" affordance from the editor.
+
 ## Known limitations / future work
 
 - No middle name/suffix columns; no row virtualization (fine to ~1k rows); no
