@@ -54,7 +54,7 @@ The application centers around political data entities:
 - **State** - US states and territories reference table (FIPS codes)
 - **Ballot** - Election ballots (state, date, type, year)
 - **Contest** - Individual races on a ballot
-- **Candidate** - Person running in a Contest (outcome, tally, incumbent status, party_at_time)
+- **Candidate** - Person running in a Contest (outcome, tally, incumbent status, party_at_time). `outcome` is one of won/lost/pending/withdrawn/unknown/`advanced`; `advanced` = advanced to the general unopposed (cancelled/uncontested primary), counted as a winner via `Candidate::WINNING_OUTCOMES` so it feeds winner lists + a future primary→general pipeline.
 - **Officeholder** - Person holding an Office (with term dates, elected_year, appointed flag)
 - **SocialMediaAccount** - Social handles linked to Person (11 platforms: Facebook, Twitter, Instagram, YouTube, TikTok, BlueSky, TruthSocial, Gettr, Rumble, Telegram, Threads). Tracks Junkipedia sync state via `junkipedia_channel_id`, `junkipedia_enqueued_at`, `junkipedia_id_collected_at`, `junkipedia_last_error`.
 - **User** - System users with roles (admin, researcher)

@@ -182,6 +182,8 @@
                       <% case candidate.outcome %>
                       <% when 'won' %>
                         <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">Won</span>
+                      <% when 'advanced' %>
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800" title="Advanced to the general unopposed (primary cancelled / no opponent)">Advanced (unopposed)</span>
                       <% when 'lost' %>
                         <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">Lost</span>
                       <% else %>

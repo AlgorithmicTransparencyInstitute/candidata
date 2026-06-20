@@ -69,6 +69,9 @@ One transaction **per row** — a bad row reports errors without losing the shee
    matching on save.
 2. **Candidate** — `find_or_initialize_by(person, contest)` (DB unique index), sets
    `outcome` (default pending), `party_at_time`, `incumbent`. Contest must belong to the election.
+   The outcome dropdown includes **"Advanced (unopposed)"** (`outcome: "advanced"`) for a
+   candidate who advances to the general because their primary was cancelled/unopposed —
+   stored value is `advanced`, which counts as a primary winner (see `Candidate::WINNING_OUTCOMES`).
 3. **Socials** — one cell per platform; accepts `handle`, `@handle`, or full URL
    (normalized both directions via per-platform URL templates):
    - no account + value → create (`Campaign` / `entered` / **unverified** — never triggers
@@ -79,6 +82,17 @@ One transaction **per row** — a bad row reports errors without losing the shee
      destroyed from the grid (warning, value restored)
 
 Row deletion removes **only the candidacy** — person and socials are kept.
+
+### Client save flow — reliability note
+
+`EditorApp.save()` computes the list of rows to send (`valid`/`skipped`) and the
+result counts (`saved`/`failed`/`warnings`) **synchronously** — from `rowsRef.current`
+and the save response — *before* any `setRows`. Do **not** collect these by pushing into
+an array inside a `setRows` updater: React may defer the updater, so the values are read
+empty and the save silently no-ops (this was the "Save button does nothing / only one row
+saves" bug). `setRows` is only ever used here for pure UI state (errors, applied results).
+Covered by `spec/requests/election_editor_save_spec.rb` (server contract) — the client
+timing itself has no unit harness, so keep the synchronous shape when editing `save()`.
 
 ## Grid features
 

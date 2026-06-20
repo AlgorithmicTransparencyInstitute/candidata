@@ -34,7 +34,7 @@ class Contest < ApplicationRecord
   end
 
   def winner
-    candidates.find_by(outcome: 'won')&.person
+    candidates.winners.first&.person
   end
 
   def winners

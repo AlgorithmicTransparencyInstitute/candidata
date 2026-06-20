@@ -36,15 +36,17 @@ Conventions worth knowing up front:
 - `party` required for primaries, must be in `Contest::PARTIES`
 - Delegates `state`, `election_type`, `year` to ballot
 - Scopes: `primary`, `general`, `special`, `runoff`, `for_year`, `for_office`, `for_party`
-- Methods: `full_name`, `winner`, `winners`, `total_votes` (sum of tallies), `decided?`
+- Methods: `full_name`, `winner`, `winners`, `total_votes` (sum of tallies), `decided?` — winner helpers use `Candidate.winners` (`outcome IN won/advanced`), so an unopposed advancer is treated as the winner
 
 ### Candidate
-`person_id` (required), `contest_id` (required), `outcome` (required in DB; won/lost/pending/withdrawn/unknown), `tally` (default 0), `party_at_time` (string party name), `incumbent` (default false)
+`person_id` (required), `contest_id` (required), `outcome` (required in DB; won/lost/pending/withdrawn/unknown/**advanced**), `tally` (default 0), `party_at_time` (string party name), `incumbent` (default false)
 
+- `outcome` value **`advanced`** = advanced to the general unopposed (primary cancelled / no opponent — "won by default"). It is **not** a literal `won`, but it counts as a winner/nominee everywhere so an unopposed advancer flows into the general (and a future primary→general pipeline).
+- `WINNING_OUTCOMES = %w[won advanced]` — the outcomes that mean "this candidate is the contest's winner/nominee"; the `winners` scope and the `Contest` winner helpers use it.
 - **Unique on `[person_id, contest_id]`** — upserts should `find_or_initialize_by(person_id:, contest_id:)`
 - `belongs_to :person, :contest`; delegates `office`, `ballot` to contest
-- Scopes: `winners`, `losers`, `pending`, `incumbents`, `challengers`, `for_year`
-- Methods: `vote_percentage`, `won?`, `lost?`
+- Scopes: `winners` (`outcome IN won/advanced`), `losers`, `pending`, `incumbents`, `challengers`, `for_year`
+- Methods: `vote_percentage`, `won?` (literal win only), `advanced?`, `winner?` (won OR advanced), `lost?`
 
 ---
 

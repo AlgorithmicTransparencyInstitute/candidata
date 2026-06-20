@@ -215,16 +215,27 @@ export function EditorApp({ payload }: { payload: Payload }) {
     if (saving) return
     const candidates = rowsRef.current.filter(r => isDirty(r, platforms) && !isBlankNewRow(r, platforms))
 
-    const valid: RowState[] = []
-    let skipped = 0
-    setRows(current => current.map(row => {
-      if (!candidates.some(c => c.key === row.key)) return row
+    // Validate synchronously. Do NOT compute `valid` as a side effect inside a
+    // setRows updater: React may defer that updater, so `valid` would still be
+    // empty when we read it below and the save would silently no-op (the
+    // reported "save button does nothing / only one row saves" bug).
+    const rowErrors = new Map<string, string[]>()
+    for (const row of candidates) {
       const errors: string[] = []
       if (!row.contestId) errors.push("Contest is required")
       if (!row.firstName.trim()) errors.push("First name is required")
       if (!row.lastName.trim()) errors.push("Last name is required")
-      if (errors.length) { skipped++; return { ...row, errors } }
-      valid.push(row)
+      if (errors.length) rowErrors.set(row.key, errors)
+    }
+    const valid = candidates.filter(r => !rowErrors.has(r.key))
+    const skipped = rowErrors.size
+
+    // Reflect validation state in the grid (pure updater: set errors on bad
+    // rows, clear stale errors on the rows we're about to save).
+    setRows(current => current.map(row => {
+      if (!candidates.some(c => c.key === row.key)) return row
+      const errors = rowErrors.get(row.key)
+      if (errors) return { ...row, errors }
       return row.errors.length ? { ...row, errors: [] } : row
     }))
 
@@ -240,18 +251,20 @@ export function EditorApp({ payload }: { payload: Payload }) {
         deletedCandidateIds
       })
 
-      let saved = 0, failed = 0
-      const warnings: string[] = []
+      // Derive counts from the response itself, not as side effects inside the
+      // setRows updater (which React may defer — that made the toast report
+      // "Saved 0 rows" even when rows saved fine).
+      const resultByKey = new Map(response.results.map(r => [r.key, r]))
+      const saved = response.results.filter(r => r.ok).length
+      const failed = response.results.filter(r => !r.ok).length
+      const warnings = response.results.flatMap(r => (r.ok ? r.warnings ?? [] : []))
+
       setRows(current => current.map(row => {
-        const result = response.results.find(r => r.key === row.key)
+        const result = resultByKey.get(row.key)
         if (!result) return row
-        if (result.ok) {
-          saved++
-          warnings.push(...(result.warnings ?? []))
-          return applySaveResult(row, result, platforms)
-        }
-        failed++
-        return { ...row, errors: result.errors ?? ["Save failed"] }
+        return result.ok
+          ? applySaveResult(row, result, platforms)
+          : { ...row, errors: result.errors ?? ["Save failed"] }
       }))
       setDeletedCandidateIds(ids => ids.filter(id => !response.deleted.includes(id)))
 

@@ -73,8 +73,9 @@
                     <span class="ml-2 px-2 py-0.5 text-xs rounded bg-purple-100 text-purple-800">Incumbent</span>
                   <% end %>
                   <% if candidate.outcome.present? %>
-                    <span class="ml-2 px-2 py-0.5 text-xs rounded <%= candidate.outcome == 'won' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600' %>">
-                      <%= candidate.outcome.titleize %>
+                    <span class="ml-2 px-2 py-0.5 text-xs rounded <%= candidate.winner? ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600' %>"
+                          title="<%= 'Advanced to the general unopposed (primary cancelled / no opponent)' if candidate.advanced? %>">
+                      <%= candidate.advanced? ? 'Advanced (unopposed)' : candidate.outcome.titleize %>
                     </span>
                   <% end %>
                 </div>

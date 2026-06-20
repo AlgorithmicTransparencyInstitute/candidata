@@ -35,6 +35,13 @@ export function contestOptionLabel(contest: ContestOption): string {
   return contest.partyCode ? `${contest.partyCode} · ${contest.label}` : contest.label
 }
 
+// Friendlier labels for outcome values whose raw token isn't self-explanatory.
+const OUTCOME_LABELS: Record<string, string> = { advanced: "Advanced (unopposed)" }
+
+function outcomeLabel(outcome: string): string {
+  return OUTCOME_LABELS[outcome] ?? outcome[0].toUpperCase() + outcome.slice(1)
+}
+
 function ContestSelect({ value, contests, onChange }: {
   value: number | null
   contests: ContestOption[]
@@ -129,7 +136,7 @@ export const GridRow = React.memo(function GridRow({
       <td>
         <select className="ee-cell" data-cell="outcome" value={row.outcome} onChange={e => onPatch(row.key, { outcome: e.target.value })}>
           {outcomes.map(outcome => (
-            <option key={outcome} value={outcome}>{outcome[0].toUpperCase() + outcome.slice(1)}</option>
+            <option key={outcome} value={outcome}>{outcomeLabel(outcome)}</option>
           ))}
         </select>
       </td>
