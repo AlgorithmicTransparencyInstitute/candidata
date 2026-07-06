@@ -1,17 +1,19 @@
 import * as React from "react"
-import { ArrowDown, ArrowUp, Plus } from "lucide-react"
+import { ArrowDown, ArrowUp, FileUp, Plus } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { NativeSelect } from "@/components/ui/native-select"
 import { useToast } from "@/components/ui/toast"
 import { getJSON, postJSON } from "./api"
 import { contestOptionLabel, GridRow } from "./GridRow"
+import { ImportCsvDialog } from "./ImportCsvDialog"
 import { NewContestDialog } from "./NewContestDialog"
 import { PersonTypeahead, type TypeaheadState } from "./PersonTypeahead"
 import {
-  applySaveResult, initialRows, isBlankNewRow, isDirty, linkPerson, makeRow, rowPayload
+  applySaveResult, initialRows, isBlankNewRow, isDirty, linkPerson, makeImportedRow, makeRow,
+  mergeImportIntoRow, rowPayload
 } from "./rows"
-import type { ContestOption, Payload, PersonResult, RowState, SaveResponse } from "./types"
+import type { ContestOption, Payload, PersonResult, RowState, SaveResponse, StagedImportRow } from "./types"
 
 export function EditorApp({ payload }: { payload: Payload }) {
   const toast = useToast()
@@ -24,6 +26,7 @@ export function EditorApp({ payload }: { payload: Payload }) {
   const [search, setSearch] = React.useState("")
   const [saving, setSaving] = React.useState(false)
   const [dialogOpen, setDialogOpen] = React.useState(false)
+  const [importOpen, setImportOpen] = React.useState(false)
   const [typeahead, setTypeahead] = React.useState<TypeaheadState | null>(null)
   const [sort, setSort] = React.useState<{ key: string; dir: 1 | -1 } | null>(null)
   const [rowOrder, setRowOrder] = React.useState<string[] | null>(null)
@@ -362,6 +365,43 @@ export function EditorApp({ payload }: { payload: Payload }) {
     toast(`Contest created: ${contest.label}`, "success")
   }
 
+  // ---------- CSV import ----------
+
+  // Staged rows arrive validated with their contest already resolved/created.
+  // Rows for people already candidates in a contest merge into that grid row;
+  // the rest append as new dirty rows. Nothing is saved until the user saves.
+  const handleImported = (newContests: ContestOption[], staged: StagedImportRow[]) => {
+    if (newContests.length > 0) {
+      setContests(current => [
+        ...current,
+        ...newContests.filter(contest => !current.some(c => c.id === contest.id))
+      ])
+    }
+    let merged = 0
+    setRows(current => {
+      const next = [...current]
+      const appended: RowState[] = []
+      for (const { row: imp, contestId } of staged) {
+        if (imp.mergeCandidateId) {
+          const i = next.findIndex(r => r.candidateId === imp.mergeCandidateId)
+          if (i >= 0) {
+            next[i] = mergeImportIntoRow(next[i], imp, platforms)
+            merged++
+            continue
+          }
+        }
+        appended.push(makeImportedRow(imp, contestId, platforms))
+      }
+      return next.concat(appended)
+    })
+    setContestFilter("")
+    setRowOrder(null)
+    const parts = [`Imported ${staged.length} row${staged.length === 1 ? "" : "s"}`]
+    if (merged) parts.push(`${merged} merged into existing candidates`)
+    if (newContests.length) parts.push(`${newContests.length} contest${newContests.length === 1 ? "" : "s"} created`)
+    toast(`${parts.join(" · ")} — review and Save`, "success")
+  }
+
   // ---------- render ----------
 
   const visibleKey = (row: RowState) => {
@@ -389,6 +429,9 @@ export function EditorApp({ payload }: { payload: Payload }) {
             ))}
           </NativeSelect>
           <Button variant="link" size="sm" onClick={() => setDialogOpen(true)}>+ New contest</Button>
+          <Button variant="outline" size="sm" onClick={() => setImportOpen(true)}>
+            <FileUp className="h-4 w-4" /> Import CSV
+          </Button>
         </div>
         <Input
           type="search" placeholder="Search names…" className="h-8 w-56"
@@ -473,6 +516,13 @@ export function EditorApp({ payload }: { payload: Payload }) {
         open={dialogOpen}
         onOpenChange={setDialogOpen}
         onCreated={handleContestCreated}
+      />
+
+      <ImportCsvDialog
+        payload={payload}
+        open={importOpen}
+        onOpenChange={setImportOpen}
+        onImported={handleImported}
       />
     </div>
   )

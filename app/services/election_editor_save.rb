@@ -8,24 +8,16 @@
 #
 # Social account rules:
 # - new value, no account     -> create (Campaign / entered / unverified)
-# - existing account, changed -> update handle+url; verified accounts are
-#   flagged research_status=revised + verified=false (re-verification flow)
+# - existing account, same handle (case/@/URL-form-insensitive) -> unchanged;
+#   cosmetic URL variants (x.com vs twitter.com, ?lang=, trailing slash) never
+#   unverify. A blank URL is filled in; a real URL change applies only to
+#   unverified accounts.
+# - existing account, different handle -> update handle+url; verified accounts
+#   are flagged research_status=revised + verified=false (re-verification flow)
 # - existing account, cleared -> destroy if unverified; verified accounts are
 #   never destroyed from the grid (warning returned, value restored client-side)
 class ElectionEditorSave
-  URL_TEMPLATES = {
-    'Facebook'    => 'https://www.facebook.com/%s',
-    'Twitter'     => 'https://twitter.com/%s',
-    'Instagram'   => 'https://www.instagram.com/%s',
-    'YouTube'     => 'https://www.youtube.com/@%s',
-    'TikTok'      => 'https://www.tiktok.com/@%s',
-    'BlueSky'     => 'https://bsky.app/profile/%s',
-    'TruthSocial' => 'https://truthsocial.com/@%s',
-    'Gettr'       => 'https://gettr.com/user/%s',
-    'Rumble'      => 'https://rumble.com/c/%s',
-    'Telegram'    => 'https://t.me/%s',
-    'Threads'     => 'https://www.threads.net/@%s'
-  }.freeze
+  URL_TEMPLATES = SocialHandles::URL_TEMPLATES
 
   def initialize(election, user)
     @election = election
@@ -105,7 +97,7 @@ class ElectionEditorSave
       next unless SocialMediaAccount::PLATFORMS.include?(platform)
 
       account_id = cell[:accountId].presence
-      normalized = normalize_social(platform, cell[:value])
+      normalized = SocialHandles.normalize(platform, cell[:value])
       account = account_id ? person.social_media_accounts.find_by(id: account_id) : nil
 
       if account
@@ -127,7 +119,25 @@ class ElectionEditorSave
       return nil
     end
 
-    return account_cell(account) if account.handle == normalized[:handle] && account.url == normalized[:url]
+    # Same handle or same exact URL = same account. URL differences with a
+    # matching handle are almost always cosmetic (x.com vs twitter.com,
+    # trailing slash, ?lang= query, legacy URL-in-handle rows) — never
+    # unverify over them. Fill in a missing URL; apply a URL change only on
+    # unverified accounts. An identical URL whose stored handle disagrees
+    # with extraction means the stored handle is derived-data garbage (old
+    # extractor bugs like "videos") — repair it without touching verification.
+    same_url = normalized[:url].present? && account.url == normalized[:url]
+    if same_url || SocialHandles.same?(platform, account.handle, normalized[:handle])
+      repairs = {}
+      if same_url && normalized[:handle].present? && !SocialHandles.same?(platform, account.handle, normalized[:handle])
+        repairs[:handle] = normalized[:handle]
+      end
+      if !same_url && normalized[:url].present? && (account.url.blank? || !account.verified)
+        repairs[:url] = normalized[:url]
+      end
+      account.update!(repairs) if repairs.any?
+      return account_cell(account)
+    end
 
     was_verified = account.verified
     account.assign_attributes(
@@ -162,37 +172,6 @@ class ElectionEditorSave
 
   def account_cell(account)
     { accountId: account.id, handle: account.handle, url: account.url, verified: account.verified }
-  end
-
-  # Accepts "@handle", "handle", or a full profile URL; returns {handle:, url:}.
-  def normalize_social(platform, raw)
-    value = raw.to_s.strip
-    return nil if value.blank?
-
-    if value.match?(%r{\Ahttps?://}i)
-      handle = handle_from_url(platform, value)
-      { handle: handle, url: value }
-    else
-      handle = value.delete_prefix('@').strip
-      { handle: handle, url: format(URL_TEMPLATES[platform], handle) }
-    end
-  end
-
-  def handle_from_url(platform, url)
-    path = URI.parse(url).path.to_s
-    segments = path.split('/').reject(&:blank?)
-    return nil if segments.empty?
-
-    segment =
-      case platform
-      when 'BlueSky' then segments[segments.index('profile').to_i + 1] || segments.last
-      when 'Gettr'   then segments[segments.index('user').to_i + 1] || segments.last
-      when 'Rumble'  then segments[segments.index('c').to_i + 1] || segments.last
-      else segments.last
-      end
-    segment.to_s.delete_prefix('@').presence
-  rescue URI::InvalidURIError
-    nil
   end
 
   def delete_candidates(ids)

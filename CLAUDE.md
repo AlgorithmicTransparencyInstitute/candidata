@@ -145,11 +145,12 @@ Researchers assign data gathering tasks to users via the Assignment model:
 
 **Spreadsheet-style bulk candidate entry, functional end-to-end — the app's first React feature.** `/admin/elections/:id/editor` (chromeless layout, linked from the admin elections list/show pages).
 
-One flat grid per election: rows are candidates; columns are contest (grouped dropdown), first/last name (typeahead links existing People and prefills their socials), party, incumbent, outcome, gender, race, and one cell per social platform (accepts `handle`, `@handle`, or full URL — normalized both ways). Dirty tracking, per-row save status/errors, Enter/⌘S keyboard flow, contest filter, inline new-contest dialog (find-or-creates ballot + contest).
+One flat grid per election: rows are candidates; columns are contest (grouped dropdown), first/last name (typeahead links existing People and prefills their socials), party, incumbent, outcome, gender, race, and one cell per social platform (accepts `handle`, `@handle`, or full URL — normalized both ways). Dirty tracking, per-row save status/errors, Enter/⌘S keyboard flow, contest filter, inline new-contest dialog (find-or-creates ballot + contest), and an **Import CSV** dialog (upload → column mapping → validation/matching preview → stages rows into the grid as unsaved rows; creates missing ballots/contests on confirm; handles both the cleaned-batch CSV format and raw state workbook exports).
 
 Key code:
 - `app/controllers/admin/election_editor_controller.rb` — page + save/people/offices/contests endpoints (all data embedded on load, no fetch)
-- `app/services/election_editor_save.rb` — per-row transactional upsert (Person → Candidate → SocialMediaAccounts). Editor-created accounts are `Campaign`/`entered`/**unverified** (never triggers Junkipedia auto-enqueue). Verified accounts: edits flag `revised`+unverified with a warning; clearing is refused.
+- `app/services/election_editor_save.rb` — per-row transactional upsert (Person → Candidate → SocialMediaAccounts). Editor-created accounts are `Campaign`/`entered`/**unverified** (never triggers Junkipedia auto-enqueue). Verified accounts: same-handle resubmissions (x.com vs twitter.com, `@`/case/URL-form differences) are no-ops that never unverify; only a genuine handle change flags `revised`+unverified with a warning; clearing is refused.
+- `app/services/election_editor_csv_import.rb` — read-only CSV preview (parse/map/validate, office→contest matching, person matching); `app/services/social_handles.rb` — shared handle/URL normalization. See `docs/ELECTION_EDITOR.md` § CSV import.
 - `app/javascript/react/` — React app (entry `election_editor.tsx`, grid in `editor/`, shadcn-pattern primitives in `components/ui/`)
 - `app/views/admin/election_editor/show.html.erb`, `app/views/layouts/election_editor.html.erb`
 

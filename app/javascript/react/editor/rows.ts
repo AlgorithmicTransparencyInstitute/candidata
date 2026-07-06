@@ -1,4 +1,4 @@
-import type { Payload, PersonResult, RowPayload, RowState, SaveRowResult } from "./types"
+import type { ImportRow, Payload, PersonResult, RowPayload, RowState, SaveRowResult } from "./types"
 
 let rowSeq = 0
 
@@ -117,6 +117,57 @@ export function rowPayload(row: RowState, platforms: string[]) {
 
 export function initialRows(payload: Payload): RowState[] {
   return payload.rows.map(r => makeRow(r, payload.platforms))
+}
+
+// A CSV-imported row staged into the grid. baseline stays "" so the row is
+// always dirty until saved (applySaveResult recomputes a real baseline).
+// Social cells carry the accountId binding of a matched person's existing
+// account so saving updates that account instead of creating a duplicate.
+export function makeImportedRow(imp: ImportRow, contestId: number, platforms: string[]): RowState {
+  const row = makeRow({
+    personId: imp.personId,
+    contestId,
+    firstName: imp.firstName,
+    lastName: imp.lastName,
+    party: imp.party,
+    outcome: imp.outcome,
+    incumbent: imp.incumbent,
+    gender: imp.gender,
+    race: imp.race
+  }, platforms)
+  for (const platform of platforms) {
+    const cell = imp.socials[platform]
+    if (cell) {
+      row.socials[platform] = {
+        accountId: cell.accountId,
+        value: cell.value,
+        url: cell.url,
+        verified: cell.verified
+      }
+    }
+  }
+  row.warnings = imp.warnings
+  row.baseline = ""
+  return row
+}
+
+// Merge a CSV import into an existing grid row (the person is already a
+// candidate in this contest). Only values the CSV actually provided are
+// applied — absent columns never clobber current data. Normal dirty tracking
+// picks up whatever actually changed.
+export function mergeImportIntoRow(row: RowState, imp: ImportRow, platforms: string[]): RowState {
+  const csv = imp.csv
+  const next: RowState = { ...row, socials: { ...row.socials }, justSaved: false }
+  if (csv.party != null) next.party = csv.party
+  if (csv.outcome != null) next.outcome = csv.outcome
+  if (csv.incumbent != null) next.incumbent = csv.incumbent
+  if (csv.gender != null) next.gender = csv.gender
+  if (csv.race != null) next.race = csv.race
+  for (const platform of platforms) {
+    const value = csv.socials?.[platform]
+    if (value) next.socials[platform] = { ...next.socials[platform], value }
+  }
+  return next
 }
 
 // Loose charset check for handle-looking values (URLs are exempt — the server

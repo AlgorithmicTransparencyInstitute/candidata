@@ -71,6 +71,7 @@ Rails.application.routes.draw do
     get  'elections/:id/editor/people',   to: 'election_editor#people_search',  as: :election_editor_people
     get  'elections/:id/editor/offices',  to: 'election_editor#offices_search', as: :election_editor_offices
     post 'elections/:id/editor/contests', to: 'election_editor#create_contest', as: :election_editor_contests
+    post 'elections/:id/editor/import',   to: 'election_editor#import_preview', as: :election_editor_import
     resources :ballots
     resources :contests
     resources :candidates

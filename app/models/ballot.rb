@@ -7,7 +7,8 @@ class Ballot < ApplicationRecord
 
   ELECTION_TYPES = %w[primary general special runoff].freeze
   PARTIES = %w[Democratic Republican Libertarian Independent Nonpartisan Unaffiliated Constitution Forward].freeze +
-             ['Working Class', 'Legal Marijuana NOW', 'No Party Preference', 'Peace and Freedom', 'Independent American']
+             ['Working Class', 'Legal Marijuana NOW', 'No Party Preference', 'Peace and Freedom', 'Independent American',
+              'No Labels', 'Unity']
 
   validates :state, presence: true
   validates :date, presence: true

@@ -306,6 +306,17 @@
             <li><strong>New contests:</strong> "+ New contest" creates a race (and its party ballot if needed) without leaving the editor.</li>
             <li><strong>Deleting a row</strong> removes only the candidacy — the person and their social accounts are kept.</li>
           </ul>
+
+          <h3 class="text-lg font-semibold text-gray-900 mt-6 mb-3">Importing a CSV:</h3>
+          <p class="text-gray-700 mb-4">The <strong>Import CSV</strong> button loads a whole spreadsheet of candidates into the grid at once. Nothing is written until you review and Save.</p>
+          <ul class="list-disc list-inside space-y-2 text-gray-700">
+            <li><strong>Columns are matched automatically</strong> from the headers (candidate name — full or first/last, party, office, district, incumbent, withdrew, outcome, gender, race, and one column per social platform). Unrecognized headers can be mapped by hand in the dialog; "x" or "n/a" in a social column means "no account" and is ignored.</li>
+            <li><strong>Contests are matched or created.</strong> Rows are matched to this election's existing contests; races that don't exist yet are listed as "will create contest" (the party ballot is created too, if needed). If the office can't be identified, a search box lets you pick it — or those rows are skipped.</li>
+            <li><strong>People are matched by name</strong> within the election's state, exactly like the typeahead: a unique match links the row (pre-filling demographics and known accounts), and someone already entered in the same contest becomes an <em>update</em> of their existing row rather than a duplicate.</li>
+            <li><strong>Verified accounts are protected.</strong> If the CSV has a different handle than a person's existing verified account, the CSV value is added as a separate campaign account — it never overwrites the verified one.</li>
+            <li><strong>Problem rows are skipped, not imported</strong> (unknown party, wrong state, duplicates, missing name/office) — the dialog lists each skipped row with the reason. Withdrawn candidates are skipped by default (uncheck to include them with outcome "Withdrawn").</li>
+            <li><strong>After import, review and Save.</strong> Imported rows arrive as unsaved (amber) rows in the grid; nothing touches the database until you press Save, and each row saves/fails independently.</li>
+          </ul>
         </div>
       </section>
 

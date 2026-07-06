@@ -17,6 +17,9 @@ integration-tested; the grid is the app's first React + shadcn-pattern feature.
 | Page | `GET /admin/elections/:id/editor` (chromeless layout) |
 | Controller | `app/controllers/admin/election_editor_controller.rb` |
 | Save service | `app/services/election_editor_save.rb` |
+| CSV import preview service | `app/services/election_editor_csv_import.rb` |
+| Shared handle/URL logic | `app/services/social_handles.rb` |
+| Shared per-platform account picker | `app/services/election_editor_socials.rb` |
 | View (mount point + grid CSS) | `app/views/admin/election_editor/show.html.erb` |
 | Layout | `app/views/layouts/election_editor.html.erb` |
 | **React app** | `app/javascript/react/` — entry `election_editor.tsx` |
@@ -48,6 +51,7 @@ editor/EditorApp.tsx       # toolbar, grid, save flow, keyboard nav, typeahead o
 editor/GridRow.tsx         # memoized row (re-renders only on its own edits)
 editor/PersonTypeahead.tsx # floating person-match menu
 editor/NewContestDialog.tsx# office search + party → create ballot/contest
+editor/ImportCsvDialog.tsx # CSV upload → mapping/preview → stage rows into grid
 ```
 
 ## Endpoints (admin-only)
@@ -59,6 +63,7 @@ editor/NewContestDialog.tsx# office search + party → create ballot/contest
 | `GET .../editor/people?q=` | Person typeahead (dup guard; returns demographics + socials for prefill). |
 | `GET .../editor/offices?q=` | Office search scoped to the election's state (new-contest dialog). |
 | `POST .../editor/contests` | Find-or-create party ballot (state/date/type from the election) + contest. |
+| `POST .../editor/import` | **Read-only CSV preview**: parse, map columns, validate values, match offices/contests/people. Body: `{csv, mapping?}` (mapping = `{header: fieldId}` overrides). 2 MB / 2,000-row cap. Writes nothing — the dialog creates contests via `POST .../contests` and stages rows for the normal save. |
 
 ## Save semantics (`ElectionEditorSave`)
 
@@ -73,10 +78,18 @@ One transaction **per row** — a bad row reports errors without losing the shee
    candidate who advances to the general because their primary was cancelled/unopposed —
    stored value is `advanced`, which counts as a primary winner (see `Candidate::WINNING_OUTCOMES`).
 3. **Socials** — one cell per platform; accepts `handle`, `@handle`, or full URL
-   (normalized both directions via per-platform URL templates):
+   (normalized both directions via `SocialHandles`, which prefers `@segments`,
+   knows per-platform path markers, and ignores subpage suffixes like
+   `/reels/`, `/videos`; `facebook.com/profile.php?id=…` yields no handle):
    - no account + value → create (`Campaign` / `entered` / **unverified** — never triggers
      the Junkipedia auto-enqueue)
-   - account + changed value → update; verified accounts get `verified: false` +
+   - account + **same handle** (case-, `@`- and URL-form-insensitive) → unchanged.
+     Cosmetic URL variants (x.com vs twitter.com, `?lang=`, trailing slash) never
+     unverify. A blank URL gets filled in; a real URL change applies only to
+     unverified accounts. Re-sending an account's own exact URL when the stored
+     handle is derived-data garbage (old extractor bugs like `"videos"`) repairs
+     the handle without touching verification.
+   - account + **different handle** → update; verified accounts get `verified: false` +
      `research_status: revised` + a warning (re-verification flow)
    - account + cleared → destroy **only if unverified**; verified accounts are never
      destroyed from the grid (warning, value restored)
@@ -111,6 +124,63 @@ timing itself has no unit harness, so keep the synchronous shape when editing `s
 - New-contest dialog (shadcn Dialog): office typeahead + party select; refreshes all
   contest dropdowns in place.
 
+## CSV import ("Import CSV" toolbar button)
+
+Upload a spreadsheet of candidates and stage it into the grid. Design principle:
+**the preview endpoint writes nothing** — all record creation flows through the
+already-tested paths (`POST .../contests` for ballots+contests on confirm,
+`ElectionEditorSave` when the user reviews the staged rows and hits Save).
+
+Flow: pick file → server parses + auto-maps columns → dialog shows editable
+column mapping, contest resolution list, and validation summary → confirm →
+missing ballots/contests are created, rows land in the grid as unsaved (dirty)
+rows → review → Save.
+
+**Column mapping** (`ElectionEditorCsvImport::HEADER_ALIASES`): recognizes both
+the cleaned-batch format (`candidate_name,is_incumbent,withdrew,party,office,
+district,race,gender,twitter,…`) and the raw workbook exports
+(`CandidateName`, `Primary contestant?`, bare `House`/`Senate` office names).
+Unrecognized headers can be mapped manually in the dialog (re-previews live).
+A name column (full or first+last) and Office are required; Party is required
+for primaries.
+
+**Validation / normalization**
+- Party: `"Democrat"→"Democratic"`, `"GOP"→"Republican"`, trailing `" Party"`
+  stripped (`"Unity Party"→"Unity"`); must be in `Contest::PARTIES` for a
+  primary (new parties still require the Ballot/Contest `PARTIES` code change).
+- `withdrew` truthy → outcome `withdrawn`; rows can be skipped via a checkbox
+  (default on). `Primary contestant? = No` rows are blocked on a primary.
+- Social cells: placeholder values researchers type (`x`, `n/a`, `none`, …)
+  are treated as empty; URLs/handles pass through to save-time normalization.
+- Wrong-state rows, unknown outcomes/genders, and in-file duplicates
+  (same name + contest) are flagged per row.
+
+**Contest matching** (per unique office+district+party group):
+1. existing contest in this election → rows bind to it;
+2. else a matching state `Office` → "will create contest" (federal shorthand:
+   `U.S. House`/`House` + district → `U.S. Representative` seat `District N`,
+   `Senate` → `U.S. Senator`; statewide + state-legislature title conventions);
+   several textually identical offices (a state's two Senate seats) narrow via
+   the election's existing contests, or via a linked incumbent's current
+   `Officeholder` office (propagated to the other party's group);
+3. else unresolved → inline office search in the dialog binds it manually
+   (rows in unresolved groups are skipped).
+
+**Person matching** — same policy as the batch importer: exact first+last
+(case-insensitive) within the election's state; single match links (and
+prefills demographics + socials with account bindings), incumbents may take
+the first of several matches, otherwise ambiguity is a warning and the row
+stays unlinked. A linked person already candidate in the same contest becomes
+an **update** merged into their existing grid row (only CSV-provided values
+overwrite).
+
+**Verified-account protection**: a CSV social value whose handle *differs*
+from the person's existing account is staged **unbound**, so save creates a
+separate `Campaign` account instead of overwriting (the workbooks usually
+carry campaign accounts while the DB holds verified official-office ones).
+
+Caps: 2 MB file, 2,000 rows. See `spec/requests/election_editor_import_spec.rb`.
+
 ## Testing
 
 - **Save service**: exercised via `rails runner` in a rolled-back transaction — create
@@ -136,7 +206,7 @@ these are the known items from Cameron's first review:
    strips the platform root (e.g. `facebook.com/` → show `tomcottonar`,
    `youtube.com/@x` → `@x`), and reveal the full URL on click/focus for editing.
    The external-link icon already opens the real URL; keep that. Implementation
-   note: the server already extracts canonical handles (`ElectionEditorSave#handle_from_url`)
+   note: the server already extracts canonical handles (`SocialHandles.handle_from_url`)
    — display can derive from `cell.url` vs `cell.handle` without new parsing.
 
 3. **Multiple accounts per platform (Campaign / Official Office / Personal).**
@@ -189,5 +259,8 @@ Gaps to decide on next pass:
 
 ## Known limitations / future work
 
-- No middle name/suffix columns; no row virtualization (fine to ~1k rows); no
-  multi-cell Excel paste (CSV import pipeline covers bulk spreadsheets).
+- No middle name/suffix columns (CSV import drops middles/suffixes from full
+  names too); no row virtualization (fine to ~1k rows); no multi-cell Excel
+  paste (the in-editor CSV import covers bulk spreadsheets).
+- CSV import ignores `Website` columns (the grid has no website field; the
+  batch rake pipeline still imports `Person.website_campaign`).

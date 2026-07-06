@@ -34,7 +34,7 @@ export type PartyOption = {
 
 export type Payload = {
   election: { id: number; label: string; state: string; year: number; type: string; date: string }
-  urls: { save: string; people: string; offices: string; contests: string; back: string }
+  urls: { save: string; people: string; offices: string; contests: string; import: string; back: string }
   contests: ContestOption[]
   parties: PartyOption[]
   contestParties: string[]
@@ -106,4 +106,86 @@ export type SaveRowResult = {
 export type SaveResponse = {
   results: SaveRowResult[]
   deleted: number[]
+}
+
+// ---------- CSV import ----------
+
+export type ImportSocialCell = {
+  accountId: number | null
+  value: string
+  url: string | null
+  verified: boolean
+}
+
+// Values the CSV itself provided (vs. prefill from a matched person) — used
+// when merging an import into an already-loaded grid row.
+export type ImportCsvValues = {
+  party?: string | null
+  outcome?: string | null
+  incumbent?: boolean
+  gender?: string | null
+  race?: string | null
+  socials: Record<string, string>
+}
+
+export type ImportRow = {
+  index: number
+  firstName: string
+  lastName: string
+  party: string | null
+  outcome: string
+  incumbent: boolean
+  withdrawn: boolean
+  gender: string | null
+  race: string | null
+  contestKey: string | null
+  contestId: number | null
+  personId: number | null
+  personLabel: string | null
+  mergeCandidateId: number | null
+  socials: Record<string, ImportSocialCell>
+  csv: ImportCsvValues
+  issues: string[]
+  warnings: string[]
+}
+
+export type ImportContestGroup = {
+  key: string
+  label: string
+  party: string | null
+  contestId: number | null
+  officeId: number | null
+  officeLabel: string | null
+  status: "matched" | "create" | "unresolved"
+  note: string | null
+  rowCount: number
+}
+
+export type ImportMappingEntry = { header: string; field: string | null }
+
+export type ImportSummary = {
+  total: number
+  withIssues?: number
+  linked?: number
+  newPeople?: number
+  updates?: number
+  withdrawn?: number
+  contestsMatched?: number
+  contestsToCreate?: number
+  contestsUnresolved?: number
+}
+
+export type ImportPreview = {
+  fields: { id: string; label: string }[]
+  mapping: ImportMappingEntry[]
+  rows: ImportRow[]
+  contestGroups: ImportContestGroup[]
+  summary: ImportSummary
+  errors: string[]
+}
+
+// A previewed row bound to its final contest id (resolved or just created).
+export type StagedImportRow = {
+  row: ImportRow
+  contestId: number
 }

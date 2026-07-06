@@ -5,6 +5,8 @@ module Admin
   # people_search  — typeahead for linking rows to existing Person records
   # offices_search — typeahead for the "new contest" dialog
   # create_contest — find-or-create ballot + contest for this election
+  # import_preview — parse/validate/match an uploaded CSV (read-only; staged
+  #                  rows are written through save + create_contest on confirm)
   class ElectionEditorController < Admin::BaseController
     layout 'election_editor'
 
@@ -103,6 +105,17 @@ module Admin
       render json: { error: e.record.errors.full_messages.join(', ') }, status: :unprocessable_entity
     end
 
+    def import_preview
+      csv = params[:csv].to_s
+      return render json: { error: 'No CSV content received' }, status: :unprocessable_entity if csv.blank?
+      if csv.bytesize > 2.megabytes
+        return render json: { error: 'CSV too large (2 MB max)' }, status: :unprocessable_entity
+      end
+
+      mapping = params[:mapping].respond_to?(:to_unsafe_h) ? params[:mapping].to_unsafe_h : {}
+      render json: ElectionEditorCsvImport.new(@election).preview(csv_text: csv, mapping_override: mapping)
+    end
+
     private
 
     def set_election
@@ -133,6 +146,7 @@ module Admin
           people: admin_election_editor_people_path(@election),
           offices: admin_election_editor_offices_path(@election),
           contests: admin_election_editor_contests_path(@election),
+          import: admin_election_editor_import_path(@election),
           back: admin_election_path(@election)
         },
         contests: contests.map { |c| contest_json(c) },
@@ -198,22 +212,8 @@ module Admin
       }
     end
 
-    # One account per platform for grid display: prefer Campaign accounts,
-    # then any with a handle or URL. Loaded associations only — no extra queries.
-    CHANNEL_PRIORITY = ['Campaign', 'Official Office', 'Personal', nil].freeze
-
     def socials_map(person)
-      person.social_media_accounts.group_by(&:platform).transform_values do |accounts|
-        account = accounts.min_by do |a|
-          [CHANNEL_PRIORITY.index(a.channel_type) || 99, a.handle.present? || a.url.present? ? 0 : 1]
-        end
-        {
-          accountId: account.id,
-          handle: account.handle,
-          url: account.url,
-          verified: account.verified
-        }
-      end
+      ElectionEditorSocials.map(person)
     end
   end
 end
