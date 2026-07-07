@@ -1,7 +1,7 @@
 class SocialMediaAccount < ApplicationRecord
   has_paper_trail on: [:create, :update, :destroy]
 
-  belongs_to :person
+  belongs_to :person, touch: true
   belongs_to :entered_by, class_name: 'User', optional: true
   belongs_to :verified_by, class_name: 'User', optional: true
 

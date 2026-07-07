@@ -1,7 +1,7 @@
 class PersonParty < ApplicationRecord
   has_paper_trail
 
-  belongs_to :person
+  belongs_to :person, touch: true
   belongs_to :party
 
   validates :person_id, uniqueness: { scope: :party_id }
