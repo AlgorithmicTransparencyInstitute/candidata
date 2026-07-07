@@ -98,6 +98,8 @@ module Importers
         if row['website'].present? && person.website_campaign.blank?
           person.update_column(:website_campaign, row['website'])
         end
+        # Record the source name string if we don't have one yet
+        person.update_column(:name_source, name) if person.name_source.blank?
 
         return person
       end
@@ -116,6 +118,7 @@ module Importers
         middle_name: name_parts[:middle],
         last_name: name_parts[:last],
         suffix: name_parts[:suffix],
+        name_source: name, # the name exactly as the source file had it
         state_of_residence: state,
         gender: standardize_gender(row['gender']),
         race: row['race'],

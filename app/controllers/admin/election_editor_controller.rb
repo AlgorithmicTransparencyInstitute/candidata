@@ -47,12 +47,15 @@ module Admin
           {
             id: person.id,
             firstName: person.first_name,
+            middleName: person.middle_name,
             lastName: person.last_name,
+            suffix: person.suffix,
             fullName: person.full_name,
             state: person.state_of_residence,
             party: person.primary_party&.name&.sub(/ Party\z/, ""),
             gender: person.gender,
             race: person.race,
+            website: person.website_campaign,
             inThisElection: person.candidates.any? { |c| election_contest_ids.include?(c.contest_id) },
             socials: socials_map(person)
           }
@@ -202,12 +205,16 @@ module Admin
         personId: person.id,
         contestId: candidate.contest_id,
         firstName: person.first_name,
+        middleName: person.middle_name,
         lastName: person.last_name,
+        suffix: person.suffix,
         party: candidate.party_at_time,
         outcome: candidate.outcome,
         incumbent: candidate.incumbent,
         gender: person.gender,
         race: person.race,
+        website: person.website_campaign,
+        nameSource: person.name_source,
         socials: socials_map(person)
       }
     end

@@ -91,7 +91,7 @@ Conventions worth knowing up front:
 ## People & parties
 
 ### Person
-`first_name` (required), `last_name` (required), `middle_name`, `suffix`, `gender` (Male/Female/Other), `race`, `birth_date`, `death_date`, `state_of_residence`, `photo_url`, `website_official`, `website_campaign`, `website_personal`, `person_uuid` (unique), `wikipedia_id`, `party_affiliation_id` (legacy FK), `needs_secondary_verification`
+`first_name` (required), `last_name` (required), `middle_name`, `suffix`, `name_source` (name string exactly as it appeared in the import source — provenance, fill-if-blank only), `gender` (Male/Female/Other), `race`, `birth_date`, `death_date`, `state_of_residence`, `photo_url`, `website_official`, `website_campaign`, `website_personal`, `person_uuid` (unique), `wikipedia_id`, `party_affiliation_id` (legacy FK), `needs_secondary_verification`
 
 - `has_many :candidates, :contests (through), :officeholders, :offices (through), :social_media_accounts (dependent: :destroy), :assignments (dependent: :destroy)`
 - `has_many :person_parties / :parties` + legacy `belongs_to :party_affiliation`

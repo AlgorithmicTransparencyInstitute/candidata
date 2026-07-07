@@ -19,15 +19,18 @@ class ElectionEditorCsvImport
   MAX_ROWS = 2000
 
   FIELDS = ([
-    ['fullName',  'Candidate name (full)'],
-    ['firstName', 'First name'],
-    ['lastName',  'Last name'],
+    ['fullName',   'Candidate name (full)'],
+    ['firstName',  'First name'],
+    ['middleName', 'Middle name'],
+    ['lastName',   'Last name'],
+    ['suffix',     'Suffix'],
     ['party',     'Party'],
     ['office',    'Office'],
     ['district',  'District / seat'],
     ['incumbent', 'Incumbent'],
     ['withdrew',  'Withdrew'],
     ['primaryContestant', 'Primary contestant?'],
+    ['website',   'Website (campaign)'],
     ['outcome',   'Outcome'],
     ['gender',    'Gender'],
     ['race',      'Race'],
@@ -44,7 +47,9 @@ class ElectionEditorCsvImport
     'candidate_name' => 'fullName', 'candidatename' => 'fullName',
     'candidate' => 'fullName', 'name' => 'fullName', 'full_name' => 'fullName',
     'first_name' => 'firstName', 'first' => 'firstName',
+    'middle_name' => 'middleName', 'middle' => 'middleName',
     'last_name' => 'lastName', 'last' => 'lastName',
+    'suffix' => 'suffix', 'name_suffix' => 'suffix',
     'party' => 'party', 'party_affiliation' => 'party',
     'office' => 'office', 'office_name' => 'office', 'office_sought' => 'office',
     'district' => 'district', 'district_number' => 'district', 'seat' => 'district',
@@ -55,6 +60,7 @@ class ElectionEditorCsvImport
     'gender' => 'gender', 'sex' => 'gender',
     'race' => 'race', 'ethnicity' => 'race',
     'state' => 'state',
+    'website' => 'website', 'campaign_website' => 'website',
     'twitter' => 'social:Twitter', 'x' => 'social:Twitter',
     'twitter_x' => 'social:Twitter', 'x_twitter' => 'social:Twitter',
     'facebook' => 'social:Facebook', 'instagram' => 'social:Instagram',
@@ -84,7 +90,8 @@ class ElectionEditorCsvImport
   }.freeze
 
   TRUTHY = %w[true t yes y 1 x].freeze
-  FALSY_PLACEHOLDERS = ['', 'false', 'f', 'no', 'n', '0', 'n/a', 'na', '99', 'see notes', 'unknown'].freeze
+  FALSY_PLACEHOLDERS = ['', 'false', 'f', 'no', 'n', '0', 'n/a', 'na', '99', 'see notes', 'unknown',
+                        'not sure', 'unsure', 'tbd', '?'].freeze
   # Values researchers type in a social cell to mean "checked, no account".
   SOCIAL_PLACEHOLDERS = ['x', 'xx', 'n/a', 'na', 'none', '-', '--', '?', 'tbd', '99', 'see notes'].freeze
 
@@ -213,7 +220,9 @@ class ElectionEditorCsvImport
     issues = []
     warnings = []
 
-    first, last = names_from(raw, issues)
+    name = names_from(raw, issues)
+    first = name[:first]
+    last = name[:last]
 
     state = field_value(raw, 'state')
     if state.present? && state.upcase != @election.state
@@ -232,16 +241,25 @@ class ElectionEditorCsvImport
       issues << 'Party is required for a primary election'
     end
 
+    # "Primary contestant? = No" means the candidate advances to the general
+    # without a contested primary — import them with outcome "advanced"
+    # (unopposed) rather than skipping. An explicit Outcome column still wins.
     primary_contestant = field_value(raw, 'primaryContestant')
-    if primary? && primary_contestant.present? && !truthy?(primary_contestant)
-      issues << 'Marked as not a primary contestant — does not belong on this primary ballot'
-    end
+    advanced_default = primary? && primary_contestant.present? && !truthy?(primary_contestant)
 
     withdrawn = truthy?(field_value(raw, 'withdrew'))
-    outcome = canonical_outcome(field_value(raw, 'outcome'), withdrawn, issues)
+    outcome = canonical_outcome(field_value(raw, 'outcome'), withdrawn, advanced_default, issues)
+    if advanced_default && outcome == 'advanced'
+      warnings << 'Not a primary contestant — imported as Advanced (unopposed)'
+    end
     incumbent = truthy?(field_value(raw, 'incumbent'))
     gender = canonical_gender(field_value(raw, 'gender'), warnings)
     race = field_value(raw, 'race')
+    race = nil if FALSY_PLACEHOLDERS.include?(race.to_s.squish.downcase)
+    website = website_value(raw)
+    # CSV-provided merge values — captured before any person prefill below so
+    # DB values never masquerade as CSV data when merging into existing rows.
+    csv = csv_values(raw, name, party, outcome, incumbent, gender, race, website)
 
     group = resolve_group(raw, party)
     issues << 'Office is required' if group.nil?
@@ -251,6 +269,23 @@ class ElectionEditorCsvImport
     if person && group && group[:contestId]
       merge_candidate_id = @candidate_index[[person.id, group[:contestId]]]
       warnings << 'Already a candidate in this contest — the existing row will be updated' if merge_candidate_id
+    end
+
+    if person
+      # A matched person's canonical record wins over the CSV (mirrors the
+      # typeahead's linkPerson, plus the DB-wins policy for demographics):
+      # first/last come from the DB; middle/suffix/gender/race keep the DB
+      # value and only fill from the CSV when the DB is blank. The campaign
+      # website is cycle-specific, so a CSV value replaces the stored one.
+      name = { first: person.first_name,
+               middle: person.middle_name.presence || name[:middle],
+               last: person.last_name,
+               suffix: person.suffix.presence || name[:suffix] }
+      first = name[:first]
+      last = name[:last]
+      gender = person.gender.presence || gender
+      race = person.race.presence || race
+      website = website.presence || person.website_campaign
     end
 
     if first.present? && last.present? && group
@@ -265,52 +300,68 @@ class ElectionEditorCsvImport
     {
       index: line,
       firstName: first.to_s,
+      middleName: name[:middle],
       lastName: last.to_s,
+      suffix: name[:suffix],
       party: (Contest::PARTIES.include?(party) ? party : party_raw).presence,
       outcome: outcome,
       incumbent: incumbent,
       withdrawn: withdrawn,
       gender: gender,
       race: race,
+      website: website,
+      nameSource: field_value(raw, 'fullName'),
       contestKey: group&.dig(:key),
       contestId: group&.dig(:contestId),
       personId: person&.id,
       personLabel: person&.full_name,
       mergeCandidateId: merge_candidate_id,
       socials: social_cells(raw, person, warnings),
-      csv: csv_values(raw, party, outcome, incumbent, gender, race),
+      csv: csv,
       issues: issues,
       warnings: warnings
     }
   end
 
   def names_from(raw, issues)
-    first = field_value(raw, 'firstName')
-    last = field_value(raw, 'lastName')
-    if first.blank? || last.blank?
+    name = {
+      first: field_value(raw, 'firstName'),
+      middle: field_value(raw, 'middleName'),
+      last: field_value(raw, 'lastName'),
+      suffix: field_value(raw, 'suffix')
+    }
+    if name[:first].blank? || name[:last].blank?
       full = field_value(raw, 'fullName')
       if full.present?
-        parsed_first, parsed_last = split_full_name(full)
-        issues << "Could not split name #{full.inspect} into first/last" if parsed_first.blank?
-        first = first.presence || parsed_first
-        last = last.presence || parsed_last
+        parsed = split_full_name(full)
+        issues << "Could not split name #{full.inspect} into first/last" if parsed[:first].blank?
+        name = parsed.merge(name.compact_blank)
       end
     end
-    issues << 'First name is required' if first.blank?
-    issues << 'Last name is required' if last.blank?
-    [first, last]
+    issues << 'First name is required' if name[:first].blank?
+    issues << 'Last name is required' if name[:last].blank?
+    name
   end
 
-  # "Clyde W. Jones, Jr." → ["Clyde", "Jones"]. Middle names/suffixes are
-  # dropped — the grid (and ElectionEditorSave) only carry first/last.
+  # "Clyde W. Jones, Jr." → {first: "Clyde", middle: "W.", last: "Jones",
+  # suffix: "Jr."}. Same conventions as the batch importer's parse_name:
+  # trailing Jr./Sr./II–V is the suffix, a quoted nickname becomes the middle
+  # name, everything between the first and last tokens joins as the middle.
   def split_full_name(full)
     name = full.squish
-    name = name.sub(/,?\s+(Jr\.?|Sr\.?|II|III|IV|V)\z/i, '')
-    name = name.gsub(/"[^"]*"/, ' ').gsub(/\([^)]*\)/, ' ').squish
+    suffix = name[/,?\s+(Jr\.?|Sr\.?|II|III|IV|V)\z/i, 1]
+    name = name.sub(/,?\s+(Jr\.?|Sr\.?|II|III|IV|V)\z/i, '') if suffix
+    nickname = name[/["“]([^"”]+)["”]/, 1]
+    name = name.gsub(/["“][^"”]*["”]/, ' ').gsub(/\([^)]*\)/, ' ').squish
     parts = name.split(/\s+/)
-    return [nil, nil] if parts.size < 2
+    return { first: nil, middle: nil, last: nil, suffix: suffix } if parts.size < 2
 
-    [parts.first, parts.last]
+    {
+      first: parts.first,
+      middle: nickname || (parts.size > 2 ? parts[1..-2].join(' ') : nil),
+      last: parts.last,
+      suffix: suffix
+    }
   end
 
   # "Democrat" → "Democratic", "GOP" → "Republican"; a trailing " Party" is
@@ -322,9 +373,12 @@ class ElectionEditorCsvImport
     PARTY_ALIASES[value.downcase] || value
   end
 
-  def canonical_outcome(raw, withdrawn, issues)
+  def canonical_outcome(raw, withdrawn, advanced_default, issues)
     value = raw.to_s.squish.downcase
-    return withdrawn ? 'withdrawn' : 'pending' if FALSY_PLACEHOLDERS.include?(value)
+    if FALSY_PLACEHOLDERS.include?(value)
+      return 'withdrawn' if withdrawn
+      return advanced_default ? 'advanced' : 'pending'
+    end
 
     outcome = OUTCOME_ALIASES[value] || value
     unless Candidate::OUTCOMES.include?(outcome)
@@ -349,19 +403,34 @@ class ElectionEditorCsvImport
   end
 
   # Only values the CSV actually provided (used when merging into an existing
-  # grid row, so absent columns never clobber existing data).
-  def csv_values(raw, party, outcome, incumbent, gender, race)
+  # grid row, so absent columns never clobber existing data). The client
+  # applies gender/race/middleName/suffix from here into BLANK cells only
+  # (DB-wins policy); website and socials replace.
+  def csv_values(raw, name, party, outcome, incumbent, gender, race, website)
     csv = { socials: {} }
+    pc = field_value(raw, 'primaryContestant')
+    outcome_implied = truthy?(field_value(raw, 'withdrew')) || (primary? && pc.present? && !truthy?(pc))
     csv[:party] = party if field_value(raw, 'party').present?
-    csv[:outcome] = outcome if field_value(raw, 'outcome').present? || truthy?(field_value(raw, 'withdrew'))
+    csv[:outcome] = outcome if field_value(raw, 'outcome').present? || outcome_implied
     csv[:incumbent] = incumbent if field_value(raw, 'incumbent').present?
     csv[:gender] = gender if gender.present?
     csv[:race] = race if race.present?
+    csv[:middleName] = name[:middle] if name[:middle].present?
+    csv[:suffix] = name[:suffix] if name[:suffix].present?
+    csv[:website] = website if website.present?
+    csv[:nameSource] = field_value(raw, 'fullName') if field_value(raw, 'fullName').present?
     SocialMediaAccount::PLATFORMS.each do |platform|
       value = social_value(raw, platform)
       csv[:socials][platform] = value if value.present?
     end
     csv
+  end
+
+  def website_value(raw)
+    value = field_value(raw, 'website')
+    return nil if value.blank? || SOCIAL_PLACEHOLDERS.include?(value.downcase)
+
+    value
   end
 
   def social_value(raw, platform)
@@ -411,8 +480,8 @@ class ElectionEditorCsvImport
 
   def people_index(raw_rows)
     keys = raw_rows.filter_map do |raw|
-      first, last = names_from(raw, [])
-      "#{first} #{last}".squish.downcase if first.present? && last.present?
+      name = names_from(raw, [])
+      "#{name[:first]} #{name[:last]}".squish.downcase if name[:first].present? && name[:last].present?
     end.uniq
     return {} if keys.empty?
 

@@ -75,8 +75,16 @@ class ElectionEditorSave
 
     person.first_name = row[:firstName].to_s.strip
     person.last_name = row[:lastName].to_s.strip
+    person.middle_name = row[:middleName].to_s.strip.presence if row.key?(:middleName)
+    person.suffix = row[:suffix].to_s.strip.presence if row.key?(:suffix)
     person.gender = row[:gender].presence if row.key?(:gender)
     person.race = row[:race].presence if row.key?(:race)
+    person.website_campaign = row[:website].to_s.strip.presence if row.key?(:website)
+    # Provenance: the name exactly as it appeared in the import source.
+    # Fill-if-blank only — never overwritten once set.
+    if row[:nameSource].present? && person.name_source.blank?
+      person.name_source = row[:nameSource].to_s.squish
+    end
     person.state_of_residence ||= @election.state
     person.save! if person.changed? || person.new_record?
     person

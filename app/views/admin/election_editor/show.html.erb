@@ -20,13 +20,16 @@
   .ee-grid tr:hover td { background: color-mix(in srgb, var(--row-bg, #fff) 88%, #475569 12%); }
   .ee-grid tr.ee-row-error td { background: #fee2e2; }
 
-  /* Sticky left columns */
+  /* Sticky left columns: status · contest · first · middle · last · suffix */
   .ee-grid .ee-c0 { position: sticky; left: 0;     z-index: 10; min-width: 36px;  max-width: 36px; }
-  .ee-grid .ee-c1 { position: sticky; left: 36px;  z-index: 10; min-width: 230px; }
-  .ee-grid .ee-c2 { position: sticky; left: 266px; z-index: 10; min-width: 120px; }
-  .ee-grid .ee-c3 { position: sticky; left: 386px; z-index: 10; min-width: 130px;
+  .ee-grid .ee-c1 { position: sticky; left: 36px;  z-index: 10; min-width: 220px; max-width: 220px; }
+  .ee-grid .ee-c2 { position: sticky; left: 256px; z-index: 10; min-width: 110px; max-width: 110px; }
+  .ee-grid .ee-c3 { position: sticky; left: 366px; z-index: 10; min-width: 64px;  max-width: 64px; }
+  .ee-grid .ee-c4 { position: sticky; left: 430px; z-index: 10; min-width: 120px; max-width: 120px; }
+  .ee-grid .ee-c5 { position: sticky; left: 550px; z-index: 10; min-width: 52px;  max-width: 52px;
                     border-right: 2px solid #d1d5db; box-shadow: 4px 0 6px -4px rgb(0 0 0 / 0.15); }
-  .ee-grid thead .ee-c0, .ee-grid thead .ee-c1, .ee-grid thead .ee-c2, .ee-grid thead .ee-c3 { z-index: 30; }
+  .ee-grid thead .ee-c0, .ee-grid thead .ee-c1, .ee-grid thead .ee-c2,
+  .ee-grid thead .ee-c3, .ee-grid thead .ee-c4, .ee-grid thead .ee-c5 { z-index: 30; }
 
   .ee-cell {
     width: 100%; border: 0; background: transparent;

@@ -69,9 +69,11 @@ editor/ImportCsvDialog.tsx # CSV upload → mapping/preview → stage rows into 
 
 One transaction **per row** — a bad row reports errors without losing the sheet.
 
-1. **Person** — `personId` present → update names/gender/race; absent → create
-   (`state_of_residence` from the election). The typeahead is the dup guard; no fuzzy
-   matching on save.
+1. **Person** — `personId` present → update names (first/middle/last/suffix),
+   gender/race, and `website_campaign`; absent → create (`state_of_residence`
+   from the election). `name_source` (the name string exactly as an import
+   file had it) is **fill-if-blank only** — provenance is never overwritten.
+   The typeahead is the dup guard; no fuzzy matching on save.
 2. **Candidate** — `find_or_initialize_by(person, contest)` (DB unique index), sets
    `outcome` (default pending), `party_at_time`, `incumbent`. Contest must belong to the election.
    The outcome dropdown includes **"Advanced (unopposed)"** (`outcome: "advanced"`) for a
@@ -109,9 +111,10 @@ timing itself has no unit harness, so keep the synchronous shape when editing `s
 
 ## Grid features
 
-- Flat table: status dot · contest (grouped dropdown) · first/last name · party ·
-  incumbent · outcome · gender · race · 11 platform columns · delete. Sticky header +
-  first four columns.
+- Flat table: status dot · contest (grouped dropdown) · first/middle/last name +
+  suffix · party · incumbent · outcome · gender · race · campaign website ·
+  11 platform columns · delete. Sticky header + the six leftmost columns
+  (through suffix). Website writes `Person#website_campaign`.
 - Status dots: blue=new, amber=modified, green=just saved, red=error (messages in
   tooltip), gray=clean. Save button shows pending count; `beforeunload` guard; toasts.
 - **Person typeahead** on name cells (new rows): links existing People, prefills
@@ -149,11 +152,19 @@ for primaries.
   stripped (`"Unity Party"→"Unity"`); must be in `Contest::PARTIES` for a
   primary (new parties still require the Ballot/Contest `PARTIES` code change).
 - `withdrew` truthy → outcome `withdrawn`; rows can be skipped via a checkbox
-  (default on). `Primary contestant? = No` rows are blocked on a primary.
-- Social cells: placeholder values researchers type (`x`, `n/a`, `none`, …)
-  are treated as empty; URLs/handles pass through to save-time normalization.
+  (default on). `Primary contestant? = No` on a primary imports the row with
+  outcome **`advanced`** (unopposed — advances to the general); an explicit
+  Outcome column always wins.
+- Social/website cells: placeholder values researchers type (`x`, `n/a`,
+  `none`, …) are treated as empty, as are `Not sure`-style race placeholders;
+  URLs/handles pass through to save-time normalization.
 - Wrong-state rows, unknown outcomes/genders, and in-file duplicates
   (same name + contest) are flagged per row.
+- **DB-wins demographics**: for matched people, first/last come from the DB
+  and middle/suffix/gender/race only fill blanks — a spreadsheet's vocabulary
+  never overwrites curated values (merge rows apply the same blank-only rule
+  client-side). Campaign website takes the CSV value (cycle-specific).
+- `name_source` records the raw source name string on create / fill-if-blank.
 
 **Contest matching** (per unique office+district+party group):
 1. existing contest in this election → rows bind to it;
@@ -259,8 +270,5 @@ Gaps to decide on next pass:
 
 ## Known limitations / future work
 
-- No middle name/suffix columns (CSV import drops middles/suffixes from full
-  names too); no row virtualization (fine to ~1k rows); no multi-cell Excel
-  paste (the in-editor CSV import covers bulk spreadsheets).
-- CSV import ignores `Website` columns (the grid has no website field; the
-  batch rake pipeline still imports `Person.website_campaign`).
+- No row virtualization (fine to ~1k rows); no multi-cell Excel paste (the
+  in-editor CSV import covers bulk spreadsheets).

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_07_07_102653) do
+ActiveRecord::Schema[8.0].define(version: 2026_07_07_185700) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pg_stat_statements"
@@ -305,6 +305,7 @@ ActiveRecord::Schema[8.0].define(version: 2026_07_07_102653) do
     t.string "airtable_id"
     t.string "wikipedia_id"
     t.boolean "needs_secondary_verification", default: false, null: false
+    t.string "name_source"
     t.index ["airtable_id"], name: "index_people_on_airtable_id", unique: true
     t.index ["first_name", "last_name"], name: "index_people_on_first_name_and_last_name"
     t.index ["needs_secondary_verification"], name: "index_people_on_needs_secondary_verification"

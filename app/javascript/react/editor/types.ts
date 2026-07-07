@@ -10,12 +10,16 @@ export type RowPayload = {
   personId: number | null
   contestId: number | null
   firstName: string
+  middleName: string | null
   lastName: string
+  suffix: string | null
   party: string | null
   outcome: string | null
   incumbent: boolean
   gender: string | null
   race: string | null
+  website: string | null
+  nameSource: string | null
   socials: Record<string, SocialCellPayload>
 }
 
@@ -59,12 +63,16 @@ export type RowState = {
   personId: number | null
   contestId: number | null
   firstName: string
+  middleName: string
   lastName: string
+  suffix: string
   party: string
   outcome: string
   incumbent: boolean
   gender: string
   race: string
+  website: string
+  nameSource: string
   socials: Record<string, SocialCellState>
   baseline: string
   errors: string[]
@@ -75,12 +83,15 @@ export type RowState = {
 export type PersonResult = {
   id: number
   firstName: string
+  middleName: string | null
   lastName: string
+  suffix: string | null
   fullName: string
   state: string | null
   party: string | null
   gender: string | null
   race: string | null
+  website: string | null
   inThisElection: boolean
   socials: Record<string, SocialCellPayload>
 }
@@ -118,26 +129,35 @@ export type ImportSocialCell = {
 }
 
 // Values the CSV itself provided (vs. prefill from a matched person) — used
-// when merging an import into an already-loaded grid row.
+// when merging an import into an already-loaded grid row. gender/race/
+// middleName/suffix apply to BLANK cells only (DB wins); the rest replace.
 export type ImportCsvValues = {
   party?: string | null
   outcome?: string | null
   incumbent?: boolean
   gender?: string | null
   race?: string | null
+  middleName?: string | null
+  suffix?: string | null
+  website?: string | null
+  nameSource?: string | null
   socials: Record<string, string>
 }
 
 export type ImportRow = {
   index: number
   firstName: string
+  middleName: string | null
   lastName: string
+  suffix: string | null
   party: string | null
   outcome: string
   incumbent: boolean
   withdrawn: boolean
   gender: string | null
   race: string | null
+  website: string | null
+  nameSource: string | null
   contestKey: string | null
   contestId: number | null
   personId: number | null

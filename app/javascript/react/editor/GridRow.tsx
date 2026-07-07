@@ -106,12 +106,26 @@ export const GridRow = React.memo(function GridRow({
       </td>
       <td className="ee-c3">
         <input
+          type="text" className="ee-cell" data-cell="middleName" placeholder="Mid."
+          title="Middle name" autoComplete="off" spellCheck={false} value={row.middleName}
+          onChange={e => onPatch(row.key, { middleName: e.target.value })}
+        />
+      </td>
+      <td className="ee-c4">
+        <input
           type="text" className="ee-cell" data-cell="lastName" placeholder="Last"
           autoComplete="off" spellCheck={false} value={row.lastName}
           onChange={e => {
             onPatch(row.key, { lastName: e.target.value })
             if (!row.personId) onNameInput(row.key, e.currentTarget)
           }}
+        />
+      </td>
+      <td className="ee-c5">
+        <input
+          type="text" className="ee-cell" data-cell="suffix" placeholder="Sfx"
+          title="Suffix (Jr., Sr., II, III…)" autoComplete="off" spellCheck={false} value={row.suffix}
+          onChange={e => onPatch(row.key, { suffix: e.target.value })}
         />
       </td>
       <td>
@@ -151,6 +165,22 @@ export const GridRow = React.memo(function GridRow({
           <option value="">—</option>
           {races.map(race => <option key={race} value={race}>{race}</option>)}
         </select>
+      </td>
+      <td className="ee-social-cell">
+        <input
+          type="text" className="ee-cell" data-cell="website" placeholder="https://"
+          title={row.website || "Campaign website"} autoComplete="off" spellCheck={false} value={row.website}
+          onChange={e => onPatch(row.key, { website: e.target.value })}
+        />
+        {/^https?:\/\//i.test(row.website.trim()) && (
+          <a
+            href={row.website.trim()} target="_blank" rel="noopener noreferrer" tabIndex={-1}
+            className="absolute right-1 top-1/2 -translate-y-1/2 rounded p-0.5 text-gray-400 hover:bg-blue-100 hover:text-blue-700"
+            title={`Open ${row.website.trim()} in a new tab`}
+          >
+            <ExternalLink className="h-3.5 w-3.5" />
+          </a>
+        )}
       </td>
       {platforms.map(platform => {
         const cell = row.socials[platform]

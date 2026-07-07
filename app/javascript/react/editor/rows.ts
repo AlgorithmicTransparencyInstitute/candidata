@@ -19,12 +19,16 @@ export function makeRow(payload: Partial<RowPayload>, platforms: string[]): RowS
     personId: payload.personId ?? null,
     contestId: payload.contestId ?? null,
     firstName: payload.firstName ?? "",
+    middleName: payload.middleName ?? "",
     lastName: payload.lastName ?? "",
+    suffix: payload.suffix ?? "",
     party: payload.party ?? "",
     outcome: payload.outcome || "pending",
     incumbent: !!payload.incumbent,
     gender: payload.gender ?? "",
     race: payload.race ?? "",
+    website: payload.website ?? "",
+    nameSource: payload.nameSource ?? "",
     socials,
     baseline: "",
     errors: [],
@@ -37,8 +41,9 @@ export function makeRow(payload: Partial<RowPayload>, platforms: string[]): RowS
 
 export function snapshot(row: RowState, platforms: string[]): string {
   return JSON.stringify([
-    row.contestId, row.firstName, row.lastName, row.party, row.outcome,
-    row.incumbent, row.gender, row.race,
+    row.contestId, row.firstName, row.middleName, row.lastName, row.suffix,
+    row.party, row.outcome, row.incumbent, row.gender, row.race,
+    row.website, row.nameSource,
     platforms.map(p => row.socials[p].value.trim())
   ])
 }
@@ -49,7 +54,8 @@ export function isDirty(row: RowState, platforms: string[]): boolean {
 
 export function isBlankNewRow(row: RowState, platforms: string[]): boolean {
   return !row.candidateId && !row.personId &&
-    !row.firstName.trim() && !row.lastName.trim() &&
+    !row.firstName.trim() && !row.middleName.trim() && !row.lastName.trim() && !row.suffix.trim() &&
+    !row.website.trim() &&
     platforms.every(p => !row.socials[p].value.trim())
 }
 
@@ -57,10 +63,13 @@ export function linkPerson(row: RowState, person: PersonResult, platforms: strin
   const next: RowState = { ...row, socials: { ...row.socials } }
   next.personId = person.id
   next.firstName = person.firstName
+  next.middleName = person.middleName ?? ""
   next.lastName = person.lastName
+  next.suffix = person.suffix ?? ""
   if (!next.gender && person.gender) next.gender = person.gender
   if (!next.race && person.race) next.race = person.race
   if (!next.party && person.party) next.party = person.party
+  if (!next.website && person.website) next.website = person.website
   for (const platform of platforms) {
     const existing = person.socials[platform]
     if (existing && !next.socials[platform].value.trim()) {
@@ -105,12 +114,16 @@ export function rowPayload(row: RowState, platforms: string[]) {
     personId: row.personId,
     contestId: row.contestId,
     firstName: row.firstName,
+    middleName: row.middleName,
     lastName: row.lastName,
+    suffix: row.suffix,
     party: row.party,
     outcome: row.outcome,
     incumbent: row.incumbent,
     gender: row.gender,
     race: row.race,
+    website: row.website,
+    nameSource: row.nameSource,
     socials
   }
 }
@@ -128,12 +141,16 @@ export function makeImportedRow(imp: ImportRow, contestId: number, platforms: st
     personId: imp.personId,
     contestId,
     firstName: imp.firstName,
+    middleName: imp.middleName,
     lastName: imp.lastName,
+    suffix: imp.suffix,
     party: imp.party,
     outcome: imp.outcome,
     incumbent: imp.incumbent,
     gender: imp.gender,
-    race: imp.race
+    race: imp.race,
+    website: imp.website,
+    nameSource: imp.nameSource
   }, platforms)
   for (const platform of platforms) {
     const cell = imp.socials[platform]
@@ -153,16 +170,23 @@ export function makeImportedRow(imp: ImportRow, contestId: number, platforms: st
 
 // Merge a CSV import into an existing grid row (the person is already a
 // candidate in this contest). Only values the CSV actually provided are
-// applied — absent columns never clobber current data. Normal dirty tracking
-// picks up whatever actually changed.
+// applied — absent columns never clobber current data — and demographics/
+// name parts follow the DB-wins policy: they fill BLANK cells only, so a
+// spreadsheet's vocabulary never overwrites curated values. Website, socials,
+// and candidacy fields (party/outcome/incumbent) take the CSV value. Normal
+// dirty tracking picks up whatever actually changed.
 export function mergeImportIntoRow(row: RowState, imp: ImportRow, platforms: string[]): RowState {
   const csv = imp.csv
   const next: RowState = { ...row, socials: { ...row.socials }, justSaved: false }
   if (csv.party != null) next.party = csv.party
   if (csv.outcome != null) next.outcome = csv.outcome
   if (csv.incumbent != null) next.incumbent = csv.incumbent
-  if (csv.gender != null) next.gender = csv.gender
-  if (csv.race != null) next.race = csv.race
+  if (csv.gender != null && !next.gender) next.gender = csv.gender
+  if (csv.race != null && !next.race) next.race = csv.race
+  if (csv.middleName != null && !next.middleName.trim()) next.middleName = csv.middleName
+  if (csv.suffix != null && !next.suffix.trim()) next.suffix = csv.suffix
+  if (csv.website != null) next.website = csv.website
+  if (csv.nameSource != null && !next.nameSource) next.nameSource = csv.nameSource
   for (const platform of platforms) {
     const value = csv.socials?.[platform]
     if (value) next.socials[platform] = { ...next.socials[platform], value }

@@ -100,6 +100,38 @@ RSpec.describe "Admin election editor save", type: :request do
     expect(account.verified).to be(true)
   end
 
+  it "persists website_campaign and fills name_source only when blank" do
+    rows = [row(key: "r1", first: "Abigail", last: "Spanberger",
+                website: "https://abigailspanberger.com", nameSource: "Abigail A. Spanberger")]
+    post admin_election_editor_save_path(election), params: { rows: rows, deletedCandidateIds: [] }, as: :json
+
+    person = Person.find_by!(first_name: "Abigail", last_name: "Spanberger")
+    expect(person.website_campaign).to eq("https://abigailspanberger.com")
+    expect(person.name_source).to eq("Abigail A. Spanberger")
+
+    rows = [row(key: "r1", first: "Abigail", last: "Spanberger", personId: person.id,
+                website: "https://spanberger2026.com", nameSource: "SPANBERGER, ABIGAIL")]
+    post admin_election_editor_save_path(election), params: { rows: rows, deletedCandidateIds: [] }, as: :json
+
+    person.reload
+    expect(person.website_campaign).to eq("https://spanberger2026.com") # website updates
+    expect(person.name_source).to eq("Abigail A. Spanberger")           # provenance never overwritten
+  end
+
+  it "persists middle name and suffix on create and clears them when blanked" do
+    rows = [row(key: "r1", first: "Clyde", last: "Jones", middleName: "W.", suffix: "Jr.")]
+    post admin_election_editor_save_path(election), params: { rows: rows, deletedCandidateIds: [] }, as: :json
+
+    person = Person.find_by!(first_name: "Clyde", last_name: "Jones")
+    expect(person.middle_name).to eq("W.")
+    expect(person.suffix).to eq("Jr.")
+
+    rows = [row(key: "r1", first: "Clyde", last: "Jones", personId: person.id, middleName: "", suffix: "")]
+    post admin_election_editor_save_path(election), params: { rows: rows, deletedCandidateIds: [] }, as: :json
+    expect(person.reload.middle_name).to be_nil
+    expect(person.suffix).to be_nil
+  end
+
   it "saves every valid row, not just the first" do
     rows = [
       row(key: "r1", first: "Kathy",   last: "Hochul"),

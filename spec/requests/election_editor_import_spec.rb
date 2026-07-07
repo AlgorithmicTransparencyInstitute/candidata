@@ -61,12 +61,14 @@ RSpec.describe "Admin election editor CSV import preview", type: :request do
         "party" => "party", "office" => "office", "district" => "district",
         "twitter" => "social:Twitter", "facebook" => "social:Facebook"
       )
-      expect(mapping["website"]).to be_nil
+      expect(mapping["website"]).to eq("website")
       expect(mapping["notes"]).to be_nil
 
       row = body["rows"].first
       expect(row["firstName"]).to eq("Clyde")
+      expect(row["middleName"]).to eq("W.")
       expect(row["lastName"]).to eq("Jones")
+      expect(row["suffix"]).to eq("Jr.")
       expect(row["party"]).to eq("Democratic")       # "Democrat" canonicalized
       expect(row["outcome"]).to eq("pending")
       expect(row["incumbent"]).to be(false)
@@ -178,6 +180,67 @@ RSpec.describe "Admin election editor CSV import preview", type: :request do
       expect(body["rows"].first["warnings"].join).to include("separate campaign account")
     end
 
+    it "prefers the matched person's canonical names and demographics over CSV parsing" do
+      Person.create!(first_name: "Edward", middle_name: "J.", last_name: "Markey",
+                     state_of_residence: "NY", gender: "Male", race: "White")
+
+      # CSV has no gender/race and a caseless name — the DB record must win
+      body = preview(<<~CSV)
+        candidate_name,party,office,district
+        edward markey,Democratic,U.S. House,1
+      CSV
+
+      row = body["rows"].first
+      expect(row["personId"]).to be_present
+      expect(row["firstName"]).to eq("Edward")
+      expect(row["middleName"]).to eq("J.")
+      expect(row["gender"]).to eq("Male")   # not cleared by the blank CSV
+      expect(row["race"]).to eq("White")
+      expect(row["csv"]).not_to have_key("gender") # prefill must not enter merge values
+    end
+
+    it "keeps DB demographics when the CSV disagrees, fills blanks, and carries website + nameSource" do
+      Person.create!(first_name: "Bobby", last_name: "Scott", state_of_residence: "NY",
+                     race: "Multiracial, Black or African-American", gender: nil)
+
+      body = preview(<<~CSV)
+        candidate_name,party,office,district,race,gender,website
+        Bobby Scott,Democratic,U.S. House,1,black,Male,https://bobbyscott.com
+      CSV
+
+      row = body["rows"].first
+      expect(row["race"]).to eq("Multiracial, Black or African-American") # DB wins over CSV vocab
+      expect(row["gender"]).to eq("Male")                                 # blank DB filled from CSV
+      expect(row["website"]).to eq("https://bobbyscott.com")
+      expect(row["nameSource"]).to eq("Bobby Scott")
+      expect(row["csv"]["race"]).to eq("black") # raw CSV value stays in merge set (client applies to blanks only)
+    end
+
+    it "fills a matched person's blank middle name from the CSV full name" do
+      Person.create!(first_name: "Daniel", last_name: "Butierez", state_of_residence: "NY")
+
+      body = preview(<<~CSV)
+        candidate_name,party,office,district
+        Daniel Butierez Sr.,Democratic,U.S. House,1
+      CSV
+
+      row = body["rows"].first
+      expect(row["personId"]).to be_present
+      expect(row["suffix"]).to eq("Sr.") # DB blank → CSV fills
+      expect(row["csv"]["suffix"]).to eq("Sr.")
+    end
+
+    it "honors explicit middle name and suffix columns" do
+      body = preview(<<~CSV)
+        first_name,middle_name,last_name,suffix,party,office
+        Mary,Beth,O'Leary,III,Republican,U.S. Senate
+      CSV
+
+      row = body["rows"].first
+      expect(row["middleName"]).to eq("Beth")
+      expect(row["suffix"]).to eq("III")
+    end
+
     it "does not link ambiguous non-incumbent matches" do
       2.times { Person.create!(first_name: "John", last_name: "Smith", state_of_residence: "NY") }
 
@@ -211,6 +274,23 @@ RSpec.describe "Admin election editor CSV import preview", type: :request do
       expect(rows[4]["withdrawn"]).to be(true)
       expect(rows[4]["outcome"]).to eq("withdrawn")
       expect(body["summary"]["withdrawn"]).to eq(1)
+    end
+
+    it "imports non-primary-contestants with outcome advanced instead of skipping" do
+      body = preview(<<~CSV)
+        candidate_name,party,office,primary_contestant,outcome
+        Jane Doe,Republican,U.S. Senate,No,
+        John Roe,Republican,U.S. Senate,No,lost
+        Sam Poe,Republican,U.S. Senate,Yes,
+      CSV
+
+      rows = body["rows"]
+      expect(rows[0]["issues"]).to eq([])
+      expect(rows[0]["outcome"]).to eq("advanced")
+      expect(rows[0]["warnings"].join).to include("Advanced (unopposed)")
+      expect(rows[0]["csv"]["outcome"]).to eq("advanced") # carried into merges too
+      expect(rows[1]["outcome"]).to eq("lost")            # explicit Outcome column wins
+      expect(rows[2]["outcome"]).to eq("pending")
     end
 
     it "requires a party column for primaries" do

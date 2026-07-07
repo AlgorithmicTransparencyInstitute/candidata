@@ -301,11 +301,14 @@ export function EditorApp({ payload }: { payload: Payload }) {
       }
       case "incumbent": return row.incumbent ? 0 : 1
       case "firstName": return row.firstName
+      case "middleName": return row.middleName
       case "lastName": return row.lastName
+      case "suffix": return row.suffix
       case "party": return row.party
       case "outcome": return row.outcome
       case "gender": return row.gender
       case "race": return row.race
+      case "website": return row.website
       default: return row.socials[key]?.value ?? ""
     }
   }
@@ -451,13 +454,16 @@ export function EditorApp({ payload }: { payload: Payload }) {
             <tr>
               <th className="ee-c0"></th>
               <SortableTh sortKey="contest" className="ee-c1">Contest</SortableTh>
-              <SortableTh sortKey="firstName" className="ee-c2">First name</SortableTh>
-              <SortableTh sortKey="lastName" className="ee-c3">Last name</SortableTh>
+              <SortableTh sortKey="firstName" className="ee-c2">First</SortableTh>
+              <SortableTh sortKey="middleName" className="ee-c3">Mid.</SortableTh>
+              <SortableTh sortKey="lastName" className="ee-c4">Last</SortableTh>
+              <SortableTh sortKey="suffix" className="ee-c5">Sfx</SortableTh>
               <SortableTh sortKey="party">Party</SortableTh>
               <SortableTh sortKey="incumbent" className="text-center">Inc.</SortableTh>
               <SortableTh sortKey="outcome">Outcome</SortableTh>
               <SortableTh sortKey="gender">Gender</SortableTh>
               <SortableTh sortKey="race">Race</SortableTh>
+              <SortableTh sortKey="website">Website</SortableTh>
               {platforms.map(platform => (
                 <SortableTh key={platform} sortKey={platform} className="bg-blue-50/70">
                   <span
@@ -473,7 +479,7 @@ export function EditorApp({ payload }: { payload: Payload }) {
           <tbody>
             {contests.length === 0 ? (
               <tr>
-                <td colSpan={10 + platforms.length} className="px-4 py-10 text-center text-sm text-gray-500">
+                <td colSpan={13 + platforms.length} className="px-4 py-10 text-center text-sm text-gray-500">
                   No contests in this election yet — click “+ New contest” to create one, then add candidates.
                 </td>
               </tr>
