@@ -9,8 +9,10 @@ module Api
 
       DEFAULT_PER_PAGE = 25
       MAX_PER_PAGE = 500
+      RATE_LIMIT_PER_MINUTE = 300
 
       before_action :authenticate_api_token!
+      before_action :enforce_rate_limit!
 
       rescue_from ActiveRecord::RecordNotFound, with: :render_not_found
 
@@ -26,6 +28,17 @@ module Api
           render json: { error: "Invalid or missing API token", code: "UNAUTHORIZED" },
                  status: :unauthorized
         end
+      end
+
+      # Fixed-window per-token throttle. Rails.cache increment returns nil on
+      # stores without counters (test null_store) — then the limit is a no-op.
+      def enforce_rate_limit!
+        window = Time.current.to_i / 60
+        count = Rails.cache.increment("api_v1_rate:#{@api_token.id}:#{window}", 1, expires_in: 2.minutes)
+        return if count.nil? || count <= RATE_LIMIT_PER_MINUTE
+
+        render json: { error: "Rate limit exceeded (#{RATE_LIMIT_PER_MINUTE}/minute)", code: "RATE_LIMITED" },
+               status: :too_many_requests
       end
 
       def render_not_found(exception)
