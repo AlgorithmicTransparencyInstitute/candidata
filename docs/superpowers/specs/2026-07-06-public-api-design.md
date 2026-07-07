@@ -65,14 +65,16 @@ All endpoints: paginated (`page`, `per_page` default 25 / **max 500**), support
 - Default scope: **current** officeholders (`Officeholder.current`);
   `current=false` includes historical.
 - Filters: `state`, `level` (federal/state/local), `branch`, `office_category`,
-  `body_name`, `district` (number), `chamber`, `updated_since`.
+  `body_name`, `district` (number), `chamber`, `party` (officeholder's primary
+  party, by name or abbreviation), `updated_since`.
 - Example: `?state=TX&office_category=U.S.+Representative&district=14` → the
   TX-14 rep with embedded person and office/district.
 
 ### 2. `GET /api/v1/candidates` — "who is running / who won"
 
-- Filters: `year`, `state`, `office_category`, `district`, `party`, `outcome`,
-  `incumbent`, `updated_since`.
+- Filters: `year`, `state`, `office_category`, `district`, `party` (matches the
+  candidate's `party_at_time`), `outcome`, `incumbent` (true = incumbents
+  running, false = challengers), `updated_since`.
 - `winners=true` convenience filter → `outcome IN Candidate::WINNING_OUTCOMES`
   (`won` + `advanced`), matching in-app winner logic.
 - Embeds: person summary, contest → ballot → election chain (dates, type,
