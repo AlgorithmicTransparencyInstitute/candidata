@@ -358,6 +358,18 @@ User administration.
 
 ---
 
+#### admin/ApiTokensController
+Manage bearer tokens for the public read API (`/api/v1`).
+
+| Action | Purpose |
+|--------|---------|
+| `index` | List tokens (name, created by, last used, active/revoked) |
+| `new` | New token form |
+| `create` | Generate token (plaintext shown once, on the `created` view) |
+| `revoke` | Revoke a token (consumers get 401s immediately) |
+
+---
+
 #### admin/JunkipediaController
 Junkipedia integration dashboard.
 
@@ -564,6 +576,32 @@ Managed by Devise gem.
 - Microsoft Entra ID login
 - Password reset
 - Profile editing with avatar
+
+---
+
+### Public API Controllers
+
+Read-only external API (`/api/v1`) — Bearer-token auth via `ApiToken`, separate from the session-authenticated internal `/api/*`. See `docs/PUBLIC_API.md` for the consumer contract.
+
+#### Api::V1::BaseController
+Shared auth, rate limiting, pagination, and error handling for all v1 controllers.
+
+| Concern | Purpose |
+|---------|---------|
+| `authenticate_api_token!` | Bearer token lookup via `ApiToken.authenticate`; 401 `UNAUTHORIZED` if missing/invalid/revoked |
+| `enforce_rate_limit!` | Fixed-window throttle, 300 req/min/token (`RATE_LIMIT_PER_MINUTE`); 429 `RATE_LIMITED` |
+| `paginate` | `?page=`/`?per_page=` (default 25, max 500 — `MAX_PER_PAGE`) with `meta` envelope |
+| `updated_since_param` | Parses `?updated_since=` as ISO8601; 400 `INVALID_PARAM` on bad input |
+| `Api::V1::Serializers` (included module) | Hand-rolled JSON shapes (person, office, district, contest) shared by all three controllers |
+
+#### Api::V1::OfficeholdersController
+`GET /api/v1/officeholders` — current officeholders by default (`current=false` for historical), filterable by state/level/branch/office_category/body_name/district/chamber/party.
+
+#### Api::V1::CandidatesController
+`GET /api/v1/candidates` — filterable by year/state/office_category/district/chamber/party/outcome/winners/incumbent.
+
+#### Api::V1::PeopleController
+`GET /api/v1/people` (state/q/updated_since filters) and `GET /api/v1/people/:person_uuid` (stable-ID lookup, 404 `NOT_FOUND` if unknown).
 
 ---
 

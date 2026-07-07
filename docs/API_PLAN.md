@@ -58,9 +58,16 @@ creates Assignments; duplicates (same user+person+task_type) are reported in `me
 The spreadsheet editor uses dedicated endpoints under `/admin/elections/:id/editor/*`
 (aggregate load/save shaped for the grid) — see `docs/ELECTION_EDITOR.md`.
 
+## Public API (implemented)
+
+`/api/v1/*` — read-only, Bearer-token auth (`ApiToken` model, admin-managed at
+`/admin/api_tokens`), 300 req/min/token. Endpoints: officeholders, candidates,
+people (+ show by `person_uuid`); all paginated (max 500) with `updated_since`
+incremental sync. Full consumer docs: `docs/PUBLIC_API.md`. Verified by
+`bin/rails runner lib/scripts/public_api_verify.rb`.
+
 ## Future phases
 
 - Researcher/verification workspace APIs (assignments lifecycle, queues)
 - Admin ops APIs (users, Junkipedia dashboard ops)
-- Public read API with token auth + rate limiting
 - CSV export, websockets for live updates

@@ -174,6 +174,8 @@ All core models are versioned, and **every change is attributed** via `versions.
 
 Session-authenticated JSON API (reads: any signed-in user; mutations: admin + `X-CSRF-Token`). All endpoints documented in `docs/API_PLAN.md` and verified by `bin/rails runner lib/scripts/api_verify.rb` (52 checks, self-cleaning) — **run it after changing API controllers**. No unauthenticated mode (local DB holds production data); future curl/public access will use token auth.
 
+The **public read API** lives at `/api/v1/*` (Bearer-token auth via ApiToken, admin-managed; see `docs/PUBLIC_API.md`); verify with `bin/rails runner lib/scripts/public_api_verify.rb`.
+
 ## Application Documentation
 
 Comprehensive documentation covering schema, architecture, features, and APIs. **Always update these docs when you make changes to keep them in sync with the codebase.**

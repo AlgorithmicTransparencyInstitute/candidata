@@ -110,6 +110,7 @@ Conventions worth knowing up front:
 `person_id`, `party_id`, `is_primary` (default false)
 
 - Unique on `[person_id, party_id]`; **partial unique index enforces one primary per person**
+- `belongs_to :person, touch: true` — a party change bumps `people.updated_at` (same incremental-sync purpose as SocialMediaAccount's touch, below)
 
 ---
 
@@ -119,7 +120,7 @@ Conventions worth knowing up front:
 `person_id` (required), `platform` (required, one of `SocialMediaAccount::PLATFORMS` — Facebook, Twitter, Instagram, YouTube, TikTok, BlueSky, TruthSocial, Gettr, Rumble, Telegram, Threads), `channel_type` (Campaign / Official Office / Personal), `url`, `handle`, `status`, `verified` (default false), `account_inactive` (default false), `research_status` (default "not_started": not_started/entered/not_found/verified/rejected/revised), `entered_by_id`, `entered_at`, `verified_by_id`, `verified_at`, `verification_notes`, `research_notes`, `researcher_verified`, `validation_source`, `pre_populated`, `modified_during_validation`, `needs_secondary_verification`, junkipedia sync columns (`junkipedia_channel_id`, `junkipedia_enqueued_at`, `junkipedia_id_collected_at`, `junkipedia_last_error`)
 
 - **DB-unique on `[person_id, platform, handle]`**; model validates handle uniqueness scoped to `[person_id, platform, channel_type]`
-- `belongs_to :person, :entered_by (User), :verified_by (User)`
+- `belongs_to :person, :entered_by (User), :verified_by (User)` — **`person` association uses `touch: true`**, so any account change bumps `people.updated_at` (the public API's `/api/v1/people?updated_since=` relies on this for incremental sync)
 - Workflow methods: `mark_entered!(user, url:, handle:)`, `mark_not_found!(user)`, `reset_status!`, `verify!(user, notes:)`, `reject!`, `revise!`, `clear_secondary_verification!`
 - Junkipedia: `junkipedia_eligible` scope (verified + active + supported platform + url), sync-state scopes, **`after_commit` auto-enqueues to Junkipedia when an eligible account flips to `verified: true`** (no-op without `JUNKIPEDIA_API_TOKEN`)
 - `previous_url` digs through PaperTrail versions
@@ -138,6 +139,15 @@ Conventions worth knowing up front:
 - Devise: invitable, database_authenticatable, registerable, recoverable, rememberable, validatable, trackable, omniauthable (Google OAuth2 + Entra ID)
 - `has_many :assignments`, entered/verified social accounts
 - Role helpers: `admin?`, `researcher?`
+
+### ApiToken
+`name` (required), `token_digest` (required, unique, SHA-256 of the plaintext token — plaintext itself is never stored), `created_by_id` (optional FK → users), `last_used_at`, `revoked_at`
+
+- Bearer tokens for the public read API (`/api/v1/*`); admin-managed at `/admin/api_tokens`. Plaintext (`cnd_live_…`) is generated once and shown only on creation.
+- `belongs_to :created_by, class_name: "User" (optional)`
+- Scope: `active` (`revoked_at: nil`)
+- Class methods: `generate!(name:, created_by:)` (creates the row and returns the instance with `raw_token` set), `authenticate(raw)` (looks up by digest among active tokens)
+- Instance methods: `revoke!`, `revoked?`, `touch_last_used!` (throttled to one write per minute; uses `update_column` — no validations, no PaperTrail noise)
 
 ---
 

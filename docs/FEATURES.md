@@ -571,6 +571,18 @@ Manage governmental bodies (Congress, state legislatures, city councils, etc.).
 
 ---
 
+### 13. API Token Management
+**Path:** `/admin/api_tokens`
+
+Create and revoke bearer tokens for the public read API (`/api/v1`) — the external, token-authenticated counterpart to the internal `/api`.
+
+**Capabilities:**
+- Create a token per consumer service; the plaintext token is shown once, at creation, and never again
+- Monitor last-used time and active/revoked status per token
+- Revoke a token — consumers using it get `401` immediately; other tokens are unaffected
+
+---
+
 ## Audit & Transparency
 
 ### Version History
