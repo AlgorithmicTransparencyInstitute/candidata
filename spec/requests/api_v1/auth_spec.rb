@@ -39,4 +39,9 @@ RSpec.describe "Api::V1 authentication", type: :request do
     get probe_path, headers: { "Authorization" => "Bearer #{api_token.raw_token}" }
     expect(response.headers["Set-Cookie"].to_s).not_to include("_session")
   end
+
+  it "accepts a lowercase bearer scheme (RFC 6750)" do
+    get probe_path, headers: { "Authorization" => "bearer #{api_token.raw_token}" }
+    expect(response).to have_http_status(:ok)
+  end
 end

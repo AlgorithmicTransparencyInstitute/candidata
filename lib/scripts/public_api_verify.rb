@@ -53,9 +53,12 @@ begin
                        .where(offices: { office_category: "U.S. Representative" }).first
   if sample
     d = sample.office.district
-    status, body = api_get("/api/v1/officeholders", token: raw,
-                           params: { state: d.state, office_category: "U.S. Representative",
-                                     district: d.district_number, chamber: d.chamber })
+    # Omit chamber entirely when blank — a real client would never send a
+    # bare `chamber` key, and (post param-hardening) the API now 400s on the
+    # non-scalar nil that a literal `chamber: nil` param produces.
+    lookup_params = { state: d.state, office_category: "U.S. Representative", district: d.district_number }
+    lookup_params[:chamber] = d.chamber if d.chamber.present?
+    status, body = api_get("/api/v1/officeholders", token: raw, params: lookup_params)
     found = body["data"].any? { |r| r["id"] == sample.id }
     check("district lookup finds known rep (#{d.state}-#{d.district_number})", status == 200 && found)
   else

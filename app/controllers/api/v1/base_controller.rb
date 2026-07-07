@@ -13,13 +13,14 @@ module Api
 
       before_action :authenticate_api_token!
       before_action :enforce_rate_limit!
+      before_action :reject_non_scalar_params!
 
       rescue_from ActiveRecord::RecordNotFound, with: :render_not_found
 
       private
 
       def authenticate_api_token!
-        raw = request.headers["Authorization"].to_s[/\ABearer (.+)\z/, 1]
+        raw = request.headers["Authorization"].to_s[/\ABearer (.+)\z/i, 1]
         @api_token = ApiToken.authenticate(raw)
 
         if @api_token
@@ -43,6 +44,17 @@ module Api
 
       def render_not_found(exception)
         render json: { error: exception.message, code: "NOT_FOUND" }, status: :not_found
+      end
+
+      # All public-API params are scalars; bracket syntax (?q[]=a) yields
+      # arrays/hashes that would raise NoMethodError deep in the filters.
+      # Reject early with the documented 400 envelope.
+      def reject_non_scalar_params!
+        offending = request.query_parameters.find { |_k, v| !v.is_a?(String) }
+        return unless offending
+
+        render json: { error: "Parameter '#{offending.first}' must be a single scalar value", code: "INVALID_PARAM" },
+               status: :bad_request
       end
 
       def json_response(data, meta: nil, status: :ok)
@@ -76,7 +88,7 @@ module Api
         return nil if params[:updated_since].blank?
 
         Time.iso8601(params[:updated_since])
-      rescue ArgumentError
+      rescue ArgumentError, TypeError
         render json: { error: "updated_since must be an ISO8601 timestamp", code: "INVALID_PARAM" },
                status: :bad_request
         nil
