@@ -62,8 +62,15 @@ begin
     puts "  skip district lookup (no current U.S. Representative with district in DB)"
   end
 
-  status, body = api_get("/api/v1/officeholders", token: raw, params: { party: "D", per_page: 5 })
-  check("party filter returns rows", status == 200 && body["data"].any?)
+  holder_with_party = Officeholder.current.joins(person: { person_parties: :party })
+                                  .where(person_parties: { is_primary: true }).first
+  if holder_with_party
+    abbr = holder_with_party.person.person_parties.find(&:is_primary).party.abbreviation
+    status, body = api_get("/api/v1/officeholders", token: raw, params: { party: abbr, per_page: 5 })
+    check("party filter (#{abbr}) returns rows", status == 200 && body["data"].any?)
+  else
+    puts "  skip party filter (no current officeholder with a primary party)"
+  end
 
   puts "== candidates"
   status, body = api_get("/api/v1/candidates", token: raw, params: { per_page: 2 })
