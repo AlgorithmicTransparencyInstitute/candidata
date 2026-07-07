@@ -34,4 +34,14 @@ RSpec.describe "Person touch on association change", type: :model do
                                            url: "https://twitter.com/xyz")
     }.not_to change { person.versions.count }
   end
+
+  it "bumps person.updated_at when the primary party is cleared via primary_party=" do
+    party = Party.create!(name: "Forward", abbreviation: "FWD")
+    person.add_party(party, is_primary: true)
+    person.update_column(:updated_at, 1.day.ago)
+
+    person.primary_party = nil
+
+    expect(person.reload.updated_at).to be > 1.hour.ago
+  end
 end

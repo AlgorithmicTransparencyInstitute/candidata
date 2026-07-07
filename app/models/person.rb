@@ -63,14 +63,16 @@ class Person < ApplicationRecord
   end
 
   def primary_party=(party)
-    # Clear existing primary
-    person_parties.where(is_primary: true).update_all(is_primary: false)
-    
-    # Set new primary
+    # Clear existing primary (update_all bypasses the PersonParty touch —
+    # touch explicitly on the clear-only path so updated_since stays honest)
+    cleared = person_parties.where(is_primary: true).update_all(is_primary: false)
+
     if party
       pp = person_parties.find_or_initialize_by(party: party)
       pp.is_primary = true
       pp.save!
+    elsif cleared.positive?
+      touch
     end
   end
 
