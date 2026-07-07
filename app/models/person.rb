@@ -1,5 +1,5 @@
 class Person < ApplicationRecord
-  has_paper_trail
+  has_paper_trail on: [:create, :update, :destroy]
 
   # Legacy direct party link (kept for backwards compatibility during migration)
   belongs_to :party_affiliation, class_name: 'Party', optional: true

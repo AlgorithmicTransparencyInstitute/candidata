@@ -26,4 +26,12 @@ RSpec.describe "Person touch on association change", type: :model do
     person.add_party(party, is_primary: true)
     expect(person.reload.updated_at).to be > 1.hour.ago
   end
+
+  it "does not record a PaperTrail version on the person for touch-only updates" do
+    person # create before measuring
+    expect {
+      person.social_media_accounts.create!(platform: "Twitter", handle: "xyz",
+                                           url: "https://twitter.com/xyz")
+    }.not_to change { person.versions.count }
+  end
 end
