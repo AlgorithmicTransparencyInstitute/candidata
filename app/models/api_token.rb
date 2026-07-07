@@ -3,6 +3,8 @@
 # index (the standard API-token pattern: a preimage-resistant digest makes
 # timing attacks on the index lookup impractical).
 class ApiToken < ApplicationRecord
+  has_paper_trail
+
   TOKEN_PREFIX = "cnd_live_".freeze
 
   belongs_to :created_by, class_name: "User", optional: true
