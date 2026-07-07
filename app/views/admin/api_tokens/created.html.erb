@@ -1,0 +1,19 @@
+<div class="max-w-lg mx-auto py-6 px-4">
+  <h1 class="text-2xl font-bold text-gray-900 mb-2">Token created</h1>
+  <p class="text-sm text-gray-600 mb-6">
+    Copy it now — <strong>it will not be shown again.</strong>
+  </p>
+
+  <div class="bg-amber-50 border border-amber-300 rounded-md p-4 mb-6">
+    <div class="text-xs font-medium text-amber-800 uppercase mb-1"><%= @api_token.name %></div>
+    <code class="block text-sm font-mono break-all select-all"><%= @api_token.raw_token %></code>
+  </div>
+
+  <p class="text-sm text-gray-600 mb-6">
+    Consumers authenticate with:
+    <code class="text-xs bg-gray-100 px-1 py-0.5 rounded">Authorization: Bearer <%= @api_token.raw_token.first(12) %>…</code>
+  </p>
+
+  <%= link_to "Back to tokens", admin_api_tokens_path,
+      class: "bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium" %>
+</div>

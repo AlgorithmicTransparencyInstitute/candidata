@@ -110,6 +110,11 @@ Rails.application.routes.draw do
         post :send_assignment_reminder
       end
     end
+    resources :api_tokens, only: [:index, :new, :create] do
+      member do
+        post :revoke
+      end
+    end
     resources :researchers, only: [:index]
     resources :invitations, only: [:new, :create]
   end

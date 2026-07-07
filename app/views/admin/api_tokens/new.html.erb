@@ -1,0 +1,21 @@
+<div class="max-w-lg mx-auto py-6 px-4">
+  <h1 class="text-2xl font-bold text-gray-900 mb-6">New API Token</h1>
+
+  <%= form_with model: @api_token, url: admin_api_tokens_path, local: true do |f| %>
+    <% if @api_token.errors.any? %>
+      <div class="mb-4 p-3 bg-red-50 border border-red-200 rounded-md text-sm text-red-700">
+        <%= @api_token.errors.full_messages.to_sentence %>
+      </div>
+    <% end %>
+
+    <div class="mb-4">
+      <%= f.label :name, "Consumer name", class: "block text-sm font-medium text-gray-700 mb-1" %>
+      <%= f.text_field :name, placeholder: "e.g. junkipedia-sync, dashboard-service",
+          class: "w-full border-gray-300 rounded-md shadow-sm" %>
+      <p class="mt-1 text-xs text-gray-500">Name the service that will use this token — one token per consumer.</p>
+    </div>
+
+    <%= f.submit "Create token", class: "bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium" %>
+    <%= link_to "Cancel", admin_api_tokens_path, class: "ml-2 text-sm text-gray-600 hover:text-gray-900" %>
+  <% end %>
+</div>
