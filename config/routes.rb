@@ -42,6 +42,14 @@ Rails.application.routes.draw do
     resources :offices, only: [:index, :show, :create, :update]
     resources :parties, only: [:index, :show]
     resources :states, only: [:index, :show]
+
+    # Public read-only API (Bearer-token auth via ApiToken; see docs/PUBLIC_API.md)
+    namespace :v1 do
+      resources :officeholders, only: [:index]
+      resources :candidates, only: [:index]
+      resources :people, only: [:index]
+      get "people/:person_uuid", to: "people#show", as: :person
+    end
   end
 
   # Admin namespace
