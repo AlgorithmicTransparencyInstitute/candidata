@@ -26,8 +26,8 @@ fetch("/api/people", {
 ```
 
 There is deliberately **no unauthenticated mode** — the dev database holds production
-data. For curl/scripting or the future public API, the plan is token auth
-(`Authorization: Bearer`), not auth bypass.
+data. For curl/scripting against the internal API there is no bypass; the **public
+read API** (below) uses token auth (`Authorization: Bearer`).
 
 **Responses** — `{ "data": …, "meta": … }` on success. Errors:
 `{ "error": …, "code": "NOT_FOUND" | "VALIDATION_ERROR" (+ "errors": {field: […]}) | "FORBIDDEN" | "PARAM_MISSING" }`

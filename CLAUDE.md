@@ -172,7 +172,7 @@ All core models are versioned, and **every change is attributed** via `versions.
 
 ## Internal API (`/api/*`)
 
-Session-authenticated JSON API (reads: any signed-in user; mutations: admin + `X-CSRF-Token`). All endpoints documented in `docs/API_PLAN.md` and verified by `bin/rails runner lib/scripts/api_verify.rb` (52 checks, self-cleaning) — **run it after changing API controllers**. No unauthenticated mode (local DB holds production data); future curl/public access will use token auth.
+Session-authenticated JSON API (reads: any signed-in user; mutations: admin + `X-CSRF-Token`). All endpoints documented in `docs/API_PLAN.md` and verified by `bin/rails runner lib/scripts/api_verify.rb` (52 checks, self-cleaning) — **run it after changing API controllers**. No unauthenticated mode (local DB holds production data); the public read API at `/api/v1` uses token auth (see below).
 
 The **public read API** lives at `/api/v1/*` (Bearer-token auth via ApiToken, admin-managed; see `docs/PUBLIC_API.md`); verify with `bin/rails runner lib/scripts/public_api_verify.rb`.
 

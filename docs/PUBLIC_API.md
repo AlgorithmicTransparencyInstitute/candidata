@@ -30,6 +30,11 @@ Rate limit: 300 requests/minute per token (429 `RATE_LIMITED` beyond that).
   payloads for reference but `person_uuid` is the key to store.
 - Social media accounts in payloads are **verified, active accounts only**
   (Candidata's human verification workflow) — that's the ground-truth guarantee.
+- All filters on a request combine with **AND** — e.g. `winners=true&outcome=lost`
+  yields an empty set (a candidate can't be both a winner and `lost`).
+- The officeholders `party` filter is an **exact, case-sensitive match** against
+  the officeholder's primary party name or abbreviation (`DEM`, `Democratic Party`;
+  `dem` or `democratic party` will not match).
 
 ## Endpoints
 
@@ -179,3 +184,6 @@ covers changes to those rows themselves (outcomes, end dates). Pass
 - `advanced` outcomes count as winners (see `winners=true`) — an unopposed
   primary advancement is a nomination.
 - Data completeness varies by state and cycle; see `/help/coverage` in-app.
+- Every person has a `person_uuid`. After importing new people, run
+  `bin/rails public_api:backfill_person_uuids` if an importer created rows
+  without one.
