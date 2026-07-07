@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_06_01_152936) do
+ActiveRecord::Schema[8.0].define(version: 2026_07_07_102653) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pg_stat_statements"
@@ -84,6 +84,18 @@ ActiveRecord::Schema[8.0].define(version: 2026_06_01_152936) do
     t.index ["user_id"], name: "index_ahoy_visits_on_user_id"
     t.index ["visit_token"], name: "index_ahoy_visits_on_visit_token", unique: true
     t.index ["visitor_token", "started_at"], name: "index_ahoy_visits_on_visitor_token_and_started_at"
+  end
+
+  create_table "api_tokens", force: :cascade do |t|
+    t.string "name", null: false
+    t.string "token_digest", null: false
+    t.bigint "created_by_id"
+    t.datetime "last_used_at"
+    t.datetime "revoked_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["created_by_id"], name: "index_api_tokens_on_created_by_id"
+    t.index ["token_digest"], name: "index_api_tokens_on_token_digest", unique: true
   end
 
   create_table "assignments", force: :cascade do |t|
@@ -524,6 +536,7 @@ ActiveRecord::Schema[8.0].define(version: 2026_06_01_152936) do
 
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
+  add_foreign_key "api_tokens", "users", column: "created_by_id"
   add_foreign_key "assignments", "people"
   add_foreign_key "assignments", "users"
   add_foreign_key "assignments", "users", column: "assigned_by_id"
