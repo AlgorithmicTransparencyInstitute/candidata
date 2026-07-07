@@ -24,7 +24,7 @@ module Admin
     def revoke
       token = ApiToken.find(params[:id])
       token.revoke!
-      redirect_to admin_api_tokens_path, notice: "Token "#{token.name}" revoked."
+      redirect_to admin_api_tokens_path, notice: "Token “#{token.name}” revoked."
     end
   end
 end

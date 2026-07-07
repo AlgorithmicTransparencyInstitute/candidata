@@ -45,6 +45,7 @@ RSpec.describe "Admin API tokens", type: :request do
       post revoke_admin_api_token_path(token)
       expect(token.reload).to be_revoked
       expect(response).to redirect_to(admin_api_tokens_path)
+      expect(flash[:notice]).to include("doomed")
     end
   end
 end
