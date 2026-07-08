@@ -63,8 +63,9 @@ The spreadsheet editor uses dedicated endpoints under `/admin/elections/:id/edit
 `/api/v1/*` — read-only, Bearer-token auth (`ApiToken` model, admin-managed at
 `/admin/api_tokens`), 300 req/min/token. Endpoints: officeholders, candidates,
 people (+ show by `person_uuid`); all paginated (max 500) with `updated_since`
-incremental sync. Full consumer docs: `docs/PUBLIC_API.md`. Verified by
-`bin/rails runner lib/scripts/public_api_verify.rb`.
+incremental sync. Machine-readable spec: `GET /api/v1/openapi.json`
+(unauthenticated; canonical source `docs/openapi.yaml`). Full consumer docs:
+`docs/PUBLIC_API.md`. Verified by `bin/rails runner lib/scripts/public_api_verify.rb`.
 
 ## Future phases
 

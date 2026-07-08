@@ -33,6 +33,13 @@ token = ApiToken.generate!(name: "public-api-verify-temp")
 raw = token.raw_token
 
 begin
+  puts "== openapi"
+  status, body = api_get("/api/v1/openapi.json")
+  check("openapi.json -> 200 without auth", status == 200 && body["openapi"] == "3.1.0")
+  check("openapi documents all four endpoints",
+        (body["paths"] || {}).keys.sort & ["/officeholders", "/candidates", "/people", "/people/{person_uuid}"] ==
+        ["/candidates", "/officeholders", "/people", "/people/{person_uuid}"])
+
   puts "== auth"
   status, body = api_get("/api/v1/people", params: { per_page: 1 })
   check("no token -> 401 UNAUTHORIZED", status == 401 && body["code"] == "UNAUTHORIZED")

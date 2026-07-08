@@ -5,6 +5,10 @@ candidates, election winners, and current officeholders.
 
 Base URL: `https://candidata.space/api/v1`
 
+**Machine-readable spec:** `https://candidata.space/api/v1/openapi.json` (OpenAPI 3.1,
+no auth required) — point client generators, Postman, or AI tools at it. Canonical
+source: `docs/openapi.yaml` in this repo; keep it in sync with any endpoint change.
+
 ## Authentication
 
 Every request needs a bearer token (issued by a Candidata admin at

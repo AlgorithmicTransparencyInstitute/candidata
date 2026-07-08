@@ -603,6 +603,9 @@ Shared auth, rate limiting, pagination, and error handling for all v1 controller
 #### Api::V1::PeopleController
 `GET /api/v1/people` (state/q/updated_since filters) and `GET /api/v1/people/:person_uuid` (stable-ID lookup, 404 `NOT_FOUND` if unknown).
 
+#### Api::V1::DocsController
+`GET /api/v1/openapi.json` — serves `docs/openapi.yaml` as JSON. Deliberately unauthenticated (inherits `ActionController::API` directly, not `BaseController`): describes the contract, exposes no data. Cached in-process; 1-hour public Cache-Control.
+
 ---
 
 ## Services (Business Logic Layer)

@@ -1,0 +1,476 @@
+openapi: 3.1.0
+info:
+  title: Candidata Public API
+  version: "1.0"
+  description: |
+    Read-only JSON API for external services that need ground truth about
+    candidates, election winners, and current officeholders in US elections.
+
+    Authenticate every request with a bearer token issued by a Candidata admin:
+    `Authorization: Bearer cnd_live_…`. Rate limit: 300 requests/minute per token.
+
+    All list endpoints are paginated (`page`, `per_page` — default 25, max 500,
+    values outside the range are clamped, not rejected) and support incremental
+    sync via `updated_since` (ISO8601; rows whose own `updated_at` is at or
+    after that time). Rows are ordered by `id` for stable paging. All filters
+    combine with AND. `meta` appears on list responses only.
+
+    Human-oriented documentation with sync recipes: docs/PUBLIC_API.md in the
+    Candidata repository.
+servers:
+  - url: https://candidata.space/api/v1
+security:
+  - bearerAuth: []
+paths:
+  /officeholders:
+    get:
+      operationId: listOfficeholders
+      summary: Who holds office (current by default)
+      description: >
+        Returns current officeholders unless `current=false`. Answers
+        "who is the senator/representative for this state/district".
+      parameters:
+        - $ref: "#/components/parameters/page"
+        - $ref: "#/components/parameters/perPage"
+        - $ref: "#/components/parameters/updatedSince"
+        - name: state
+          in: query
+          description: Office state, e.g. `TX`
+          schema: { type: string }
+        - name: level
+          in: query
+          schema: { type: string, enum: [federal, state, local] }
+        - name: branch
+          in: query
+          schema: { type: string, enum: [executive, legislative, judicial] }
+        - name: office_category
+          in: query
+          description: e.g. `U.S. Senator`, `U.S. Representative`, `Governor`, `State Representative`
+          schema: { type: string }
+        - name: body_name
+          in: query
+          description: e.g. `U.S. House of Representatives`
+          schema: { type: string }
+        - name: district
+          in: query
+          description: District number (combine with `chamber` and/or `office_category` to disambiguate)
+          schema: { type: integer }
+        - name: chamber
+          in: query
+          description: District chamber (`upper`/`lower`) — federal congressional districts have no chamber
+          schema: { type: string, enum: [upper, lower] }
+        - name: party
+          in: query
+          description: >
+            Officeholder's primary party, matched exactly (case-sensitive) by
+            name or abbreviation, e.g. `Democratic Party` or `DEM`.
+          schema: { type: string }
+        - name: current
+          in: query
+          description: Pass `false` to include former officeholders
+          schema: { type: string, enum: ["false"] }
+      responses:
+        "200":
+          description: Paginated officeholders
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data, meta]
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: "#/components/schemas/Officeholder" }
+                  meta: { $ref: "#/components/schemas/PaginationMeta" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "429": { $ref: "#/components/responses/RateLimited" }
+  /candidates:
+    get:
+      operationId: listCandidates
+      summary: Who is running / ran / won
+      parameters:
+        - $ref: "#/components/parameters/page"
+        - $ref: "#/components/parameters/perPage"
+        - $ref: "#/components/parameters/updatedSince"
+        - name: year
+          in: query
+          description: Contest year, e.g. `2026`
+          schema: { type: integer }
+        - name: state
+          in: query
+          description: Ballot state, e.g. `GA`
+          schema: { type: string }
+        - name: office_category
+          in: query
+          schema: { type: string }
+        - name: district
+          in: query
+          description: Via the contest's office's district
+          schema: { type: integer }
+        - name: chamber
+          in: query
+          schema: { type: string, enum: [upper, lower] }
+        - name: party
+          in: query
+          description: Exact match on the candidate's party at the time of running, e.g. `Democratic`, `Republican`
+          schema: { type: string }
+        - name: outcome
+          in: query
+          schema:
+            type: string
+            enum: [won, lost, pending, withdrawn, unknown, advanced]
+        - name: winners
+          in: query
+          description: >
+            `true` returns candidates whose outcome is `won` OR `advanced`
+            (advanced = unopposed advancement to the general; Candidata counts
+            it as a winning outcome).
+          schema: { type: string, enum: ["true"] }
+        - name: incumbent
+          in: query
+          description: "`true`: incumbents running; `false`: challengers"
+          schema: { type: string, enum: ["true", "false"] }
+      responses:
+        "200":
+          description: Paginated candidates
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data, meta]
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: "#/components/schemas/Candidate" }
+                  meta: { $ref: "#/components/schemas/PaginationMeta" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "429": { $ref: "#/components/responses/RateLimited" }
+  /people:
+    get:
+      operationId: listPeople
+      summary: Bulk-sync backbone — people with parties, verified socials, offices, candidacies
+      parameters:
+        - $ref: "#/components/parameters/page"
+        - $ref: "#/components/parameters/perPage"
+        - $ref: "#/components/parameters/updatedSince"
+        - name: state
+          in: query
+          description: State of residence
+          schema: { type: string }
+        - name: q
+          in: query
+          description: Name search; space-separated terms, each matched against first/middle/last name
+          schema: { type: string }
+      responses:
+        "200":
+          description: Paginated people
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data, meta]
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: "#/components/schemas/PersonFull" }
+                  meta: { $ref: "#/components/schemas/PaginationMeta" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "429": { $ref: "#/components/responses/RateLimited" }
+  /people/{person_uuid}:
+    get:
+      operationId: getPerson
+      summary: Look up one person by stable identifier
+      parameters:
+        - name: person_uuid
+          in: path
+          required: true
+          description: The person's stable public identifier (UUID)
+          schema: { type: string }
+      responses:
+        "200":
+          description: The person
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data: { $ref: "#/components/schemas/PersonFull" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "429": { $ref: "#/components/responses/RateLimited" }
+  /openapi.json:
+    get:
+      operationId: getOpenApiSpec
+      summary: This document (no authentication required)
+      security: []
+      responses:
+        "200":
+          description: The OpenAPI 3.1 description of this API
+          content:
+            application/json:
+              schema: { type: object }
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      description: Admin-issued token, format `cnd_live_<24 hex chars>`
+  parameters:
+    page:
+      name: page
+      in: query
+      schema: { type: integer, minimum: 1, default: 1 }
+    perPage:
+      name: per_page
+      in: query
+      description: Defaults to 25, maximum 500 (out-of-range values are clamped)
+      schema: { type: integer, minimum: 1, maximum: 500, default: 25 }
+    updatedSince:
+      name: updated_since
+      in: query
+      description: ISO8601 timestamp; returns rows whose own `updated_at` is at or after this time
+      schema: { type: string, format: date-time }
+  responses:
+    BadRequest:
+      description: Malformed parameter (e.g. non-ISO8601 `updated_since`, array-valued param)
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+    Unauthorized:
+      description: Missing, malformed, unknown, or revoked bearer token
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+    NotFound:
+      description: No record with that identifier
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+    RateLimited:
+      description: More than 300 requests in the current minute for this token
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+  schemas:
+    Error:
+      type: object
+      required: [error, code]
+      properties:
+        error: { type: string }
+        code:
+          type: string
+          enum: [UNAUTHORIZED, NOT_FOUND, INVALID_PARAM, RATE_LIMITED]
+    PaginationMeta:
+      type: object
+      required: [total, page, per_page, total_pages, has_next_page, has_previous_page]
+      properties:
+        total: { type: integer }
+        page: { type: integer }
+        per_page: { type: integer }
+        total_pages: { type: integer }
+        has_next_page: { type: boolean }
+        has_previous_page: { type: boolean }
+    Party:
+      type: object
+      required: [name, abbreviation]
+      properties:
+        name: { type: string, examples: ["Democratic Party"] }
+        abbreviation: { type: [string, "null"], examples: ["DEM"] }
+    PartyMembership:
+      allOf:
+        - $ref: "#/components/schemas/Party"
+        - type: object
+          required: [is_primary]
+          properties:
+            is_primary: { type: boolean }
+    SocialMediaAccount:
+      type: object
+      description: Only human-verified, active accounts appear in this API
+      required: [platform, handle, url]
+      properties:
+        platform:
+          type: string
+          enum: [Facebook, Twitter, Instagram, YouTube, TikTok, BlueSky, TruthSocial, Gettr, Rumble, Telegram, Threads]
+        handle: { type: [string, "null"] }
+        url: { type: [string, "null"] }
+        channel_type:
+          type: [string, "null"]
+          enum: [Campaign, Official Office, Personal, null]
+    District:
+      type: object
+      properties:
+        state: { type: string }
+        district_number: { type: [integer, "null"] }
+        chamber:
+          type: [string, "null"]
+          description: "`upper`/`lower` for state legislative districts; null for congressional"
+        level: { type: string }
+        ocdid: { type: [string, "null"] }
+    Office:
+      type: object
+      properties:
+        id: { type: integer }
+        title: { type: string }
+        level: { type: string, enum: [federal, state, local] }
+        branch: { type: string, enum: [executive, legislative, judicial] }
+        role: { type: [string, "null"] }
+        office_category: { type: [string, "null"], examples: ["U.S. Representative"] }
+        body_name: { type: [string, "null"], examples: ["U.S. House of Representatives"] }
+        state: { type: [string, "null"] }
+        seat: { type: [string, "null"] }
+        county: { type: [string, "null"] }
+        jurisdiction: { type: [string, "null"] }
+        ocdid: { type: [string, "null"] }
+        district:
+          oneOf:
+            - $ref: "#/components/schemas/District"
+            - type: "null"
+    Election:
+      type: object
+      properties:
+        id: { type: integer }
+        state: { type: [string, "null"] }
+        date: { type: [string, "null"], format: date }
+        election_type: { type: [string, "null"] }
+        year: { type: [integer, "null"] }
+    Ballot:
+      type: object
+      properties:
+        id: { type: integer }
+        state: { type: string }
+        date: { type: [string, "null"], format: date }
+        election_type: { type: [string, "null"] }
+        party: { type: [string, "null"], description: Set for party primaries }
+        year: { type: [integer, "null"] }
+        election:
+          oneOf:
+            - $ref: "#/components/schemas/Election"
+            - type: "null"
+    Contest:
+      type: object
+      properties:
+        id: { type: integer }
+        name: { type: string }
+        contest_type: { type: [string, "null"] }
+        party: { type: [string, "null"] }
+        date: { type: [string, "null"], format: date }
+        office: { $ref: "#/components/schemas/Office" }
+        ballot:
+          oneOf:
+            - $ref: "#/components/schemas/Ballot"
+            - type: "null"
+    Websites:
+      type: object
+      properties:
+        official: { type: [string, "null"] }
+        campaign: { type: [string, "null"] }
+        personal: { type: [string, "null"] }
+    PersonCore:
+      type: object
+      description: Embedded person shape (officeholders/candidates rows)
+      required: [id, person_uuid, first_name, last_name, full_name]
+      properties:
+        id: { type: integer }
+        person_uuid:
+          type: string
+          description: Stable public identifier — store this, not the numeric id
+        first_name: { type: string }
+        middle_name: { type: [string, "null"] }
+        last_name: { type: string }
+        suffix: { type: [string, "null"] }
+        full_name: { type: string }
+        state_of_residence: { type: [string, "null"] }
+        gender: { type: [string, "null"] }
+        race: { type: [string, "null"] }
+        photo_url: { type: [string, "null"] }
+        wikipedia_id: { type: [string, "null"] }
+        websites: { $ref: "#/components/schemas/Websites" }
+        party:
+          oneOf:
+            - $ref: "#/components/schemas/Party"
+            - type: "null"
+          description: Primary party
+        parties:
+          type: array
+          items: { $ref: "#/components/schemas/PartyMembership" }
+        social_media_accounts:
+          type: array
+          items: { $ref: "#/components/schemas/SocialMediaAccount" }
+        updated_at: { type: [string, "null"], format: date-time }
+    CurrentOffice:
+      allOf:
+        - $ref: "#/components/schemas/Office"
+        - type: object
+          properties:
+            start_date: { type: [string, "null"], format: date }
+            elected_year: { type: [integer, "null"] }
+    Candidacy:
+      type: object
+      properties:
+        id: { type: integer }
+        outcome:
+          type: [string, "null"]
+          enum: [won, lost, pending, withdrawn, unknown, advanced, null]
+        winner:
+          type: boolean
+          description: true when outcome is `won` or `advanced`
+        incumbent: { type: boolean }
+        party_at_time: { type: [string, "null"], examples: ["Democratic"] }
+        tally: { type: [integer, "null"] }
+        contest:
+          type: object
+          properties:
+            id: { type: integer }
+            name: { type: string }
+            contest_type: { type: [string, "null"] }
+            party: { type: [string, "null"] }
+            date: { type: [string, "null"], format: date }
+    PersonFull:
+      allOf:
+        - $ref: "#/components/schemas/PersonCore"
+        - type: object
+          description: People endpoints add held offices and candidacies
+          properties:
+            current_offices:
+              type: array
+              items: { $ref: "#/components/schemas/CurrentOffice" }
+            candidacies:
+              type: array
+              items: { $ref: "#/components/schemas/Candidacy" }
+    Officeholder:
+      type: object
+      required: [id, current, person, office]
+      properties:
+        id: { type: integer }
+        start_date: { type: [string, "null"], format: date }
+        end_date:
+          type: [string, "null"]
+          format: date
+          description: null while in office
+        elected_year: { type: [integer, "null"] }
+        appointed: { type: boolean }
+        current: { type: boolean }
+        updated_at: { type: [string, "null"], format: date-time }
+        person: { $ref: "#/components/schemas/PersonCore" }
+        office: { $ref: "#/components/schemas/Office" }
+    Candidate:
+      type: object
+      required: [id, winner, person, contest]
+      properties:
+        id: { type: integer }
+        outcome:
+          type: [string, "null"]
+          enum: [won, lost, pending, withdrawn, unknown, advanced, null]
+        winner:
+          type: boolean
+          description: true when outcome is `won` or `advanced` (unopposed advancement)
+        incumbent: { type: boolean }
+        party_at_time: { type: [string, "null"], examples: ["Republican"] }
+        tally: { type: [integer, "null"], description: Vote count where known }
+        updated_at: { type: [string, "null"], format: date-time }
+        person: { $ref: "#/components/schemas/PersonCore" }
+        contest: { $ref: "#/components/schemas/Contest" }

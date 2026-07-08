@@ -45,6 +45,7 @@ Rails.application.routes.draw do
 
     # Public read-only API (Bearer-token auth via ApiToken; see docs/PUBLIC_API.md)
     namespace :v1 do
+      get "openapi", to: "docs#openapi" # /api/v1/openapi.json — unauthenticated machine-readable spec
       resources :officeholders, only: [:index]
       resources :candidates, only: [:index]
       resources :people, only: [:index]
