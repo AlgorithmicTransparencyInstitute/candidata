@@ -21,6 +21,11 @@ RSpec.describe "Admin API tokens", type: :request do
       expect(response.body).not_to include(token.raw_token)
     end
 
+    it "opts the new-token form out of Turbo (success response is a 200 render, which Turbo refuses)" do
+      get new_admin_api_token_path
+      expect(response.body).to include('data-turbo="false"')
+    end
+
     it "creates a token and shows the plaintext exactly once" do
       post admin_api_tokens_path, params: { api_token: { name: "new-service" } }
       expect(response).to have_http_status(:ok)
