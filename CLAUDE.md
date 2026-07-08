@@ -174,7 +174,18 @@ All core models are versioned, and **every change is attributed** via `versions.
 
 Session-authenticated JSON API (reads: any signed-in user; mutations: admin + `X-CSRF-Token`). All endpoints documented in `docs/API_PLAN.md` and verified by `bin/rails runner lib/scripts/api_verify.rb` (52 checks, self-cleaning) — **run it after changing API controllers**. No unauthenticated mode (local DB holds production data); the public read API at `/api/v1` uses token auth (see below).
 
-The **public read API** lives at `/api/v1/*` (Bearer-token auth via ApiToken, admin-managed; see `docs/PUBLIC_API.md`); verify with `bin/rails runner lib/scripts/public_api_verify.rb`.
+## Public API (`/api/v1/*`)
+
+Read-only, versioned API for external services that use Candidata as ground truth (live in production since July 2026):
+
+- **Endpoints**: `GET /api/v1/officeholders` (current by default — "who is the TX-14 rep"), `GET /api/v1/candidates` (`winners=true` = won+advanced), `GET /api/v1/people` + `GET /api/v1/people/:person_uuid` (stable public identifier). All paginated (`per_page` max 500) with `updated_since` incremental sync.
+- **Auth**: `Authorization: Bearer cnd_live_…` — `ApiToken` model, SHA-256 digest stored, plaintext shown once. Admins create/revoke at `/admin/api_tokens`. Rate limit 300 req/min/token.
+- **Machine-readable spec**: `https://candidata.space/api/v1/openapi.json` (OpenAPI 3.1, **unauthenticated** — external tools point at this). Canonical source: `docs/openapi.yaml`; lint with `npx @redocly/cli lint docs/openapi.yaml`.
+- **Payload rules**: verified+active social accounts only; no workflow fields (research_status, Junkipedia columns, etc.); serializers in `app/controllers/api/v1/serializers.rb` are strict allowlists — change shapes only additively (breaking changes mean `/api/v2`).
+- **Verify**: `bin/rails runner lib/scripts/public_api_verify.rb` (24 checks against the dev DB) — **run it after touching anything under `app/controllers/api/v1/`**.
+- **Consumer docs**: `docs/PUBLIC_API.md` (auth, filters, examples, sync recipe) — this is what external integrators read; it must always match the deployed behavior.
+
+**The public API is a published contract.** Whenever a change touches models, serializers, or endpoints that feed it (Person, Officeholder, Candidate, SocialMediaAccount, Party, Office, District, Contest, Ballot, Election), check whether `docs/openapi.yaml`, `docs/PUBLIC_API.md`, and the v1 serializers need a matching update — external tools consume these directly.
 
 ## Application Documentation
 
@@ -186,6 +197,8 @@ Comprehensive documentation covering schema, architecture, features, and APIs. *
 | **docs/ARCHITECTURE.md** | Controllers, views, services, background jobs, request flows, and design patterns |
 | **docs/FEATURES.md** | User-facing features organized by role (public, researcher, verifier, admin) and workflow |
 | **docs/API_PLAN.md** | Planned internal/public APIs with request/response examples and status |
+| **docs/PUBLIC_API.md** | Consumer-facing public API docs: auth, endpoints, filters, examples, sync recipe |
+| **docs/openapi.yaml** | Machine-readable OpenAPI 3.1 contract, served publicly at `/api/v1/openapi.json` |
 | **docs/VERIFICATION_WORKFLOW.md** | The data collection → validation → secondary verification system: state machine, completion gates, four-eyes rule, design record |
 | **docs/ELECTION_EDITOR.md** | Spreadsheet bulk candidate entry: architecture, endpoints, save semantics, next-pass TODOs |
 
@@ -208,8 +221,16 @@ When implementing any changes—new models, controller actions, features, or API
 - Describe the workflow in `docs/FEATURES.md` (user perspective)
 - Document the technical implementation in `docs/ARCHITECTURE.md`
 
-**When building APIs:**
+**When building or changing APIs:**
 - Document endpoints, request/response format, and parameters in `docs/API_PLAN.md`
+- Internal `/api` changes: re-run `bin/rails runner lib/scripts/api_verify.rb`
+- **Public `/api/v1` changes — the contract has three synchronized surfaces, update all of them:**
+  1. `docs/openapi.yaml` (then `npx @redocly/cli lint docs/openapi.yaml`)
+  2. `docs/PUBLIC_API.md` (what integrators read — examples must use real production values)
+  3. The code + `lib/scripts/public_api_verify.rb` (re-run it; add checks for new behavior)
+- Public API shapes change **additively only**; a breaking change means a new `/api/v2` namespace, not an edit to v1
+
+**Changes elsewhere in the system can silently break the API contract.** Model/serializer/schema changes to anything the public API serves (people, officeholders, candidates, parties, socials, offices, districts, contests, ballots, elections) require the same three-surface check above — don't assume a change is API-neutral because it didn't touch `app/controllers/api/`.
 
 **When user-facing functionality changes, ALSO update the in-app user guides:**
 - `app/views/admin/guide/show.html.erb` — admin guide (`/admin/guide`): assignments, record management, election editor, change history. Keep the table of contents + section numbering in sync.
@@ -220,9 +241,10 @@ When implementing any changes—new models, controller actions, features, or API
 **Before committing feature work:**
 1. Implement the feature in code
 2. Update relevant repo doc file(s) AND the in-app guide(s) if the change is user-facing
-3. Commit code, repo docs, and guide updates together
+3. Check the public API surfaces (`docs/openapi.yaml`, `docs/PUBLIC_API.md`, v1 serializers/verify script) if any served data or endpoint behavior changed
+4. Commit code, repo docs, guide updates, and API-contract updates together
 
-This keeps the docs authoritative and prevents drift between implementation, repo documentation, and what users are told in the app.
+This keeps three audiences in sync with one commit: future developers (repo docs), app users (in-app guides), and external API consumers (PUBLIC_API.md + openapi.json). Drift in any of the three turns into support burden or broken integrations.
 
 ## Office Categorization System
 
