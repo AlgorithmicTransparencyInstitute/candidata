@@ -154,6 +154,37 @@ RSpec.describe "Admin election editor save", type: :request do
       expect(result["socials"].keys).to match_array(core)
     end
 
+    it "marks unfilled stubs not_found so a verifier can confirm the absence in one click" do
+      rows = [row(key: "r1", first: "Testy", last: "McTest",
+                  socials: { Twitter: { accountId: nil, value: "testymc" } })]
+      post admin_election_editor_save_path(election), params: { rows: rows, deletedCandidateIds: [] }, as: :json
+      person = Person.find(JSON.parse(response.body)["results"].first["personId"])
+
+      stubs = person.social_media_accounts.reject { |a| a.platform == "Twitter" }
+      # not_started would mean "nobody looked" — an unbadged row the verification
+      # queue neither counts nor blocks completion on.
+      expect(stubs.map(&:research_status).uniq).to eq(["not_found"])
+      expect(stubs).to all(be_needs_verification)
+      # no entered_by, so the four-eyes rule never strands them
+      expect(stubs.map(&:entered_by_id).compact).to be_empty
+      expect(stubs).to all(be_verifiable_by(admin))
+    end
+
+    it "keeps a verified absence out of the public API (no URL = not a channel)" do
+      rows = [row(key: "r1", first: "Testy", last: "McTest",
+                  socials: { Twitter: { accountId: nil, value: "testymc" } })]
+      post admin_election_editor_save_path(election), params: { rows: rows, deletedCandidateIds: [] }, as: :json
+      person = Person.find(JSON.parse(response.body)["results"].first["personId"])
+
+      youtube = person.social_media_accounts.find_by(platform: "YouTube")
+      youtube.verify!(admin)
+
+      serializer = Object.new.extend(Api::V1::Serializers)
+      socials = serializer.person_core_json(person.reload)[:social_media_accounts]
+      expect(socials).to be_empty
+      expect(youtube.reload).to be_verified
+    end
+
     it "does not create duplicate accounts on re-save" do
       rows = [row(key: "r1", first: "Testy", last: "McTest",
                   socials: { Twitter: { accountId: nil, value: "testymc" } })]

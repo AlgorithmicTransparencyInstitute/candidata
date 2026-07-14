@@ -190,12 +190,14 @@ class ElectionEditorSave
   end
 
   # Give every person the standard blank per-platform account slots (6 core
-  # platforms, Campaign/pre_populated/not_started) the rest of the app creates on
-  # research assignment, so accounts researchers later verify already have a row.
+  # platforms, Campaign/pre_populated). Platforms the row left empty are recorded
+  # as 'not_found' — the source data was consulted and listed no account there —
+  # which lands them in the verification queue as a one-click confirm rather than
+  # sitting as unbadged 'not_started' rows nobody is accountable for.
   # Idempotent. Then bind any freshly-created stub the row didn't fill so the
   # grid edits it in place rather than creating a duplicate on the next save.
   def prepopulate_and_bind_stubs(person, socials)
-    SocialMediaAccount.prepopulate_for_person!(person)
+    SocialMediaAccount.prepopulate_for_person!(person, research_status: 'not_found')
     person.social_media_accounts.reload.each do |account|
       next if socials.key?(account.platform)
       next unless account.pre_populated? && account.handle.blank? && account.url.blank?

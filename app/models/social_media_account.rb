@@ -193,7 +193,13 @@ class SocialMediaAccount < ApplicationRecord
 
   public
 
-  def self.prepopulate_for_person!(person, platforms: CORE_PLATFORMS, channel_type: 'Campaign')
+  # research_status distinguishes what the empty slot claims: 'not_started' means
+  # nobody has looked yet (research assignment flow), 'not_found' means a source
+  # was consulted and listed no account for that platform (election editor), which
+  # puts the row in the verification queue for a one-click confirm. Stubs carry no
+  # entered_by, so the four-eyes rule never blocks verifying them.
+  def self.prepopulate_for_person!(person, platforms: CORE_PLATFORMS, channel_type: 'Campaign',
+                                   research_status: 'not_started')
     platforms.each do |platform|
       existing = person.social_media_accounts.find_by(platform: platform, channel_type: channel_type)
       next if existing
@@ -202,7 +208,7 @@ class SocialMediaAccount < ApplicationRecord
         platform: platform,
         channel_type: channel_type,
         pre_populated: true,
-        research_status: 'not_started'
+        research_status: research_status
       )
     end
   end

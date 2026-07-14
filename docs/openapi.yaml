@@ -399,6 +399,9 @@ components:
           items: { $ref: "#/components/schemas/PartyMembership" }
         social_media_accounts:
           type: array
+          description: >-
+            Verified, active accounts with a URL. Verified absence records
+            (a confirmed "no account on this platform") are never included.
           items: { $ref: "#/components/schemas/SocialMediaAccount" }
         updated_at: { type: [string, "null"], format: date-time }
     CurrentOffice:

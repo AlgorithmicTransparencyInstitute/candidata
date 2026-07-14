@@ -3,7 +3,7 @@ module Api
     # Hand-rolled JSON shapes for the public API. This is the public contract:
     # change shapes here only additively (docs/PUBLIC_API.md documents them).
     # Workflow fields (research_status, verified_by, junkipedia_*, etc.) must
-    # never appear here. Socials: verified + active only.
+    # never appear here. Socials: verified + active + has a URL.
     module Serializers
       def person_core_json(person)
         {
@@ -64,8 +64,11 @@ module Api
         person.person_parties.find { |pp| pp.is_primary }&.party || person.party_affiliation
       end
 
+      # A verified account with no URL is a confirmed *absence* — a verifier
+      # attesting the candidate has no account on that platform. It is a real
+      # research finding, but it is not a channel, so it never ships to consumers.
       def verified_socials(person)
-        person.social_media_accounts.select { |a| a.verified && !a.account_inactive }
+        person.social_media_accounts.select { |a| a.verified && !a.account_inactive && a.url.present? }
       end
 
       def social_json(account)

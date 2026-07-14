@@ -105,11 +105,25 @@ begin
   if uuid_person
     status, body = api_get("/api/v1/people/#{uuid_person.person_uuid}", token: raw)
     check("show by uuid 200", status == 200 && body["data"]["person_uuid"] == uuid_person.person_uuid)
-    verified_count = uuid_person.social_media_accounts.verified.active.count
-    check("show returns only verified+active socials (#{verified_count})",
+    # A verified account with no URL is a confirmed *absence* ("this candidate has
+    # no TikTok"), not a channel — it must never ship to consumers.
+    verified_count = uuid_person.social_media_accounts.verified.active.where.not(url: [nil, ""]).count
+    check("show returns only verified+active socials with a URL (#{verified_count})",
           body["data"]["social_media_accounts"].length == verified_count)
   else
     puts "  skip uuid show (no person with uuid + verified account)"
+  end
+
+  absence_person = Person.where.not(person_uuid: nil).joins(:social_media_accounts)
+                         .where(social_media_accounts: { verified: true, account_inactive: false })
+                         .where(social_media_accounts: { url: [nil, ""] }).first
+  if absence_person
+    status, body = api_get("/api/v1/people/#{absence_person.person_uuid}", token: raw)
+    socials = body["data"]["social_media_accounts"]
+    check("verified absence records (no URL) are excluded from payloads",
+          status == 200 && socials.none? { |a| a["url"].nil? || a["url"] == "" })
+  else
+    puts "  skip absence check (no verified URL-less account in DB)"
   end
   status, body = api_get("/api/v1/people/00000000-0000-0000-0000-000000000000", token: raw)
   check("unknown uuid -> 404 NOT_FOUND", status == 404 && body["code"] == "NOT_FOUND")

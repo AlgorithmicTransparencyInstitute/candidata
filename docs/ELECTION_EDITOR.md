@@ -88,10 +88,24 @@ One transaction **per row** — a bad row reports errors without losing the shee
      platform if one exists rather than duplicating.
    - **Placeholder slots**: after each saved row, `SocialMediaAccount.prepopulate_for_person!`
      gives the person the standard blank per-platform account slots (the 6
-     `CORE_PLATFORMS`, `Campaign`/`pre_populated`/`not_started`) that the rest of
-     the app creates on research assignment — so accounts later verified already
-     have a row. Idempotent; the freshly-created stubs are bound back into the
-     grid so a later edit fills them in place.
+     `CORE_PLATFORMS`, `Campaign`/`pre_populated`) that the rest of the app creates
+     on research assignment — so accounts later verified already have a row.
+     Idempotent; the freshly-created stubs are bound back into the grid so a later
+     edit fills them in place.
+
+     Editor stubs are created as **`not_found`**, not `not_started`: the source
+     data *was* consulted and listed no account for that platform. That is a claim
+     a verifier can confirm, so the row shows up in the verification queue with a
+     "Needs Verification" badge and a one-click verify (which sets `verified` with
+     a blank URL — a confirmed absence). `not_started` would mean "nobody looked",
+     which renders as an unbadged row that the queue neither counts nor blocks
+     completion on. Stubs carry **no `entered_by`**, so `verifiable_by?` is true
+     for everyone and the four-eyes rule never strands them. A researcher who
+     wants to enter data anyway hits "Undo" on the row (`reset_status!`).
+
+     Verified blank accounts are excluded from the public API (`verified_socials`
+     requires a URL) and never reach Junkipedia (`junkipedia_eligible?` requires a
+     URL).
    - account + **same handle** (case-, `@`- and URL-form-insensitive) → unchanged.
      Cosmetic URL variants (x.com vs twitter.com, `?lang=`, trailing slash) never
      unverify. A blank URL gets filled in; a real URL change applies only to
@@ -269,11 +283,12 @@ Gaps to decide on next pass:
    party on their profile page. Decide whether grid party entry should also set the
    person's primary party.
 
-7. **No blank account stubs.** Unlike the admin data-collection flow
-   (`SocialMediaAccount.prepopulate_for_person!` makes 6 core-platform placeholders),
-   the editor only creates accounts for platforms with a typed handle. Fine for entry
-   speed, but means editor-created people don't start with the standard research
-   placeholders — decide if that matters for the downstream verification pipeline.
+7. **Stubs are created for all 6 core platforms, on every saved row.** Including
+   rows for people who already existed and were merely touched in the editor, and
+   including platforms the source never covers. Every one becomes a `not_found` row
+   a verifier must confirm — so a broad edit pass can inflate the verification
+   queue. If that becomes noisy, scope stub creation to editor-*created* people, or
+   to the platforms the import source actually had columns for.
 
 8. **No assignments created.** Editor-entered people enter the verification pipeline
    only when an admin later assigns a data_validation task. Consider an optional
