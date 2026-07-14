@@ -1,7 +1,7 @@
 {
   "scripts": {
     "build": "esbuild app/javascript/react/election_editor.tsx --bundle --minify --sourcemap --format=iife --outdir=app/assets/builds --define:process.env.NODE_ENV='\"production\"'",
-    "build:watch": "esbuild app/javascript/react/election_editor.tsx --bundle --sourcemap --format=iife --outdir=app/assets/builds --define:process.env.NODE_ENV='\"development\"' --watch"
+    "build:watch": "esbuild app/javascript/react/election_editor.tsx --bundle --sourcemap --format=iife --outdir=app/assets/builds --define:process.env.NODE_ENV='\"development\"' --watch=forever"
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.1.16",

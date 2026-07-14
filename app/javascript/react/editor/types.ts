@@ -99,6 +99,8 @@ export type PersonResult = {
 export type OfficeResult = {
   id: number
   label: string
+  searchLabel?: string
+  state?: string | null
   level: string
   branch: string
   body: string | null

@@ -72,7 +72,7 @@ class ElectionEditorCsvImport
   }.freeze
 
   # Source spreadsheets vary ("Democrat" vs "Democratic", single letters, GOP…).
-  # Canonical values are the Contest::PARTIES vocabulary.
+  # Canonical values are snapped to Party.ballot_vocabulary in #canonical_party.
   PARTY_ALIASES = {
     'democrat' => 'Democratic', 'democratic' => 'Democratic', 'dem' => 'Democratic', 'd' => 'Democratic',
     'republican' => 'Republican', 'gop' => 'Republican', 'rep' => 'Republican', 'r' => 'Republican',
@@ -231,7 +231,7 @@ class ElectionEditorCsvImport
 
     party_raw = field_value(raw, 'party')
     party = canonical_party(party_raw)
-    if party_raw.present? && !Contest::PARTIES.include?(party)
+    if party_raw.present? && !allowed_parties.include?(party)
       if primary?
         issues << "Unknown party #{party_raw.inspect} — not in the ballot vocabulary"
       else
@@ -303,7 +303,7 @@ class ElectionEditorCsvImport
       middleName: name[:middle],
       lastName: last.to_s,
       suffix: name[:suffix],
-      party: (Contest::PARTIES.include?(party) ? party : party_raw).presence,
+      party: (allowed_parties.include?(party) ? party : party_raw).presence,
       outcome: outcome,
       incumbent: incumbent,
       withdrawn: withdrawn,
@@ -365,12 +365,21 @@ class ElectionEditorCsvImport
   end
 
   # "Democrat" → "Democratic", "GOP" → "Republican"; a trailing " Party" is
-  # dropped first so "Unity Party"/"No Labels Party" hit the vocabulary.
+  # dropped first so "Unity Party"/"No Labels Party" hit the vocabulary. After
+  # alias mapping we snap to the Party-table-derived vocabulary so minor parties
+  # ("Green", "Conservative") and case variants resolve to their canonical form.
   def canonical_party(raw)
     value = raw.to_s.squish.sub(/\s+party\z/i, '')
     return nil if value.blank?
 
-    PARTY_ALIASES[value.downcase] || value
+    aliased = PARTY_ALIASES[value.downcase] || value
+    Party.canonical_ballot_party(aliased) || aliased
+  end
+
+  # The recognized party vocabulary, fetched once per preview (a single query)
+  # rather than per row.
+  def allowed_parties
+    @allowed_parties ||= Party.ballot_vocabulary
   end
 
   def canonical_outcome(raw, withdrawn, advanced_default, issues)

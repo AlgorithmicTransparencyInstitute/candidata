@@ -24,7 +24,7 @@ Conventions worth knowing up front:
 
 - Unique on `[state, date, election_type, party]`
 - `belongs_to :election (optional)`, `has_many :contests, dependent: :destroy`
-- **`party` is required for primaries** and must be in `Ballot::PARTIES` (add new parties there *and* in `Contest::PARTIES`)
+- **`party` is required for primaries** and must be in `Party.ballot_vocabulary` (the single source of truth — see Party below; new `Party` rows become valid automatically)
 - Scopes: `primary`, `general`, `special`, `runoff`, `for_year`, `for_state`, `for_party`
 - `full_name` → `name` or `"{year} {state} {party} {Type}"`
 
@@ -33,7 +33,7 @@ Conventions worth knowing up front:
 
 - Unique on `[date, location, office_id, ballot_id]`
 - `belongs_to :office, :ballot`, `has_many :candidates, dependent: :destroy`
-- `party` required for primaries, must be in `Contest::PARTIES`
+- `party` required for primaries, must be in `Party.ballot_vocabulary`
 - Delegates `state`, `election_type`, `year` to ballot
 - Scopes: `primary`, `general`, `special`, `runoff`, `for_year`, `for_office`, `for_party`
 - Methods: `full_name`, `winner`, `winners`, `total_votes` (sum of tallies), `decided?` — winner helpers use `Candidate.winners` (`outcome IN won/advanced`), so an unopposed advancer is treated as the winner
@@ -57,8 +57,8 @@ Conventions worth knowing up front:
 
 - Unique on `[title, level, state, district_id]`
 - `belongs_to :district, :body (both optional)`, `has_many :contests, :officeholders, :people (through)`
-- Scopes: `federal`, `state`, `local`, `legislative`, `executive`, `judicial`, `by_category` (→ `office_category`), `by_body` (→ `body_name`)
-- Methods: `full_title`, `display_name` (`"{title} ({seat})"`), `legislative?`/`executive?`/`judicial?`
+- Scopes: `federal`, `state`, `local`, `legislative`, `executive`, `judicial`, `by_category` (→ `office_category`), `by_body` (→ `body_name`), `search_text(q)` (ILIKE across title/seat/body_name/office_category/jurisdiction — backs the searchable office pickers)
+- Methods: `full_title`, `display_name` (`"{title} ({seat})"`), `search_label` (adds `" — {state} · {body}"` for disambiguating results), `legislative?`/`executive?`/`judicial?`
 
 ### Officeholder
 `person_id` (required), `office_id` (required), `start_date` (required), `end_date`, `elected_year`, `appointed` (default false), `official_email`, `official_phone`, `official_address`, `contact_form_url`, `next_election_date`, `term_end_date`
@@ -104,7 +104,8 @@ Conventions worth knowing up front:
 
 - `has_many :person_parties / :people (through)`; legacy `has_many :affiliated_people` via `party_affiliation_id`
 - Scopes: `major` / `minor` (keyed on names "Democratic Party"/"Republican Party")
-- ⚠️ Distinct from `Ballot::PARTIES` / `Contest::PARTIES` constants (ballot-label vocabulary) and from `candidates.party_at_time` / `people` import party strings like `"Democratic"`.
+- **`Party.ballot_vocabulary`** — the single source of truth for the `ballots.party` / `contests.party` string vocabulary and every party dropdown. Union of the table's names as short labels (`ballot_label` strips a trailing `" Party"`, so `"Green Party"→"Green"`) with `LEGACY_BALLOT_PARTIES` (kept permanently so no already-stored value can fail validation), minus `"Unknown"`, sorted+uniq. `Party.canonical_ballot_party(raw)` snaps an arbitrary string to its canonical vocabulary casing (case-insensitive, `" Party"`-tolerant) or nil. Adding a `Party` row makes it a valid ballot/contest party automatically.
+- ⚠️ Ballots/contests store the **short label** (`"Green"`); the table stores org names (`"Green Party"`). There is no `party_id` FK — `ballots.party`/`contests.party` are free-text columns validated against `ballot_vocabulary`. `candidates.party_at_time` uses the same short-label vocabulary.
 
 ### PersonParty (join)
 `person_id`, `party_id`, `is_primary` (default false)

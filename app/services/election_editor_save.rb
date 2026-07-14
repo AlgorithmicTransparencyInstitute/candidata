@@ -54,6 +54,7 @@ class ElectionEditorSave
       person = upsert_person(row)
       candidate = upsert_candidate(row, person, contest_id)
       socials = upsert_socials(row, person, warnings)
+      socials = prepopulate_and_bind_stubs(person, socials)
     end
 
     {
@@ -166,16 +167,42 @@ class ElectionEditorSave
   end
 
   def create_account(person, platform, normalized)
-    account = person.social_media_accounts.find_or_initialize_by(platform: platform, handle: normalized[:handle])
+    # Reuse an exact (platform, handle) match, else fill a blank pre-populated
+    # Campaign stub for this platform rather than creating a duplicate row, else
+    # build a fresh Campaign account.
+    account = person.social_media_accounts.find_by(platform: platform, handle: normalized[:handle])
+    account ||= person.social_media_accounts.detect do |a|
+      a.persisted? && a.platform == platform && a.channel_type == 'Campaign' && a.handle.blank? && a.url.blank?
+    end
+    account ||= person.social_media_accounts.build(platform: platform)
+
+    account.handle = normalized[:handle]
     account.url = normalized[:url] if account.url.blank?
-    if account.new_record?
-      account.channel_type = 'Campaign'
+    if account.new_record? || account.pre_populated?
+      account.channel_type = 'Campaign' if account.channel_type.blank?
       account.research_status = 'entered'
       account.entered_by = @user
       account.entered_at = Time.current
+      account.pre_populated = false
     end
     account.save!
     account_cell(account)
+  end
+
+  # Give every person the standard blank per-platform account slots (6 core
+  # platforms, Campaign/pre_populated/not_started) the rest of the app creates on
+  # research assignment, so accounts researchers later verify already have a row.
+  # Idempotent. Then bind any freshly-created stub the row didn't fill so the
+  # grid edits it in place rather than creating a duplicate on the next save.
+  def prepopulate_and_bind_stubs(person, socials)
+    SocialMediaAccount.prepopulate_for_person!(person)
+    person.social_media_accounts.reload.each do |account|
+      next if socials.key?(account.platform)
+      next unless account.pre_populated? && account.handle.blank? && account.url.blank?
+
+      socials[account.platform] = account_cell(account)
+    end
+    socials
   end
 
   def account_cell(account)

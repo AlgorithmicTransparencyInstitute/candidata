@@ -18,8 +18,33 @@ module Admin
       end
 
       @offices = @offices.page(params[:page]).per(50)
-      @states = State.order(:name).pluck(:abbreviation, :name)
+      # [name, abbreviation] so the option value submitted matches offices.state.
+      @states = State.order(:name).pluck(:name, :abbreviation)
       @levels = Office::LEVELS
+    end
+
+    # JSON typeahead backing the searchable office pickers (core contest form and,
+    # via the editor's own endpoint, the election editor). Searches the whole
+    # office table; optional state/level/branch narrowing.
+    def search
+      q = params[:q].to_s.strip
+      return render json: { offices: [] } if q.length < 2
+
+      offices = Office.search_text(q)
+      offices = offices.where(state: params[:state]) if params[:state].present?
+      offices = offices.where(level: params[:level]) if params[:level].present?
+      offices = offices.where(branch: params[:branch]) if params[:branch].present?
+      offices = offices.order(:state, :title, :seat).limit(25)
+
+      render json: {
+        offices: offices.map { |o|
+          {
+            id: o.id, label: o.search_label, title: o.title, seat: o.seat,
+            state: o.state, body: o.body_name, category: o.office_category,
+            level: o.level, branch: o.branch
+          }
+        }
+      }
     end
 
     def show

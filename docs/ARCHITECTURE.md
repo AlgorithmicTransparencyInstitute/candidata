@@ -293,11 +293,11 @@ Standard CRUD for each entity.
 
 | Controller | Purpose |
 |------------|---------|
-| `ContestsController` | Manage races |
-| `BallotsController` | Manage election ballots |
-| `ElectionsController` | Manage election cycles |
+| `ContestsController` | Manage races. New/edit form uses a **search-as-you-type office picker** (all ~42k offices, via `office_search` Stimulus controller → `GET /admin/offices/search`) instead of a capped select; party is a select from `Party.ballot_vocabulary`. |
+| `BallotsController` | Manage election ballots. Index filters: **state** (fixed label/value inversion — submits the abbreviation), **year** (real `year` column via `for_year`), and a new **party** filter/column. `ballot_params` now permits `party`/`year`/`election_id`; the new/edit form has party + election fields and prefills from `?election_id=`. |
+| `ElectionsController` | Manage election cycles. Show page lists ballots with an **Add ballots** panel; `POST /admin/elections/:id/add_ballots` find-or-creates ballots (idempotent, linked). Primaries take `parties[]`, pre-selecting parties that candidates use but no ballot exists for. |
+| `OfficesController` | Manage office positions. **`GET /admin/offices/search`** — JSON typeahead (`Office.search_text`, optional `state`/`level`/`branch`, `search_label` for display) backing the contest office picker. |
 | `DistrictsController` | Manage electoral districts |
-| `OfficesController` | Manage office positions |
 | `PartiesController` | Manage parties |
 | `BodiesController` | Manage governmental bodies |
 | `CandidatesController` | Manage candidates |

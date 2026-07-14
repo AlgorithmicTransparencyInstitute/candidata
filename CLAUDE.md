@@ -330,7 +330,7 @@ heroku run bin/rails import:candidates_2026_<batch> --app candidata
 ```
 
 Key gotchas:
-- New parties must be added to `PARTIES` in both `app/models/ballot.rb` and `app/models/contest.rb`
+- The ballot/contest party vocabulary is derived from the `Party` table via `Party.ballot_vocabulary` (table names with a trailing `" Party"` stripped, unioned with `Party::LEGACY_BALLOT_PARTIES`). To make a new party valid for ballots/contests, **add a `Party` record** — no model constant edit needed. Only add to `LEGACY_BALLOT_PARTIES` for a label that must exist without a matching table row.
 - Source spreadsheets vary in conventions ("Withdrew" vs "Withdrawn", "Democrat" vs "Democratic", "99"/"see notes"/"N/A" as placeholders, lowercase race values). The cleaner is the place to absorb new variants.
 - See `docs/CANDIDATE_CSV_IMPORT.md` for full documentation including batch history
 

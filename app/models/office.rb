@@ -25,7 +25,18 @@ class Office < ApplicationRecord
   scope :judicial, -> { where(branch: 'judicial') }
   scope :by_category, ->(cat) { where(office_category: cat) }
   scope :by_body, ->(body) { where(body_name: body) }
-  
+
+  # Fuzzy search across the fields a human recognizes an office by. Used by the
+  # searchable office pickers (core contest form + election editor new-contest).
+  scope :search_text, ->(query) {
+    pattern = "%#{sanitize_sql_like(query.to_s.strip)}%"
+    where(
+      'title ILIKE :p OR seat ILIKE :p OR body_name ILIKE :p OR ' \
+      'office_category ILIKE :p OR jurisdiction ILIKE :p',
+      p: pattern
+    )
+  }
+
   def full_title
     parts = [title]
     parts << seat if seat.present?
@@ -39,6 +50,13 @@ class Office < ApplicationRecord
     else
       title
     end
+  end
+
+  # Richer one-line label for search results, disambiguating same-titled offices
+  # across states/bodies: "State Representative (District 5) — CO · CO State House".
+  def search_label
+    context = [state, body_name].reject(&:blank?).uniq.join(' · ')
+    context.present? ? "#{display_name} — #{context}" : display_name
   end
 
   def legislative?

@@ -81,7 +81,7 @@ The Ballot and Contest models validate party names. Currently supported:
 - Democratic, Republican, Libertarian, Independent, Nonpartisan, Unaffiliated, Constitution, Forward
 - Working Class, Legal Marijuana NOW, No Party Preference, Peace and Freedom, Independent American
 
-To add a new party, update the `PARTIES` constant in both `app/models/ballot.rb` and `app/models/contest.rb`, and add a mapping in the cleaning script. **Watch out:** the importer's outer `rescue => e` block swallows validation failures from missing parties (they're logged to `@stats[:errors]` rather than raised), so the import will appear to succeed while silently dropping candidates whose party isn't in the constant. Cross-check candidate counts against cleaned-CSV counts after every import.
+To add a new party, **create a `Party` record** (its short label — the name minus a trailing `" Party"` — automatically joins `Party.ballot_vocabulary`, which the ballot/contest validations use), and add a mapping in the cleaning script if the source spelling differs. **Watch out:** the importer's outer `rescue => e` block swallows validation failures from missing parties (they're logged to `@stats[:errors]` rather than raised), so the import will appear to succeed while silently dropping candidates whose party isn't in the vocabulary. Cross-check candidate counts against cleaned-CSV counts after every import.
 
 ## Key Files
 

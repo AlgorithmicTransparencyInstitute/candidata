@@ -47,8 +47,9 @@
   </div>
 
   <div class="bg-white rounded-lg shadow">
-    <div class="px-6 py-4 border-b border-gray-200">
+    <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
       <h2 class="text-xl font-semibold text-gray-900">Ballots</h2>
+      <%= link_to "New Ballot", new_admin_ballot_path(election_id: @election.id), class: "px-3 py-1.5 text-sm bg-gray-200 text-gray-700 rounded hover:bg-gray-300" %>
     </div>
     <div class="divide-y divide-gray-200">
       <% if @ballots.any? %>
@@ -69,6 +70,38 @@
         <% end %>
       <% else %>
         <div class="px-6 py-8 text-center text-gray-500">No ballots linked to this election</div>
+      <% end %>
+    </div>
+
+    <div class="px-6 py-4 border-t border-gray-200 bg-gray-50 rounded-b-lg">
+      <% if @election.election_type == 'primary' %>
+        <h3 class="text-sm font-semibold text-gray-900 mb-2">Add party ballots</h3>
+        <% if @suggested_ballot_parties.any? %>
+          <p class="text-xs text-gray-600 mb-2">
+            Candidates in this election run under these parties, which have no ballot yet:
+            <span class="font-medium text-amber-700"><%= @suggested_ballot_parties.join(', ') %></span> (pre-selected below).
+          </p>
+        <% end %>
+        <% if @missing_ballot_parties.any? %>
+          <%= form_with url: add_ballots_admin_election_path(@election), method: :post, class: "flex flex-wrap items-end gap-3" do %>
+            <div>
+              <label class="block text-xs font-medium text-gray-700 mb-1">Parties (one ballot each)</label>
+              <select name="parties[]" multiple size="6" class="min-w-[240px] px-2 py-1 border border-gray-300 rounded-md text-sm">
+                <% @missing_ballot_parties.each do |party| %>
+                  <option value="<%= party %>" <%= 'selected' if @suggested_ballot_parties.include?(party) %>><%= party %></option>
+                <% end %>
+              </select>
+            </div>
+            <%= submit_tag "Add selected ballots", class: "px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 cursor-pointer text-sm" %>
+            <p class="text-xs text-gray-500 self-center">Hold ⌘/Ctrl to select several.</p>
+          <% end %>
+        <% else %>
+          <p class="text-sm text-gray-500">Every party in the vocabulary already has a ballot for this election.</p>
+        <% end %>
+      <% elsif @ballots.empty? %>
+        <%= button_to "Add #{@election.election_type&.titleize} ballot", add_ballots_admin_election_path(@election), method: :post, class: "px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 cursor-pointer text-sm" %>
+      <% else %>
+        <p class="text-sm text-gray-500">This <%= @election.election_type %> election already has its ballot.</p>
       <% end %>
     </div>
   </div>

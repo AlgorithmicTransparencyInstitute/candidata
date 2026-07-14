@@ -6,15 +6,12 @@ class Ballot < ApplicationRecord
   has_many :offices, through: :contests
 
   ELECTION_TYPES = %w[primary general special runoff].freeze
-  PARTIES = %w[Democratic Republican Libertarian Independent Nonpartisan Unaffiliated Constitution Forward].freeze +
-             ['Working Class', 'Legal Marijuana NOW', 'No Party Preference', 'Peace and Freedom', 'Independent American',
-              'No Labels', 'Unity']
 
   validates :state, presence: true
   validates :date, presence: true
   validates :election_type, presence: true, inclusion: { in: ELECTION_TYPES }
   validates :year, presence: true
-  validates :party, inclusion: { in: PARTIES }, allow_nil: true
+  validates :party, inclusion: { in: ->(_record) { Party.ballot_vocabulary } }, allow_nil: true
   validates :party, presence: true, if: -> { election_type == 'primary' }
 
   scope :primary, -> { where(election_type: 'primary') }

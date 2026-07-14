@@ -339,10 +339,10 @@ function OfficeResolver({ payload, note, onPick }: {
               key={office.id}
               type="button"
               className="block w-full px-2.5 py-1.5 text-left text-xs hover:bg-blue-50"
-              onClick={() => { onPick(office); setQuery(office.label); setResults([]) }}
+              onClick={() => { onPick(office); setQuery(office.searchLabel ?? office.label); setResults([]) }}
             >
               <span className="font-medium">{office.label}</span>
-              <span className="ml-1 text-gray-500">{[office.level, office.body].filter(Boolean).join(" · ")}</span>
+              <span className="ml-1 text-gray-500">{[office.state, office.body || office.level].filter(Boolean).join(" · ")}</span>
             </button>
           ))}
         </div>

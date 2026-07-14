@@ -321,6 +321,31 @@ RSpec.describe "Admin election editor CSV import preview", type: :request do
     end
   end
 
+  describe "minor parties from the parties table" do
+    it "accepts a party that exists only in the parties table (e.g. Green)" do
+      Party.create!(name: "Green Party", abbreviation: "GRN")
+      csv = <<~CSV
+        candidate_name,party,office,district
+        Jane Green,Green,U.S. House,1
+      CSV
+
+      body = preview(csv)
+      row = body["rows"].first
+      expect(row["issues"]).to eq([])
+      expect(row["party"]).to eq("Green")
+    end
+
+    it "still blocks a primary party that is in neither the table nor the legacy list" do
+      csv = <<~CSV
+        candidate_name,party,office,district
+        Jo Nope,Zzz,U.S. House,1
+      CSV
+
+      row = preview(csv)["rows"].first
+      expect(row["issues"].join).to include("not in the ballot vocabulary")
+    end
+  end
+
   it "rejects unparseable and oversized input cleanly" do
     body = preview(%(a,b\n"unclosed))
     expect(body["errors"].join).to include("Could not parse CSV")

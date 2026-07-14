@@ -287,6 +287,13 @@
             <li><strong>Editing records:</strong> Click "Edit" link next to any record</li>
             <li><strong>Viewing details:</strong> Click "View" or the record name to see full details</li>
           </ul>
+
+          <h3 class="text-lg font-semibold text-gray-900 mt-6 mb-3">Working with ballots &amp; contests:</h3>
+          <ul class="list-disc list-inside space-y-2 text-gray-700">
+            <li><strong>Adding ballots to an election:</strong> Open an election's detail page. The <strong>Add ballots</strong> panel at the bottom of the Ballots card find-or-creates ballots for you (it never duplicates). For a primary, pick one or more parties (parties that already have candidates but no ballot are pre-selected) and click <em>Add selected ballots</em>. For a general/special election, click <em>Add ballot</em>.</li>
+            <li><strong>Creating a contest:</strong> On the New/Edit Contest form, the <strong>Office</strong> field is a search box — type at least two characters (title, seat, body, or state) and pick from the results. Every office in the database is searchable. Choose the party from the dropdown (required for primaries).</li>
+            <li><strong>Filtering ballots:</strong> The <%= link_to "Ballots", admin_ballots_path, target: "_blank", class: "text-blue-600" %> list filters by state, year, and party. Party is stored on each ballot (primaries always carry one) and shown as its own column.</li>
+          </ul>
         </div>
       </section>
 

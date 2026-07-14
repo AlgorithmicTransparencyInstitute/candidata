@@ -32,8 +32,7 @@ module Admin
 
     def new
       @contest = Contest.new
-      @offices = Office.order(:title).limit(100)
-      @ballots = Ballot.order(date: :desc).limit(50)
+      load_form_collections
     end
 
     def create
@@ -41,23 +40,20 @@ module Admin
       if @contest.save
         redirect_to admin_contest_path(@contest), notice: "Contest created."
       else
-        @offices = Office.order(:title).limit(100)
-        @ballots = Ballot.order(date: :desc).limit(50)
+        load_form_collections
         render :new, status: :unprocessable_entity
       end
     end
 
     def edit
-      @offices = Office.order(:title).limit(100)
-      @ballots = Ballot.order(date: :desc).limit(50)
+      load_form_collections
     end
 
     def update
       if @contest.update(contest_params)
         redirect_to admin_contest_path(@contest), notice: "Contest updated."
       else
-        @offices = Office.order(:title).limit(100)
-        @ballots = Ballot.order(date: :desc).limit(50)
+        load_form_collections
         render :edit, status: :unprocessable_entity
       end
     end
@@ -71,6 +67,15 @@ module Admin
 
     def set_contest
       @contest = Contest.find(params[:id])
+    end
+
+    # Office is chosen via the search-as-you-type picker (see office_search
+    # Stimulus controller + /admin/offices/search), so no office collection is
+    # pre-loaded. Ballots (~100s) and the party vocabulary are small enough to
+    # embed directly.
+    def load_form_collections
+      @ballots = Ballot.includes(:election).order(date: :desc)
+      @party_options = Party.ballot_vocabulary
     end
 
     def contest_params

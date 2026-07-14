@@ -390,8 +390,9 @@ Full CRUD on elections, ballots, and contests.
 
 **Capabilities:**
 - Create elections (primaries, generals, special)
-- Create ballots (per state, per date)
-- Create contests (races)
+- **Add ballots from the election page** — an "Add ballots" panel find-or-creates ballots for the election (idempotent, auto-linked). For primaries it pre-selects the parties that candidates run under but which lack a ballot, so you can fill coverage gaps in one click.
+- Create contests (races) with a **search-as-you-type office picker** covering every office in the database (no longer a capped list); party is chosen from the shared party vocabulary.
+- Filter the **Ballots** list by state, year (fixed), and party
 - Add candidates to contests
 - Set election outcomes
 - View full election tree

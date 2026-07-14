@@ -61,7 +61,7 @@ editor/ImportCsvDialog.tsx # CSV upload → mapping/preview → stage rows into 
 | `GET .../editor` | Page with **all data embedded as JSON** (election, contests grouped by ballot, parties, platform list, gender/race vocab, candidate rows with socials) — no fetch on load. |
 | `POST .../editor/save` | Bulk upsert `{rows, deletedCandidateIds}` → per-row results keyed by client row key. |
 | `GET .../editor/people?q=` | Person typeahead (dup guard; returns demographics + socials for prefill). |
-| `GET .../editor/offices?q=` | Office search scoped to the election's state (new-contest dialog). |
+| `GET .../editor/offices?q=` | Office search (shared `Office.search_text`). Defaults to the election's state; falls back to all states when `all=1` or there's no in-state match (`allStates` flag in the response). Returns `state` + `searchLabel` for cross-state disambiguation. |
 | `POST .../editor/contests` | Find-or-create party ballot (state/date/type from the election) + contest. |
 | `POST .../editor/import` | **Read-only CSV preview**: parse, map columns, validate values, match offices/contests/people. Body: `{csv, mapping?}` (mapping = `{header: fieldId}` overrides). 2 MB / 2,000-row cap. Writes nothing — the dialog creates contests via `POST .../contests` and stages rows for the normal save. |
 
@@ -84,7 +84,14 @@ One transaction **per row** — a bad row reports errors without losing the shee
    knows per-platform path markers, and ignores subpage suffixes like
    `/reels/`, `/videos`; `facebook.com/profile.php?id=…` yields no handle):
    - no account + value → create (`Campaign` / `entered` / **unverified** — never triggers
-     the Junkipedia auto-enqueue)
+     the Junkipedia auto-enqueue). Fills a blank pre-populated stub for that
+     platform if one exists rather than duplicating.
+   - **Placeholder slots**: after each saved row, `SocialMediaAccount.prepopulate_for_person!`
+     gives the person the standard blank per-platform account slots (the 6
+     `CORE_PLATFORMS`, `Campaign`/`pre_populated`/`not_started`) that the rest of
+     the app creates on research assignment — so accounts later verified already
+     have a row. Idempotent; the freshly-created stubs are bound back into the
+     grid so a later edit fills them in place.
    - account + **same handle** (case-, `@`- and URL-form-insensitive) → unchanged.
      Cosmetic URL variants (x.com vs twitter.com, `?lang=`, trailing slash) never
      unverify. A blank URL gets filled in; a real URL change applies only to
@@ -149,8 +156,10 @@ for primaries.
 
 **Validation / normalization**
 - Party: `"Democrat"→"Democratic"`, `"GOP"→"Republican"`, trailing `" Party"`
-  stripped (`"Unity Party"→"Unity"`); must be in `Contest::PARTIES` for a
-  primary (new parties still require the Ballot/Contest `PARTIES` code change).
+  stripped (`"Unity Party"→"Unity"`), then snapped to `Party.ballot_vocabulary`
+  (case-insensitive) so minor parties like `"Green"`/`"Conservative"` resolve
+  automatically; must be in that vocabulary for a primary. Adding a `Party` row
+  is now enough — no `PARTIES` code change needed.
 - `withdrew` truthy → outcome `withdrawn`; rows can be skipped via a checkbox
   (default on). `Primary contestant? = No` on a primary imports the row with
   outcome **`advanced`** (unopposed — advances to the general); an explicit
@@ -222,9 +231,11 @@ these are the known items from Cameron's first review:
 
 3. **Multiple accounts per platform (Campaign / Official Office / Personal).**
    Current behavior (documented so the next pass starts informed):
-   - *Loading*: `socials_map` shows ONE account per platform, picked by channel-type
-     priority Campaign > Official Office > Personal > nil; other accounts on that
-     platform are invisible in the grid.
+   - *Loading*: `socials_map` (`ElectionEditorSocials.map`) shows ONE account per
+     platform, picked **content-first** — an account with a handle/URL beats a
+     blank pre-populated stub — then by channel priority Campaign > Official
+     Office > Personal > nil. (Content-first stops a blank Campaign stub from
+     shadowing a real handle on another channel.) Other accounts stay invisible.
    - *Creating*: handles entered in the grid create accounts with
      `channel_type: "Campaign"`.
    - *Editing*: edits apply to whichever account the cell is bound to (`accountId`).

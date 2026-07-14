@@ -67,14 +67,20 @@ module Admin
       q = params[:q].to_s.strip
       return render json: { offices: [] } if q.length < 2
 
-      pattern = "%#{ActiveRecord::Base.sanitize_sql_like(q)}%"
-      offices = Office.where(state: @election.state)
-                      .where("title ILIKE :p OR seat ILIKE :p OR body_name ILIKE :p", p: pattern)
-                      .order(:title, :seat).limit(12)
+      matches = Office.search_text(q)
+      in_state = matches.where(state: @election.state)
+      # Default to the election's state, but fall back to all states when the
+      # user opts in (all=1) or nothing matches in-state, so at-large,
+      # multi-state, or mis-tagged offices are still reachable.
+      all_states = ActiveModel::Type::Boolean.new.cast(params[:all]) || !in_state.exists?
+      scope = all_states ? matches : in_state
+      offices = scope.order(:state, :title, :seat).limit(25)
 
       render json: {
+        allStates: all_states,
         offices: offices.map { |o|
-          { id: o.id, label: o.display_name, level: o.level, branch: o.branch, body: o.body_name }
+          { id: o.id, label: o.display_name, searchLabel: o.search_label, state: o.state,
+            level: o.level, branch: o.branch, body: o.body_name }
         }
       }
     end
@@ -156,7 +162,7 @@ module Admin
         # Party column uses the candidate vocabulary (party_at_time strings like
         # "Democratic"), NOT the parties table's org names ("Democratic Party").
         parties: party_options,
-        contestParties: Contest::PARTIES.sort,
+        contestParties: Party.ballot_vocabulary,
         platforms: SocialMediaAccount::PLATFORMS,
         # Reuses SocialMediaHelper#platform_icon (same SVGs/colors as the rest of the app)
         platformIcons: SocialMediaAccount::PLATFORMS.index_with { |p| helpers.platform_icon(p, size: 14) },
@@ -184,7 +190,7 @@ module Admin
     end
 
     def party_options
-      values = (Contest::PARTIES + Candidate.distinct.pluck(:party_at_time).compact).uniq.sort
+      values = (Party.ballot_vocabulary + Candidate.distinct.pluck(:party_at_time).compact).uniq.sort
       values.map { |value| { value: value, code: party_code(value) } }
     end
 

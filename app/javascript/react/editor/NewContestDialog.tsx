@@ -14,6 +14,7 @@ export function NewContestDialog({ payload, open, onOpenChange, onCreated }: {
 }) {
   const [query, setQuery] = React.useState("")
   const [results, setResults] = React.useState<OfficeResult[]>([])
+  const [allStates, setAllStates] = React.useState(false)
   const [officeId, setOfficeId] = React.useState<number | null>(null)
   const [party, setParty] = React.useState(payload.contestParties[0] ?? "")
   const [error, setError] = React.useState("")
@@ -24,23 +25,26 @@ export function NewContestDialog({ payload, open, onOpenChange, onCreated }: {
 
   React.useEffect(() => {
     if (!open) {
-      setQuery(""); setResults([]); setOfficeId(null); setError("")
+      setQuery(""); setResults([]); setOfficeId(null); setError(""); setAllStates(false)
     }
   }, [open])
+
+  const runSearch = async (value: string, all: boolean) => {
+    try {
+      const res = await getJSON<{ offices: OfficeResult[]; allStates?: boolean }>(
+        `${payload.urls.offices}?q=${encodeURIComponent(value.trim())}${all ? "&all=1" : ""}`
+      )
+      setResults(res.offices)
+      setAllStates(Boolean(res.allStates))
+    } catch { /* search is best-effort */ }
+  }
 
   const search = (value: string) => {
     setQuery(value)
     setOfficeId(null)
     clearTimeout(timer.current)
     if (value.trim().length < 2) { setResults([]); return }
-    timer.current = setTimeout(async () => {
-      try {
-        const { offices } = await getJSON<{ offices: OfficeResult[] }>(
-          `${payload.urls.offices}?q=${encodeURIComponent(value.trim())}`
-        )
-        setResults(offices)
-      } catch { /* search is best-effort */ }
-    }, 250)
+    timer.current = setTimeout(() => runSearch(value, false), 250)
   }
 
   const create = async () => {
@@ -81,24 +85,38 @@ export function NewContestDialog({ payload, open, onOpenChange, onCreated }: {
               onChange={e => search(e.target.value)}
             />
             {results.length > 0 && !officeId && (
-              <div className="mt-1 max-h-48 divide-y divide-gray-100 overflow-auto rounded-md border border-gray-200">
-                {results.map(office => (
-                  <button
-                    key={office.id}
-                    type="button"
-                    className="block w-full px-3 py-2 text-left text-sm hover:bg-blue-50"
-                    onClick={() => { setOfficeId(office.id); setQuery(office.label); setResults([]) }}
-                  >
-                    <span className="font-medium">{office.label}</span>
-                    <span className="ml-1 text-xs text-gray-500">
-                      {[office.level, office.body].filter(Boolean).join(" · ")}
-                    </span>
-                  </button>
-                ))}
-              </div>
+              <>
+                {allStates && (
+                  <p className="mt-1 text-xs text-amber-600">Showing offices from all states.</p>
+                )}
+                <div className="mt-1 max-h-48 divide-y divide-gray-100 overflow-auto rounded-md border border-gray-200">
+                  {results.map(office => (
+                    <button
+                      key={office.id}
+                      type="button"
+                      className="block w-full px-3 py-2 text-left text-sm hover:bg-blue-50"
+                      onClick={() => { setOfficeId(office.id); setQuery(office.searchLabel ?? office.label); setResults([]) }}
+                    >
+                      <span className="font-medium">{office.label}</span>
+                      <span className="ml-1 text-xs text-gray-500">
+                        {[office.state, office.body || office.level].filter(Boolean).join(" · ")}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </>
             )}
             {query.trim().length >= 2 && results.length === 0 && !officeId && (
               <p className="mt-1 text-xs text-gray-500">No matches yet in {payload.election.state} — keep typing.</p>
+            )}
+            {query.trim().length >= 2 && !officeId && !allStates && (
+              <button
+                type="button"
+                className="mt-1 text-xs text-blue-600 hover:underline"
+                onClick={() => runSearch(query, true)}
+              >
+                Search all states
+              </button>
             )}
           </div>
 

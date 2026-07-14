@@ -132,6 +132,42 @@ RSpec.describe "Admin election editor save", type: :request do
     expect(person.suffix).to be_nil
   end
 
+  describe "placeholder account slots" do
+    it "pre-populates the 6 core platform stubs for a new person and binds them" do
+      rows = [row(key: "r1", first: "Testy", last: "McTest",
+                  socials: { Twitter: { accountId: nil, value: "testymc" } })]
+      post admin_election_editor_save_path(election), params: { rows: rows, deletedCandidateIds: [] }, as: :json
+      result = JSON.parse(response.body)["results"].first
+      person = Person.find(result["personId"])
+
+      core = SocialMediaAccount::CORE_PLATFORMS
+      created = person.social_media_accounts
+      expect(created.map(&:platform)).to match_array(core)
+      # the filled one is entered; the rest are blank pre-populated stubs
+      twitter = created.find { |a| a.platform == "Twitter" }
+      expect(twitter.handle).to eq("testymc")
+      expect(twitter.pre_populated).to be(false)
+      stubs = created.reject { |a| a.platform == "Twitter" }
+      expect(stubs.map(&:pre_populated).uniq).to eq([true])
+      expect(stubs.map(&:handle).compact).to be_empty
+      # every core platform is bound in the response so later edits fill in place
+      expect(result["socials"].keys).to match_array(core)
+    end
+
+    it "does not create duplicate accounts on re-save" do
+      rows = [row(key: "r1", first: "Testy", last: "McTest",
+                  socials: { Twitter: { accountId: nil, value: "testymc" } })]
+      post admin_election_editor_save_path(election), params: { rows: rows, deletedCandidateIds: [] }, as: :json
+      person = Person.find(JSON.parse(response.body)["results"].first["personId"])
+      count = person.social_media_accounts.count
+
+      resave = [row(key: "r1", first: "Testy", last: "McTest", personId: person.id,
+                    socials: { Twitter: { accountId: nil, value: "testymc" } })]
+      post admin_election_editor_save_path(election), params: { rows: resave, deletedCandidateIds: [] }, as: :json
+      expect(person.social_media_accounts.count).to eq(count)
+    end
+  end
+
   it "saves every valid row, not just the first" do
     rows = [
       row(key: "r1", first: "Kathy",   last: "Hochul"),
