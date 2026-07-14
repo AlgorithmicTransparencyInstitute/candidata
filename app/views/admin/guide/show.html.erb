@@ -293,6 +293,8 @@
             <li><strong>Adding ballots to an election:</strong> Open an election's detail page. The <strong>Add ballots</strong> panel at the bottom of the Ballots card find-or-creates ballots for you (it never duplicates). For a primary, pick one or more parties (parties that already have candidates but no ballot are pre-selected) and click <em>Add selected ballots</em>. For a general/special election, click <em>Add ballot</em>.</li>
             <li><strong>Creating a contest:</strong> On the New/Edit Contest form, the <strong>Office</strong> field is a search box — type at least two characters (title, seat, body, or state) and pick from the results. Every office in the database is searchable. Choose the party from the dropdown (required for primaries).</li>
             <li><strong>Filtering ballots:</strong> The <%= link_to "Ballots", admin_ballots_path, target: "_blank", class: "text-blue-600" %> list filters by state, year, and party. Party is stored on each ballot (primaries always carry one) and shown as its own column.</li>
+            <li><strong>Moving between related records:</strong> Every list (districts, offices, contests, ballots, elections) filters by its key attributes and shows the related records inline. Rows and detail pages link to one another — a contest links to its office, district, ballot, and election; an office links to its district; a ballot links to its election — so you can navigate the data model by clicking through.</li>
+            <li><strong>Ballot names:</strong> Ballots created by the editor, CSV import, or the Add-ballots panel are automatically named (e.g. "2026 OH Republican Primary") — you no longer get blank-named ballots.</li>
           </ul>
         </div>
       </section>

@@ -43,6 +43,7 @@
           <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">State</th>
           <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Type</th>
           <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Party</th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Election</th>
           <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Contests</th>
           <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
         </tr>
@@ -59,6 +60,13 @@
               <span class="px-2 py-1 text-xs rounded-full bg-purple-100 text-purple-800"><%= ballot.election_type&.titleize %></span>
             </td>
             <td class="px-6 py-4 text-gray-600"><%= ballot.party.presence || '—' %></td>
+            <td class="px-6 py-4 text-sm">
+              <% if ballot.election %>
+                <%= link_to ballot.election.full_name, admin_election_path(ballot.election), class: "text-blue-600 hover:text-blue-800" %>
+              <% else %>
+                <span class="text-gray-400">—</span>
+              <% end %>
+            </td>
             <td class="px-6 py-4 text-gray-600"><%= ballot.contests.size %></td>
             <td class="px-6 py-4 text-right">
               <%= link_to "Edit", edit_admin_ballot_path(ballot), class: "text-blue-600 hover:text-blue-800" %>

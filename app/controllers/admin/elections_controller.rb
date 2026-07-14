@@ -3,7 +3,7 @@ module Admin
     before_action :set_election, only: [:show, :edit, :update, :destroy, :add_ballots]
 
     def index
-      @elections = Election.order(date: :asc)
+      @elections = Election.includes(ballots: :contests).order(date: :asc)
 
       if params[:q].present?
         @elections = @elections.where("name ILIKE ? OR state ILIKE ?", "%#{params[:q]}%", "%#{params[:q]}%")

@@ -293,11 +293,11 @@ Standard CRUD for each entity.
 
 | Controller | Purpose |
 |------------|---------|
-| `ContestsController` | Manage races. New/edit form uses a **search-as-you-type office picker** (all ~42k offices, via `office_search` Stimulus controller → `GET /admin/offices/search`) instead of a capped select; party is a select from `Party.ballot_vocabulary`. |
-| `BallotsController` | Manage election ballots. Index filters: **state** (fixed label/value inversion — submits the abbreviation), **year** (real `year` column via `for_year`), and a new **party** filter/column. `ballot_params` now permits `party`/`year`/`election_id`; the new/edit form has party + election fields and prefills from `?election_id=`. |
-| `ElectionsController` | Manage election cycles. Show page lists ballots with an **Add ballots** panel; `POST /admin/elections/:id/add_ballots` find-or-creates ballots (idempotent, linked). Primaries take `parties[]`, pre-selecting parties that candidates use but no ballot exists for. |
-| `OfficesController` | Manage office positions. **`GET /admin/offices/search`** — JSON typeahead (`Office.search_text`, optional `state`/`level`/`branch`, `search_label` for display) backing the contest office picker. |
-| `DistrictsController` | Manage electoral districts |
+| `ContestsController` | Manage races. New/edit form uses a **search-as-you-type office picker** (all ~42k offices, via `office_search` Stimulus controller → `GET /admin/offices/search`) instead of a capped select; party is a select from `Party.ballot_vocabulary`. **Index** filters by search/state/party/district#/type/year (joined via `includes`+`references`) and shows state, district (linked), party, ballot+election (linked), candidate count. |
+| `BallotsController` | Manage election ballots. Index filters: **state** (fixed label/value inversion — submits the abbreviation), **year** (real `year` column via `for_year`), **party**, and shows a linked **Election** column. `ballot_params` now permits `party`/`year`/`election_id`; the new/edit form has party + election fields and prefills from `?election_id=`. Ballots always carry a name (auto-populated — see Ballot in SCHEMA). |
+| `ElectionsController` | Manage election cycles. Show page lists ballots with an **Add ballots** panel; `POST /admin/elections/:id/add_ballots` find-or-creates ballots (idempotent, linked). Primaries take `parties[]`, pre-selecting parties that candidates use but no ballot exists for. Index shows year, ballot + contest counts. |
+| `OfficesController` | Manage office positions. **`GET /admin/offices/search`** — JSON typeahead (`Office.search_text`, optional `state`/`level`/`branch`, `search_label` for display) backing the contest office picker. **Index** filters by search/level/branch/state/category and shows category, level+branch, body, linked district. |
+| `DistrictsController` | Manage electoral districts. Index has search (ocdid/state/district #) + state/level/chamber filters, OCD-ID column, and a per-page office-count (linked). |
 | `PartiesController` | Manage parties |
 | `BodiesController` | Manage governmental bodies |
 | `CandidatesController` | Manage candidates |

@@ -26,7 +26,7 @@ Conventions worth knowing up front:
 - `belongs_to :election (optional)`, `has_many :contests, dependent: :destroy`
 - **`party` is required for primaries** and must be in `Party.ballot_vocabulary` (the single source of truth — see Party below; new `Party` rows become valid automatically)
 - Scopes: `primary`, `general`, `special`, `runoff`, `for_year`, `for_state`, `for_party`
-- `full_name` → `name` or `"{year} {state} {party} {Type}"`
+- **`name` is auto-populated** on save (`set_default_name` before_validation) from `"{year} {state} {party} {Type}"` when blank — so editor/CSV-created ballots always carry a name. An explicit name is kept. `full_name` returns `name` or the composed label.
 
 ### Contest
 `date` (required), `location`, `contest_type` (required: primary/general/special/runoff), `party`, `office_id` (required), `ballot_id` (required)
@@ -72,6 +72,9 @@ Conventions worth knowing up front:
 
 - Unique on `[state, district_number, level, chamber]`
 - `has_many :offices` (via `district_id` on offices)
+- **No `name` column** — `full_name` composes a label (`"OH State House District 5"`, `"AK At-Large"`, etc.) from state/level/chamber/district_number
+- Scopes incl. `at_large` (`federal`, `district_number: 0`), `at_large_voting` (`VOTING_AT_LARGE_STATES`), `congressional`, `state_senate`/`state_house`
+- ⚠️ Only ~7% of districts are referenced by any office (offices came from GovProj and only 429/6440 districts are linked; at-large districts carry no office). Not a schema error — a data-linkage completeness gap.
 
 ### Body
 `name` (required), `level`, `branch`, `state`, `country` (default "US"), `jurisdiction`, `jurisdiction_ocdid`, `chamber_type`, `parent_body_id`, `seats_count`, `founded_date`, `website`

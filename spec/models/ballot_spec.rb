@@ -15,6 +15,23 @@ RSpec.describe Ballot, type: :model do
     end
   end
 
+  describe 'automatic name' do
+    it 'fills a blank name with the composed label on save' do
+      ballot = Ballot.create!(state: 'OH', date: Date.new(2026, 5, 5), election_type: 'primary', party: 'Republican')
+      expect(ballot.name).to eq('2026 OH Republican Primary')
+    end
+
+    it 'omits party for a non-primary ballot' do
+      ballot = Ballot.create!(state: 'OH', date: Date.new(2026, 11, 3), election_type: 'general')
+      expect(ballot.name).to eq('2026 OH General')
+    end
+
+    it 'keeps an explicitly provided name' do
+      ballot = Ballot.create!(state: 'OH', date: Date.new(2026, 11, 3), election_type: 'general', name: 'Custom Ballot')
+      expect(ballot.name).to eq('Custom Ballot')
+    end
+  end
+
   describe 'filter scopes' do
     let!(:co) { Ballot.create!(state: 'CO', date: Date.new(2026, 6, 30), election_type: 'general', year: 2026) }
     let!(:ny) { Ballot.create!(state: 'NY', date: Date.new(2025, 11, 4), election_type: 'general', year: 2025) }

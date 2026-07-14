@@ -3,27 +3,28 @@ module Admin
     before_action :set_contest, only: [:show, :edit, :update, :destroy]
 
     def index
-      @contests = Contest.includes(office: :district, ballot: :election).order(date: :desc)
+      # includes + references => LEFT JOINs, so we can filter on the joined
+      # offices/districts/ballots tables without duplicate-join errors.
+      @contests = Contest.includes(:candidates, office: :district, ballot: :election).order('contests.date DESC')
 
       if params[:q].present?
-        @contests = @contests.joins(:office).where("offices.title ILIKE ?", "%#{params[:q]}%")
+        @contests = @contests.where('offices.title ILIKE :p OR offices.seat ILIKE :p', p: "%#{params[:q]}%").references(:offices)
       end
-
-      if params[:contest_type].present?
-        @contests = @contests.where(contest_type: params[:contest_type])
+      @contests = @contests.where(contest_type: params[:contest_type]) if params[:contest_type].present?
+      @contests = @contests.where(party: params[:party]) if params[:party].present?
+      @contests = @contests.where('EXTRACT(YEAR FROM contests.date) = ?', params[:year]) if params[:year].present?
+      if params[:state].present?
+        @contests = @contests.where(ballots: { state: params[:state] }).references(:ballots)
       end
-
-      if params[:year].present?
-        @contests = @contests.where("EXTRACT(YEAR FROM date) = ?", params[:year])
-      end
-
       if params[:district_number].present?
-        @contests = @contests.joins(office: :district).where(districts: { district_number: params[:district_number] })
+        @contests = @contests.where(districts: { district_number: params[:district_number] }).references(:districts)
       end
 
       @contests = @contests.page(params[:page]).per(50)
-      @contest_types = Contest::CONTEST_TYPES rescue ['general', 'primary', 'runoff', 'special']
-      @years = Contest.distinct.pluck(Arel.sql("EXTRACT(YEAR FROM date)")).compact.sort.reverse
+      @contest_types = Contest::CONTEST_TYPES
+      @years = Contest.distinct.pluck(Arel.sql('EXTRACT(YEAR FROM date)')).compact.map(&:to_i).sort.reverse
+      @parties = Contest.where.not(party: [nil, '']).distinct.order(:party).pluck(:party)
+      @states = State.order(:name).pluck(:name, :abbreviation)
     end
 
     def show

@@ -3,24 +3,20 @@ module Admin
     before_action :set_office, only: [:show, :edit, :update, :destroy]
 
     def index
-      @offices = Office.includes(:district, :body).order(:title)
+      @offices = Office.includes(:district, :body).order(:state, :title)
 
-      if params[:q].present?
-        @offices = @offices.where("title ILIKE ?", "%#{params[:q]}%")
-      end
-
-      if params[:level].present?
-        @offices = @offices.where(level: params[:level])
-      end
-
-      if params[:state].present?
-        @offices = @offices.where(state: params[:state])
-      end
+      @offices = @offices.search_text(params[:q]) if params[:q].present?
+      @offices = @offices.where(level: params[:level]) if params[:level].present?
+      @offices = @offices.where(branch: params[:branch]) if params[:branch].present?
+      @offices = @offices.where(state: params[:state]) if params[:state].present?
+      @offices = @offices.by_category(params[:category]) if params[:category].present?
 
       @offices = @offices.page(params[:page]).per(50)
       # [name, abbreviation] so the option value submitted matches offices.state.
       @states = State.order(:name).pluck(:name, :abbreviation)
       @levels = Office::LEVELS
+      @branches = Office::BRANCHES
+      @categories = Office.where.not(office_category: [nil, '']).distinct.order(:office_category).pluck(:office_category)
     end
 
     # JSON typeahead backing the searchable office pickers (core contest form and,

@@ -4,12 +4,21 @@ class Admin::DistrictsController < Admin::BaseController
   def index
     @districts = District.all
 
-    # Filters
+    if params[:q].present?
+      term = params[:q].strip
+      @districts = @districts.where(
+        "ocdid ILIKE :like OR state ILIKE :like OR CAST(district_number AS text) = :exact",
+        like: "%#{term}%", exact: term
+      )
+    end
     @districts = @districts.where(level: params[:level]) if params[:level].present?
     @districts = @districts.where(state: params[:state]) if params[:state].present?
     @districts = @districts.where(chamber: params[:chamber]) if params[:chamber].present?
 
     @districts = @districts.order(:state, :level, :district_number).page(params[:page]).per(50)
+    @states = State.order(:name).pluck(:name, :abbreviation)
+    # Office counts for the current page in one query (avoids per-row N+1).
+    @office_counts = Office.where(district_id: @districts.map(&:id)).group(:district_id).count
   end
 
   def show

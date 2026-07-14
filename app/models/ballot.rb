@@ -23,19 +23,31 @@ class Ballot < ApplicationRecord
   scope :for_party, ->(party) { where(party: party) }
 
   before_validation :set_year_from_date
+  before_validation :set_default_name
 
+  # Always returns a human label; `name` is auto-filled on save (see
+  # set_default_name) so this normally just returns the stored name.
   def full_name
-    return name if name.present?
-
-    parts = [year, state]
-    parts << party if party.present?
-    parts << election_type.capitalize
-    parts.join(' ')
+    name.presence || composed_name
   end
 
   private
 
   def set_year_from_date
     self.year ||= date&.year
+  end
+
+  # Ensure every ballot carries a name. Ballots created by the election editor /
+  # CSV import previously saved with a blank name; auto-populate the logical
+  # label (e.g. "2026 OH Republican Primary") when none was given.
+  def set_default_name
+    self.name = composed_name if name.blank?
+  end
+
+  def composed_name
+    parts = [year, state]
+    parts << party if party.present?
+    parts << election_type&.capitalize
+    parts.compact.join(' ').presence
   end
 end

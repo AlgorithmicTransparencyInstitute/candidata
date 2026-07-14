@@ -6,7 +6,7 @@
   <div class="bg-white rounded-lg shadow mb-6">
     <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
       <div>
-        <h1 class="text-2xl font-bold text-gray-900"><%= @ballot.name %></h1>
+        <h1 class="text-2xl font-bold text-gray-900"><%= @ballot.full_name %></h1>
         <p class="text-gray-600"><%= @ballot.date.strftime('%B %d, %Y') %></p>
       </div>
       <div class="flex items-center gap-2">
@@ -19,6 +19,24 @@
       <div>
         <div class="text-sm text-gray-500">State</div>
         <div class="font-medium"><%= @ballot.state || 'N/A' %></div>
+      </div>
+      <div>
+        <div class="text-sm text-gray-500">Year</div>
+        <div class="font-medium"><%= @ballot.year || 'N/A' %></div>
+      </div>
+      <div>
+        <div class="text-sm text-gray-500">Party</div>
+        <div class="font-medium"><%= @ballot.party.presence || 'Nonpartisan' %></div>
+      </div>
+      <div>
+        <div class="text-sm text-gray-500">Election</div>
+        <div class="font-medium">
+          <% if @ballot.election %>
+            <%= link_to @ballot.election.full_name, admin_election_path(@ballot.election), class: "text-blue-600 hover:text-blue-800" %>
+          <% else %>
+            <span class="text-gray-400">Not linked</span>
+          <% end %>
+        </div>
       </div>
       <div>
         <div class="text-sm text-gray-500">Total Contests</div>
@@ -37,13 +55,13 @@
           <div class="px-6 py-4 flex justify-between items-center">
             <div>
               <div class="font-medium">
-                <%= contest.office.title %>
+                <%= link_to contest.office.title, admin_office_path(contest.office), class: "text-blue-600 hover:text-blue-800" %>
                 <% if contest.office.district %>
-                  <span class="text-gray-500 font-mono text-sm ml-2">(District <%= contest.office.district.district_number %>)</span>
+                  <%= link_to "(#{contest.office.district.full_name})", admin_district_path(contest.office.district), class: "text-gray-500 text-sm ml-2 hover:text-gray-700" %>
                 <% end %>
               </div>
               <div class="text-sm text-gray-600">
-                <%= contest.contest_type&.titleize %> · <%= contest.candidates.count %> candidates
+                <%= contest.contest_type&.titleize %><% if contest.party.present? %> · <%= contest.party %><% end %> · <%= pluralize(contest.candidates.count, 'candidate') %>
               </div>
             </div>
             <%= link_to "View", admin_contest_path(contest), class: "text-blue-600 hover:text-blue-800 text-sm" %>

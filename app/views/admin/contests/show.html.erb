@@ -20,9 +20,19 @@
         <div class="text-sm text-gray-500">Ballot</div>
         <div class="font-medium">
           <% if @contest.ballot %>
-            <%= link_to @contest.ballot.name, admin_ballot_path(@contest.ballot), class: "text-blue-600 hover:text-blue-800" %>
+            <%= link_to @contest.ballot.full_name, admin_ballot_path(@contest.ballot), class: "text-blue-600 hover:text-blue-800" %>
           <% else %>
             N/A
+          <% end %>
+        </div>
+      </div>
+      <div>
+        <div class="text-sm text-gray-500">Election</div>
+        <div class="font-medium">
+          <% if @contest.ballot&.election %>
+            <%= link_to @contest.ballot.election.full_name, admin_election_path(@contest.ballot.election), class: "text-blue-600 hover:text-blue-800" %>
+          <% else %>
+            <span class="text-gray-400">Not linked</span>
           <% end %>
         </div>
       </div>
@@ -31,6 +41,10 @@
         <div class="font-medium">
           <%= link_to @contest.office.title, admin_office_path(@contest.office), class: "text-blue-600 hover:text-blue-800" %>
         </div>
+      </div>
+      <div>
+        <div class="text-sm text-gray-500">State / Year</div>
+        <div class="font-medium"><%= [@contest.state, @contest.year].compact.join(' · ').presence || 'N/A' %></div>
       </div>
       <div>
         <div class="text-sm text-gray-500">District</div>

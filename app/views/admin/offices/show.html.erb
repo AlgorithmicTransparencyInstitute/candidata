@@ -23,8 +23,16 @@
         <div class="font-medium"><%= @office.state || 'N/A' %></div>
       </div>
       <div>
-        <div class="text-sm text-gray-500">District</div>
-        <div class="font-medium"><%= @office.district&.name || 'N/A' %></div>
+        <div class="text-sm text-gray-500">Category</div>
+        <div class="font-medium"><%= @office.office_category || 'N/A' %></div>
+      </div>
+      <div>
+        <div class="text-sm text-gray-500">Branch</div>
+        <div class="font-medium"><%= @office.branch&.titleize || 'N/A' %></div>
+      </div>
+      <div>
+        <div class="text-sm text-gray-500">Role</div>
+        <div class="font-medium"><%= @office.role.presence || 'N/A' %></div>
       </div>
       <div>
         <div class="text-sm text-gray-500">Body</div>
@@ -32,7 +40,17 @@
       </div>
       <div>
         <div class="text-sm text-gray-500">District</div>
-        <div class="font-medium"><%= @office.district&.full_name || 'N/A' %></div>
+        <div class="font-medium">
+          <% if @office.district %>
+            <%= link_to @office.district.full_name, admin_district_path(@office.district), class: "text-blue-600 hover:text-blue-800" %>
+          <% else %>
+            <span class="text-gray-400">N/A</span>
+          <% end %>
+        </div>
+      </div>
+      <div class="col-span-2">
+        <div class="text-sm text-gray-500">OCD-ID</div>
+        <div class="font-medium text-sm font-mono break-all"><%= @office.ocdid.presence || @office.jurisdiction_ocdid.presence || 'N/A' %></div>
       </div>
     </div>
   </div>

@@ -3,7 +3,7 @@ module Admin
     before_action :set_ballot, only: [:show, :edit, :update, :destroy]
 
     def index
-      @ballots = Ballot.order(date: :desc).includes(:contests)
+      @ballots = Ballot.order(date: :desc).includes(:contests, :election)
 
       @ballots = @ballots.where("name ILIKE ?", "%#{params[:q]}%") if params[:q].present?
       @ballots = @ballots.for_year(params[:year]) if params[:year].present?

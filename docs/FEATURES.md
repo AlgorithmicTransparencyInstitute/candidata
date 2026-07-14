@@ -425,6 +425,8 @@ Manage government positions and electoral districts.
 - Set type (congressional, state legislative, local)
 - Add offices
 
+**Navigation across records:** every admin list (districts, offices, contests, ballots, elections) supports filtering by its key attributes and displays the related records inline; list rows and detail pages link to their related records (contest → office/district/ballot/election, office → district, ballot → election, etc.) so you can move through the data model directly.
+
 ---
 
 ### 6. Manage Parties

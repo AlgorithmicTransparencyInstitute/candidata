@@ -36,9 +36,10 @@
           <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
           <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
           <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">State</th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Year</th>
           <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Type</th>
-          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Registration</th>
-          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Ballots</th>
+          <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Ballots</th>
+          <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Contests</th>
           <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
         </tr>
       </thead>
@@ -50,13 +51,12 @@
             </td>
             <td class="px-6 py-4 text-gray-600"><%= election.date.strftime('%b %d, %Y') %></td>
             <td class="px-6 py-4 text-gray-600"><%= election.state %></td>
+            <td class="px-6 py-4 text-gray-600"><%= election.year %></td>
             <td class="px-6 py-4">
               <span class="px-2 py-1 text-xs rounded-full bg-purple-100 text-purple-800"><%= election.election_type&.titleize %></span>
             </td>
-            <td class="px-6 py-4 text-sm text-gray-600">
-              <%= election.registration_deadline&.strftime('%b %d, %Y') || '—' %>
-            </td>
-            <td class="px-6 py-4 text-gray-600"><%= election.ballots.count %></td>
+            <td class="px-6 py-4 text-center text-gray-600"><%= election.ballots.size %></td>
+            <td class="px-6 py-4 text-center text-gray-600"><%= election.ballots.sum { |b| b.contests.size } %></td>
             <td class="px-6 py-4 text-right space-x-4">
               <%= link_to "Editor", "/admin/elections/#{election.id}/editor", class: "text-blue-600 hover:text-blue-800 font-medium" %>
               <%= link_to "Edit", edit_admin_election_path(election), class: "text-blue-600 hover:text-blue-800" %>
