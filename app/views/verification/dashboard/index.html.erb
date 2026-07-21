@@ -1,11 +1,11 @@
 <div class="max-w-7xl mx-auto px-4 py-8">
-  <h1 class="text-3xl font-bold text-gray-900 mb-8">Data Validation Dashboard</h1>
+  <h1 class="text-3xl font-bold text-gray-900 mb-8">Verification Dashboard</h1>
 
   <!-- Stats Overview -->
   <div class="grid grid-cols-3 gap-4 mb-8">
     <div class="bg-white rounded-lg shadow p-4">
       <div class="text-2xl font-bold text-purple-600"><%= @stats[:pending] %></div>
-      <div class="text-sm text-gray-600">Pending Validation</div>
+      <div class="text-sm text-gray-600">Pending Tasks</div>
     </div>
     <div class="bg-white rounded-lg shadow p-4">
       <div class="text-2xl font-bold text-orange-600"><%= @stats[:in_progress] %></div>
@@ -20,8 +20,8 @@
   <!-- Assignments -->
   <div class="bg-white rounded-lg shadow">
     <div class="px-6 py-4 border-b border-gray-200">
-      <h2 class="text-xl font-semibold text-gray-900">Validation Queue</h2>
-      <p class="text-sm text-gray-600">Review and verify accounts entered by researchers</p>
+      <h2 class="text-xl font-semibold text-gray-900">Verification Tasks</h2>
+      <p class="text-sm text-gray-600">Data validation and secondary verification assignments</p>
     </div>
     <div class="divide-y divide-gray-200">
       <% if @assignments.any? %>
@@ -31,13 +31,23 @@
               <div>
                 <div class="font-medium text-gray-900"><%= assignment.person.full_name %></div>
                 <div class="text-sm text-gray-600">
-                  <%= assignment.person.social_media_accounts.campaign.needs_verification.count %> accounts to verify
+                  <% if assignment.task_type == 'secondary_verification' %>
+                    <span class="text-red-600"><%= assignment.person.social_media_accounts.needs_secondary_verification.count %> accounts flagged for re-review</span>
+                  <% else %>
+                    <%= assignment.person.social_media_accounts.campaign.needs_verification.count %> accounts to verify
+                  <% end %>
                 </div>
               </div>
               <div class="flex items-center gap-2" onclick="event.stopPropagation()">
                 <%= assignment_status_badge(assignment.status) %>
-                <% if assignment.pending? %>
-                  <%= button_to "Start Verify", start_verification_assignment_path(assignment), method: :patch, class: "px-3 py-1 bg-purple-600 text-white text-sm rounded hover:bg-purple-700" %>
+                <% if assignment.task_type == 'secondary_verification' %>
+                  <% if assignment.pending? %>
+                    <%= button_to "Start Review", start_verification_assignment_path(assignment), method: :patch, class: "px-3 py-1 bg-red-600 text-white text-sm rounded hover:bg-red-700" %>
+                  <% else %>
+                    <span class="px-3 py-1 bg-red-600 text-white text-sm rounded">Continue →</span>
+                  <% end %>
+                <% elsif assignment.pending? %>
+                  <%= button_to "Start Validation", start_verification_assignment_path(assignment), method: :patch, class: "px-3 py-1 bg-purple-600 text-white text-sm rounded hover:bg-purple-700" %>
                 <% else %>
                   <span class="px-3 py-1 bg-purple-600 text-white text-sm rounded">Continue →</span>
                 <% end %>
@@ -47,7 +57,7 @@
         <% end %>
       <% else %>
         <div class="px-6 py-8 text-center text-gray-500">
-          No data validation assignments pending.
+          No verification assignments pending.
         </div>
       <% end %>
     </div>

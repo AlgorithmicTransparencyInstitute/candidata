@@ -129,13 +129,17 @@ Access documentation about the app.
 ### 1. View Dashboard
 **Path:** `/researcher`
 
-Researcher overview and task management.
+Researcher overview and task management. One card per task type — **Data
+Collection**, **Data Validation**, and **Secondary Verification** — each
+listing the user's active assignments with a Start/Continue button.
+Secondary verification assignments link into the verification workspace
+(`/verification/assignments/:id`), which owns that flow.
 
 **Shows:**
-- Pending assignments (how many)
-- Currently in-progress assignment
+- Pending assignments (how many, per task type)
+- Currently in-progress assignments
 - Completed assignments count
-- Quick stats on work progress
+- Quick stats on work progress (pending/in-progress per task type)
 
 **Actions:**
 - Start an assignment
@@ -229,7 +233,10 @@ Linear queue of accounts needing research (pagination support).
 ### 1. Verification Dashboard
 **Path:** `/verification`
 
-Overview of verification tasks.
+Overview of verification tasks (both data_validation and
+secondary_verification). Each row is styled by task type: validation rows
+(purple, "N accounts to verify") vs secondary rows (indigo, "N accounts
+flagged for re-review").
 
 **Shows:**
 - Pending verification assignments (count)
@@ -237,6 +244,22 @@ Overview of verification tasks.
 - Completed (count)
 - Recent activities
 - Accounts needing secondary verification
+
+### 1b. Verification Queue
+**Path:** `/verification/queue`
+
+The queue page splits the two task types into separate sections —
+**Data Validation** (`#validation`) and **Secondary Verification**
+(`#secondary`) — with per-type pending counts in the stats row.
+
+**Canonical task vocabulary** (used everywhere: sidebar, dashboards, queues,
+guides): **Data Collection** (blue), **Data Validation** (purple),
+**Secondary Verification** (red) — always presented in that workflow order.
+The researcher-layout sidebar uses the single-word forms **Collection /
+Validation / Verification** top-to-bottom, each with its own count badge
+(blue / purple / red); the latter two link to the queue section anchors.
+Page headings and cards use the full names. Start buttons follow the same
+naming: "Start Collection", "Start Validation", "Start Review".
 
 ---
 

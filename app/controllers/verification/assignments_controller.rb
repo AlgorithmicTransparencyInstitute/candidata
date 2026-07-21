@@ -11,6 +11,9 @@ module Verification
 
     def show
       @person = @assignment.person
+      if @assignment.task_type == 'secondary_verification'
+        @flagged_remaining = @person.social_media_accounts.needs_secondary_verification.count
+      end
       # Group all accounts by channel_type, regardless of verification status
       @campaign_accounts = @person.social_media_accounts.campaign.order(:platform)
       @official_accounts = @person.social_media_accounts.official.order(:platform)
@@ -71,11 +74,14 @@ module Verification
       redirect_to verification_queue_path, notice: notice
     end
 
+    # Completion requires an explicit per-account sign-off: every flagged
+    # account must have been individually confirmed (AccountsController#confirm_secondary
+    # clears its flag). Completing then just clears the person-level flag.
     def complete_secondary_verification
-      unresolved = @assignment.person.social_media_accounts.needs_secondary_verification.needs_verification.count
-      if unresolved > 0
+      remaining = @assignment.person.social_media_accounts.needs_secondary_verification.count
+      if remaining > 0
         redirect_to verification_assignment_path(@assignment),
-                    alert: "#{unresolved} flagged #{'account'.pluralize(unresolved)} still need resolution (verify, reject, or mark not found)."
+                    alert: "#{remaining} flagged #{'account'.pluralize(remaining)} still need to be confirmed — click \"Confirm Verified\" on each flagged account."
         return
       end
 

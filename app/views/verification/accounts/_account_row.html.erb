@@ -1,17 +1,29 @@
 <%
-  # Determine background color and status badge based on account state
-  if account.needs_secondary_verification
-    bg_color = "bg-purple-50"
-    status_badge = '<span class="px-2 py-0.5 text-xs rounded-full bg-purple-100 text-purple-700 shrink-0">Needs Secondary Verification</span>'.html_safe
-  elsif account.research_status == 'verified'
-    bg_color = "bg-green-50"
-    status_badge = '<span class="px-2 py-0.5 text-xs rounded-full bg-green-100 text-green-700 shrink-0">✓ Verified</span>'.html_safe
-  elsif account.research_status == 'entered' || account.research_status == 'not_found'
-    bg_color = "bg-blue-50"
-    status_badge = '<span class="px-2 py-0.5 text-xs rounded-full bg-blue-100 text-blue-700 shrink-0">Needs Verification</span>'.html_safe
+  # Determine background color and status badge based on account state.
+  # The secondary-verification flag only takes over the row styling on a
+  # secondary_verification task, where clearing it (Confirm Verified) is the
+  # user's actual job. On a data_validation task the row reflects its research
+  # status — verifying it turns it green — and the flag demotes to a small
+  # informational pill (it's the secondary task's job, not this one's).
+  secondary_context = @assignment.task_type == 'secondary_verification'
+  flag_pill = nil
+  if account.needs_secondary_verification && secondary_context
+    bg_color = "bg-red-50"
+    status_badge = '<span class="px-2 py-0.5 text-xs rounded-full bg-red-100 text-red-700 shrink-0">Needs Secondary Verification</span>'.html_safe
   else
-    bg_color = "bg-white"
-    status_badge = nil
+    if account.needs_secondary_verification
+      flag_pill = '<span class="px-2 py-0.5 text-xs rounded-full border border-red-200 text-red-500 shrink-0" title="Another user will re-review this account in a secondary verification task.">Flagged for secondary review</span>'.html_safe
+    end
+    if account.research_status == 'verified'
+      bg_color = "bg-green-50"
+      status_badge = '<span class="px-2 py-0.5 text-xs rounded-full bg-green-100 text-green-700 shrink-0">✓ Verified</span>'.html_safe
+    elsif account.research_status == 'entered' || account.research_status == 'not_found'
+      bg_color = "bg-blue-50"
+      status_badge = '<span class="px-2 py-0.5 text-xs rounded-full bg-blue-100 text-blue-700 shrink-0">Needs Verification</span>'.html_safe
+    else
+      bg_color = "bg-white"
+      status_badge = nil
+    end
   end
 
   is_verified = account.research_status == 'verified'
@@ -53,10 +65,28 @@
       <% if status_badge %>
         <%= status_badge %>
       <% end %>
+      <% if flag_pill %>
+        <%= flag_pill %>
+      <% end %>
 
       <!-- Action Buttons (only show when assignment is in progress) -->
       <% if @assignment.in_progress? %>
         <div class="flex items-center gap-2 shrink-0">
+          <!-- Secondary-verification sign-off: each flagged account must be
+               individually confirmed before the assignment can be completed. -->
+          <% if @assignment.task_type == 'secondary_verification' && account.needs_secondary_verification %>
+            <% if account.needs_verification? %>
+              <span class="px-2 py-0.5 text-xs rounded-full bg-amber-100 text-amber-800 shrink-0 cursor-help" title="Resolve this account first (verify or mark not found), then confirm it.">
+                Resolve first
+              </span>
+            <% elsif account.verifiable_by?(current_user) %>
+              <%= button_to "Confirm Verified", confirm_secondary_verification_account_path(account), method: :patch, class: "px-3 py-1 bg-red-600 text-white text-xs rounded-md hover:bg-red-700 transition-colors shrink-0", form: { data: { turbo: false } }, title: "Confirm this account is correct — clears its secondary-verification flag" %>
+            <% else %>
+              <span class="px-2 py-0.5 text-xs rounded-full bg-amber-100 text-amber-800 shrink-0 cursor-help" title="You entered this account — another user must confirm it.">
+                Awaiting another reviewer
+              </span>
+            <% end %>
+          <% end %>
           <!-- Verify Button (checkmark icon) — hidden for your own entries (four-eyes rule) -->
           <% if !is_verified && !account.verifiable_by?(current_user) %>
             <span class="px-2 py-0.5 text-xs rounded-full bg-amber-100 text-amber-800 shrink-0 group relative cursor-help" title="You entered this account — another user must verify it. Completing this task will flag it for secondary verification.">

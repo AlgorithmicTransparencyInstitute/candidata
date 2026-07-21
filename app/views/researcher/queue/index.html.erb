@@ -46,7 +46,7 @@
               <div class="flex items-center gap-3" onclick="event.stopPropagation()">
                 <%= assignment_status_badge(assignment.status) %>
                 <% if assignment.pending? %>
-                  <%= button_to "Start Work", start_researcher_assignment_path(assignment), method: :patch, class: "px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700" %>
+                  <%= button_to "Start Collection", start_researcher_assignment_path(assignment), method: :patch, class: "px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700" %>
                 <% else %>
                   <span class="px-4 py-2 bg-blue-600 text-white rounded">Continue →</span>
                 <% end %>

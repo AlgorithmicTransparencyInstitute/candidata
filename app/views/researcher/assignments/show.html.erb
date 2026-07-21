@@ -57,7 +57,7 @@
             <%= @assignment.status.humanize %>
           </span>
           <% if @assignment.pending? %>
-            <%= button_to "Start Working", start_researcher_assignment_path(@assignment), method: :patch, class: "px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium" %>
+            <%= button_to "Start Collection", start_researcher_assignment_path(@assignment), method: :patch, class: "px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium" %>
           <% elsif @assignment.in_progress? %>
             <%= button_to "Mark Complete", complete_researcher_assignment_path(@assignment), method: :patch, class: "px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm font-medium", data: { confirm: "Are you sure all accounts have been researched?" } %>
           <% elsif @assignment.completed? %>

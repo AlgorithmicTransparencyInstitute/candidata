@@ -48,7 +48,7 @@ Transitions (all in `SocialMediaAccount`):
 | `reject!(user, notes:)` | `rejected` | verification workspace |
 | `revise!(user, …)` | `revised`, `verified: false` — "needs re-verification by someone else" | verification update when url/handle changed |
 | `reset_status!` | back to `not_started` | both workspaces |
-| `clear_secondary_verification!` | clears the two flags | `Person#clear_secondary_verification!` (no UI calls this today) |
+| `clear_secondary_verification!` | clears the two flags | per-account **Confirm Verified** button on secondary tasks (`AccountsController#confirm_secondary`); `Person#clear_secondary_verification!` on assignment completion |
 
 Key scope: **`needs_verification` = status in `[entered, not_found, revised]`** — this
 is the verification queue definition *and* the completion gate.
@@ -152,6 +152,25 @@ secondary view highlights flagged accounts). Its completion gate: all flagged ac
 resolved (verified/rejected/not_found) — with rule A guaranteeing the resolver differs
 from the enterer. Completing clears `needs_secondary_verification` via the existing
 `Person#clear_secondary_verification!`.
+
+> **Update (July 2026): per-account sign-off.** The C completion gate was upgraded
+> from "all flagged accounts resolved" to an explicit per-account confirmation:
+> each flagged account shows a red **Confirm Verified** button
+> (`Verification::AccountsController#confirm_secondary`, four-eyes enforced,
+> account must be resolved first) that clears its own
+> `needs_secondary_verification` flag. The assignment's
+> **Complete Secondary Verification** button stays disabled (with a
+> remaining-count) until every flagged account has been individually confirmed;
+> completing then clears the person-level flag. Pinned by
+> `spec/requests/verification_flow_spec.rb` ("secondary verification tasks").
+>
+> **Row styling is task-aware.** The red "Needs Secondary Verification"
+> treatment (row background + badge + Confirm button) only appears when the
+> account is viewed through a `secondary_verification` assignment — where
+> clearing it is the user's job. Viewed through a `data_validation` assignment,
+> the same account renders by research status (verifying turns it green) with a
+> muted "Flagged for secondary review" pill, since the flag belongs to a
+> different task/user.
 
 **D. Fix the `modified_during_validation` false positives.** First entry into a blank
 stub should not count as a "modification" (require the account to have had a previous

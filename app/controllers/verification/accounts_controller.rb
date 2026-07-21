@@ -157,6 +157,35 @@ module Verification
       end
     end
 
+    # Per-account secondary-verification sign-off. Clears the flag for ONE
+    # account; the assignment can only be completed once every flagged account
+    # has been confirmed this way (see AssignmentsController#complete_secondary_verification).
+    # Full-page redirect (turbo: false on the button) so the flagged-remaining
+    # count and the completion button state refresh together.
+    def confirm_secondary
+      unless @account.needs_secondary_verification?
+        redirect_to verification_assignment_path(@assignment), alert: "This account isn't flagged for secondary verification."
+        return
+      end
+
+      if @account.needs_verification?
+        redirect_to verification_assignment_path(@assignment),
+                    alert: "#{@account.platform}: resolve this account first (verify, or mark not found) before confirming."
+        return
+      end
+
+      return unless enforce_four_eyes!
+
+      @account.clear_secondary_verification!
+      remaining = @account.person.social_media_accounts.needs_secondary_verification.count
+      notice = if remaining.zero?
+        "#{@account.platform} confirmed. All flagged accounts are confirmed — you can now complete the assignment."
+      else
+        "#{@account.platform} confirmed. #{remaining} flagged #{'account'.pluralize(remaining)} remaining."
+      end
+      redirect_to verification_assignment_path(@assignment), notice: notice
+    end
+
     def reject
       notes = params[:notes]&.strip
       if notes.blank?

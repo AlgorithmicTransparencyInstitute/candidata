@@ -168,6 +168,7 @@ Rails.application.routes.draw do
         patch :verify_with_changes
         patch :reject
         patch :update_notes
+        patch :confirm_secondary
       end
     end
   end

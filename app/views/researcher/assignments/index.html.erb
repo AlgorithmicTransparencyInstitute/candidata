@@ -10,6 +10,7 @@
       <%= link_to "All Active", researcher_assignments_path, class: "px-4 py-2 rounded #{@filter == 'all' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}" %>
       <%= link_to "Data Collection", researcher_assignments_path(filter: 'data_collection'), class: "px-4 py-2 rounded #{@filter == 'data_collection' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}" %>
       <%= link_to "Data Validation", researcher_assignments_path(filter: 'data_validation'), class: "px-4 py-2 rounded #{@filter == 'data_validation' ? 'bg-purple-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}" %>
+      <%= link_to "Secondary Verification", researcher_assignments_path(filter: 'secondary_verification'), class: "px-4 py-2 rounded #{@filter == 'secondary_verification' ? 'bg-red-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}" %>
       <%= link_to "Pending", researcher_assignments_path(filter: 'pending'), class: "px-4 py-2 rounded #{@filter == 'pending' ? 'bg-yellow-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}" %>
       <%= link_to "In Progress", researcher_assignments_path(filter: 'in_progress'), class: "px-4 py-2 rounded #{@filter == 'in_progress' ? 'bg-green-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}" %>
       <%= link_to "Completed (#{@completed_count})", researcher_assignments_path(filter: 'completed'), class: "px-4 py-2 rounded #{@filter == 'completed' ? 'bg-gray-700 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}" %>
@@ -36,6 +37,19 @@
                   <div class="text-sm text-gray-500 mt-1">
                     Completed <%= time_ago_in_words(assignment.completed_at) %> ago
                   </div>
+                <% elsif assignment.task_type == 'secondary_verification' %>
+                  <div class="text-sm text-gray-500 mt-1">
+                    <span class="text-red-600"><%= assignment.person.social_media_accounts.needs_secondary_verification.count %> accounts flagged for re-review</span>
+                  </div>
+                <% elsif assignment.task_type == 'data_validation' %>
+                  <div class="text-sm text-gray-500 mt-1">
+                    <% needs_verify = assignment.person.social_media_accounts.campaign.needs_verification.count %>
+                    <% if needs_verify > 0 %>
+                      <span class="text-orange-600"><%= needs_verify %> accounts to verify</span>
+                    <% else %>
+                      <span class="text-green-600">All accounts verified</span>
+                    <% end %>
+                  </div>
                 <% else %>
                   <div class="text-sm text-gray-500 mt-1">
                     <% needs_work = assignment.person.social_media_accounts.campaign.core_platforms.needs_research.count %>
@@ -49,7 +63,10 @@
               </div>
               <div class="flex items-center gap-3" onclick="event.stopPropagation()">
                 <div class="text-right">
-                  <span class="px-2 py-1 text-xs rounded-full <%= assignment.task_type == 'data_collection' ? 'bg-blue-100 text-blue-800' : 'bg-purple-100 text-purple-800' %>">
+                  <% type_badge = { 'data_collection' => 'bg-blue-100 text-blue-800',
+                                    'data_validation' => 'bg-purple-100 text-purple-800',
+                                    'secondary_verification' => 'bg-red-100 text-red-800' }[assignment.task_type] %>
+                  <span class="px-2 py-1 text-xs rounded-full <%= type_badge %>">
                     <%= assignment.task_type.humanize %>
                   </span>
                   <div class="mt-1">
@@ -64,17 +81,18 @@
                   <% end %>
                   <%= link_to "View", assignment_path, class: "px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 text-sm" %>
                 <% elsif assignment.pending? %>
-                  <% if assignment.task_type == 'data_validation' %>
-                    <%= button_to "Start Verify", start_verification_assignment_path(assignment), method: :patch, class: "px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700" %>
+                  <% case assignment.task_type %>
+                  <% when 'data_validation' %>
+                    <%= button_to "Start Validation", start_verification_assignment_path(assignment), method: :patch, class: "px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700" %>
+                  <% when 'secondary_verification' %>
+                    <%= button_to "Start Review", start_verification_assignment_path(assignment), method: :patch, class: "px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700" %>
                   <% else %>
-                    <%= button_to "Start Work", start_researcher_assignment_path(assignment), method: :patch, class: "px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700" %>
+                    <%= button_to "Start Collection", start_researcher_assignment_path(assignment), method: :patch, class: "px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700" %>
                   <% end %>
                 <% else %>
-                  <% if assignment.task_type == 'data_validation' %>
-                    <span class="px-4 py-2 bg-purple-600 text-white rounded">Continue →</span>
-                  <% else %>
-                    <span class="px-4 py-2 bg-blue-600 text-white rounded">Continue →</span>
-                  <% end %>
+                  <% continue_color = { 'data_validation' => 'bg-purple-600',
+                                        'secondary_verification' => 'bg-red-600' }.fetch(assignment.task_type, 'bg-blue-600') %>
+                  <span class="px-4 py-2 <%= continue_color %> text-white rounded">Continue →</span>
                 <% end %>
               </div>
             </div>

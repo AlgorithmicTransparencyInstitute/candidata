@@ -35,31 +35,44 @@
             <% end %>
 
             <%
-              verification_count = current_user.assignments.data_validation.active.count
+              validation_count = current_user.assignments.data_validation.active.count
+              secondary_count = current_user.assignments.secondary_verification.active.count
               collection_count = current_user.assignments.data_collection.active.count
             %>
 
-            <%= link_to verification_queue_path, class: "group flex items-center justify-center lg:justify-between px-2 lg:px-3 py-2 text-sm font-medium rounded-md relative #{request.path.start_with?('/verification/queue') ? 'bg-gray-800 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white'}", title: "Verification" do %>
-              <div class="flex items-center justify-center lg:justify-start">
-                <svg class="h-5 w-5 lg:mr-3 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                <span class="hidden lg:inline">Verification</span>
-              </div>
-              <% if verification_count > 0 %>
-                <span class="lg:ml-2 px-1.5 lg:px-2 py-0.5 text-xs font-semibold rounded-full bg-purple-600 text-white absolute top-1 right-1 lg:relative lg:top-auto lg:right-auto"><%= verification_count %></span>
-              <% end %>
-            <% end %>
-
-            <%= link_to researcher_queue_path, class: "group flex items-center justify-center lg:justify-between px-2 lg:px-3 py-2 text-sm font-medium rounded-md relative #{request.path.start_with?('/researcher/queue') ? 'bg-gray-800 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white'}", title: "Data Collection" do %>
+            <%= link_to researcher_queue_path, class: "group flex items-center justify-center lg:justify-between px-2 lg:px-3 py-2 text-sm font-medium rounded-md relative #{request.path.start_with?('/researcher/queue') ? 'bg-gray-800 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white'}", title: "Collection" do %>
               <div class="flex items-center justify-center lg:justify-start">
                 <svg class="h-5 w-5 lg:mr-3 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
                 </svg>
-                <span class="hidden lg:inline">Data Collection</span>
+                <span class="hidden lg:inline">Collection</span>
               </div>
               <% if collection_count > 0 %>
                 <span class="lg:ml-2 px-1.5 lg:px-2 py-0.5 text-xs font-semibold rounded-full bg-blue-600 text-white absolute top-1 right-1 lg:relative lg:top-auto lg:right-auto"><%= collection_count %></span>
+              <% end %>
+            <% end %>
+
+            <%= link_to verification_queue_path(anchor: 'validation'), class: "group flex items-center justify-center lg:justify-between px-2 lg:px-3 py-2 text-sm font-medium rounded-md relative #{request.path.start_with?('/verification/queue') ? 'bg-gray-800 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white'}", title: "Validation" do %>
+              <div class="flex items-center justify-center lg:justify-start">
+                <svg class="h-5 w-5 lg:mr-3 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span class="hidden lg:inline">Validation</span>
+              </div>
+              <% if validation_count > 0 %>
+                <span class="lg:ml-2 px-1.5 lg:px-2 py-0.5 text-xs font-semibold rounded-full bg-purple-600 text-white absolute top-1 right-1 lg:relative lg:top-auto lg:right-auto"><%= validation_count %></span>
+              <% end %>
+            <% end %>
+
+            <%= link_to verification_queue_path(anchor: 'secondary'), class: "group flex items-center justify-center lg:justify-between px-2 lg:px-3 py-2 text-sm font-medium rounded-md relative #{request.path.start_with?('/verification/queue') ? 'bg-gray-800 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white'}", title: "Verification" do %>
+              <div class="flex items-center justify-center lg:justify-start">
+                <svg class="h-5 w-5 lg:mr-3 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M11.35 3.836c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m8.9-4.414c.376.023.75.05 1.124.08 1.131.094 1.976 1.057 1.976 2.192V16.5A2.25 2.25 0 0118 18.75h-2.25m-7.5-10.5H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V18.75m-7.5-10.5h6.375c.621 0 1.125.504 1.125 1.125v9.375m-8.25-3l1.5 1.5 3-3.75" />
+                </svg>
+                <span class="hidden lg:inline">Verification</span>
+              </div>
+              <% if secondary_count > 0 %>
+                <span class="lg:ml-2 px-1.5 lg:px-2 py-0.5 text-xs font-semibold rounded-full bg-red-500 text-white absolute top-1 right-1 lg:relative lg:top-auto lg:right-auto"><%= secondary_count %></span>
               <% end %>
             <% end %>
 

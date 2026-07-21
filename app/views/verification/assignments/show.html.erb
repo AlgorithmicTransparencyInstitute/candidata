@@ -91,11 +91,32 @@
             <% if @assignment.pending? %>
               <%= button_to "Start Verification", start_verification_assignment_path(@assignment), method: :patch, class: "px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 text-sm font-medium" %>
             <% elsif @assignment.in_progress? %>
-              <%= button_to "Mark Complete", complete_verification_assignment_path(@assignment), method: :patch, class: "px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm font-medium", data: { confirm: "Are you sure all accounts have been verified?" } %>
+              <% if @assignment.task_type == 'secondary_verification' %>
+                <% if @flagged_remaining.to_i > 0 %>
+                  <span class="px-4 py-2 bg-gray-200 text-gray-500 rounded-lg text-sm font-medium cursor-not-allowed" title="Confirm each flagged account first">
+                    Complete Secondary Verification (<%= @flagged_remaining %> to confirm)
+                  </span>
+                <% else %>
+                  <%= button_to "Complete Secondary Verification", complete_verification_assignment_path(@assignment), method: :patch, class: "px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm font-medium", data: { confirm: "Complete secondary verification of all accounts?" } %>
+                <% end %>
+              <% else %>
+                <%= button_to "Mark Complete", complete_verification_assignment_path(@assignment), method: :patch, class: "px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm font-medium", data: { confirm: "Are you sure all accounts have been verified?" } %>
+              <% end %>
             <% elsif @assignment.completed? %>
               <%= button_to "Reopen", reopen_verification_assignment_path(@assignment), method: :patch, class: "px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 text-sm font-medium" %>
             <% end %>
           </div>
+
+          <% if @assignment.task_type == 'secondary_verification' && @assignment.in_progress? %>
+            <div class="mt-4 bg-red-50 border-l-4 border-red-400 p-3 rounded-r-lg">
+              <p class="text-sm text-red-800">
+                <strong>Secondary verification:</strong> re-review each account with a red
+                <span class="px-1.5 py-0.5 text-xs rounded-full bg-red-100 text-red-700">Needs Secondary Verification</span>
+                badge and click <strong>Confirm Verified</strong> on it. Once every flagged account is confirmed,
+                the <strong>Complete Secondary Verification</strong> button unlocks.
+              </p>
+            </div>
+          <% end %>
         </div>
       </div>
 

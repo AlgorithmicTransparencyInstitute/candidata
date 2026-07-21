@@ -108,21 +108,73 @@ RSpec.describe "Verification workflow", type: :request do
       expect(response).to have_http_status(:ok)
     end
 
+    it "shows the red flag treatment only on the secondary task; validation tasks show research status" do
+      get verification_assignment_path(secondary)
+      expect(response.body).to include("Needs Secondary Verification")
+
+      # The same flagged account viewed through a data_validation task renders
+      # by research status (verify turns it green) with a muted info pill —
+      # the red flag is the secondary task's job, not the validator's.
+      validation = create(:assignment, user: verifier, person: flagged_person)
+      validation.start!
+      sign_in verifier
+      get verification_assignment_path(validation)
+
+      expect(response.body).not_to include("Needs Secondary Verification</span>")
+      expect(response.body).to include("Flagged for secondary review")
+      expect(response.body).to include("Needs Verification") # status badge for the entered account
+    end
+
     it "blocks completion while flagged accounts are unresolved" do
       patch complete_verification_assignment_path(secondary)
 
       expect(secondary.reload.status).to eq("in_progress")
     end
 
-    it "completes and clears flags once flagged accounts are resolved by another user" do
+    it "refuses to confirm an unresolved flagged account" do
+      patch confirm_secondary_verification_account_path(flagged_account)
+
+      expect(flagged_account.reload.needs_secondary_verification).to be(true)
+    end
+
+    it "requires per-account confirmation: verifying alone does not unlock completion" do
       patch verify_verification_account_path(flagged_account)
       expect(flagged_account.reload.verified).to be(true)
 
       patch complete_verification_assignment_path(secondary)
+      expect(secondary.reload.status).to eq("in_progress") # still flagged — not confirmed
 
+      patch confirm_secondary_verification_account_path(flagged_account)
+      expect(flagged_account.reload.needs_secondary_verification).to be(false)
+
+      patch complete_verification_assignment_path(secondary)
       expect(secondary.reload.status).to eq("completed")
       expect(flagged_person.reload.needs_secondary_verification).to be(false)
-      expect(flagged_account.reload.needs_secondary_verification).to be(false)
+    end
+
+    it "confirms each flagged account independently before completion unlocks" do
+      second_flagged = create(:social_media_account, :entered, person: flagged_person,
+                              entered_by: verifier, needs_secondary_verification: true, platform: "TikTok")
+      [flagged_account, second_flagged].each { |a| patch verify_verification_account_path(a) }
+
+      patch confirm_secondary_verification_account_path(flagged_account)
+      patch complete_verification_assignment_path(secondary)
+      expect(secondary.reload.status).to eq("in_progress") # TikTok still unconfirmed
+
+      patch confirm_secondary_verification_account_path(second_flagged)
+      patch complete_verification_assignment_path(secondary)
+      expect(secondary.reload.status).to eq("completed")
+    end
+
+    it "enforces four-eyes on confirmation: the enterer can't confirm their own account" do
+      flagged_account.verify!(other) # resolved, but entered by `verifier`
+      create(:assignment, :secondary_verification, user: verifier, person: flagged_person)
+      sign_in verifier
+
+      patch confirm_secondary_verification_account_path(flagged_account)
+
+      expect(flagged_account.reload.needs_secondary_verification).to be(true)
+      expect(flash[:alert]).to be_present
     end
   end
 
