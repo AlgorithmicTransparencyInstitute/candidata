@@ -96,6 +96,8 @@
                   <span class="px-4 py-2 bg-gray-200 text-gray-500 rounded-lg text-sm font-medium cursor-not-allowed" title="Confirm each flagged account first">
                     Complete Secondary Verification (<%= @flagged_remaining %> to confirm)
                   </span>
+                <% elsif @flagged_leftover.to_i > 0 %>
+                  <%= button_to "Complete Secondary Verification", complete_verification_assignment_path(@assignment), method: :patch, class: "px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm font-medium", data: { confirm: "Complete your part of secondary verification? #{@flagged_leftover} #{'account'.pluralize(@flagged_leftover)} you modified will be re-reviewed by another user." } %>
                 <% else %>
                   <%= button_to "Complete Secondary Verification", complete_verification_assignment_path(@assignment), method: :patch, class: "px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm font-medium", data: { confirm: "Complete secondary verification of all accounts?" } %>
                 <% end %>
@@ -114,6 +116,11 @@
                 <span class="px-1.5 py-0.5 text-xs rounded-full bg-red-100 text-red-700">Needs Secondary Verification</span>
                 badge and click <strong>Confirm Verified</strong> on it. Once every flagged account is confirmed,
                 the <strong>Complete Secondary Verification</strong> button unlocks.
+                <% if @flagged_leftover.to_i > 0 %>
+                  <br><strong><%= @flagged_leftover %> flagged <%= 'account'.pluralize(@flagged_leftover) %></strong>
+                  <%= @flagged_leftover == 1 ? 'was' : 'were' %> entered or modified by you — those don't block you;
+                  they'll be re-reviewed by another user after you complete.
+                <% end %>
               </p>
             </div>
           <% end %>

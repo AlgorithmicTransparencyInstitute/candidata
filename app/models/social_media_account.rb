@@ -4,6 +4,7 @@ class SocialMediaAccount < ApplicationRecord
   belongs_to :person, touch: true
   belongs_to :entered_by, class_name: 'User', optional: true
   belongs_to :verified_by, class_name: 'User', optional: true
+  belongs_to :escalated_by, class_name: 'User', optional: true
 
   PLATFORMS = %w[Facebook Twitter Instagram YouTube TikTok BlueSky TruthSocial Gettr Rumble Telegram Threads].freeze
   CORE_PLATFORMS = %w[Facebook Twitter Instagram YouTube TikTok BlueSky].freeze
@@ -26,6 +27,7 @@ class SocialMediaAccount < ApplicationRecord
   scope :official, -> { where(channel_type: 'Official Office') }
   scope :personal, -> { where(channel_type: 'Personal') }
   scope :pre_populated, -> { where(pre_populated: true) }
+  scope :escalated, -> { where(escalated_for_review: true) }
   scope :needs_research, -> { where(research_status: 'not_started', pre_populated: true) }
   scope :needs_verification, -> { where(research_status: %w[entered not_found revised]) }
   scope :needs_secondary_verification, -> { where(needs_secondary_verification: true) }
@@ -157,6 +159,24 @@ class SocialMediaAccount < ApplicationRecord
   # Clear secondary verification flag (called during secondary verification)
   def clear_secondary_verification!
     update!(needs_secondary_verification: false, modified_during_validation: false)
+  end
+
+  # Deactivated: we have the account (URL kept) but it's no longer live on the
+  # platform — typically the candidate lost and shut it down. NOT "not found":
+  # the data stays; the account just drops out of active/API/Junkipedia scopes.
+  def toggle_deactivated!
+    update!(account_inactive: !account_inactive)
+  end
+
+  # Escalate for review: the researcher can't make a determination (usually
+  # explained in research_notes); admins will work a list of escalated
+  # accounts and decide. Toggling off clears the stamp.
+  def toggle_escalated!(user)
+    if escalated_for_review?
+      update!(escalated_for_review: false, escalated_at: nil, escalated_by: nil)
+    else
+      update!(escalated_for_review: true, escalated_at: Time.current, escalated_by: user)
+    end
   end
 
   # Get version count for display

@@ -131,10 +131,15 @@ RSpec.describe "Verification workflow", type: :request do
       expect(secondary.reload.status).to eq("in_progress")
     end
 
-    it "refuses to confirm an unresolved flagged account" do
+    it "confirming an unverified flagged account re-verifies it and clears the flag in one step" do
+      # secondary verification IS the re-verification — no second validation cycle
       patch confirm_secondary_verification_account_path(flagged_account)
 
-      expect(flagged_account.reload.needs_secondary_verification).to be(true)
+      flagged_account.reload
+      expect(flagged_account.needs_secondary_verification).to be(false)
+      expect(flagged_account.verified).to be(true)
+      expect(flagged_account.research_status).to eq("verified")
+      expect(flagged_account.verified_by).to eq(other)
     end
 
     it "requires per-account confirmation: verifying alone does not unlock completion" do
@@ -175,6 +180,92 @@ RSpec.describe "Verification workflow", type: :request do
 
       expect(flagged_account.reload.needs_secondary_verification).to be(true)
       expect(flash[:alert]).to be_present
+    end
+
+    # The deadlock fix: an account the completer modified during the secondary
+    # review (or a misassigned task where they entered the flagged data) can
+    # never be verified/confirmed by them (four-eyes). It must not brick the
+    # task — completion succeeds and hands the account, still flagged, to the
+    # next secondary cycle for another user.
+    it "does not deadlock when the assignee modifies a flagged account mid-review" do
+      # `other` (the secondary assignee) edits the flagged account — it becomes
+      # their own entry, which they can neither verify nor confirm
+      patch mark_entered_verification_account_path(flagged_account, url: "https://twitter.com/corrected")
+      expect(flagged_account.reload.entered_by).to eq(other)
+
+      patch complete_verification_assignment_path(secondary)
+
+      expect(secondary.reload.status).to eq("completed")
+      # the hand-off: account and person stay flagged for the next reviewer
+      expect(flagged_account.reload.needs_secondary_verification).to be(true)
+      expect(flagged_person.reload.needs_secondary_verification).to be(true)
+    end
+
+    it "still blocks completion while actionable flagged accounts are unconfirmed, even with leftovers" do
+      own_edit = create(:social_media_account, :entered, person: flagged_person,
+                        entered_by: other, needs_secondary_verification: true, platform: "TikTok")
+
+      patch verify_verification_account_path(flagged_account) # actionable: entered by `verifier`
+      patch complete_verification_assignment_path(secondary)
+      expect(secondary.reload.status).to eq("in_progress") # verified but not confirmed
+
+      patch confirm_secondary_verification_account_path(flagged_account)
+      patch complete_verification_assignment_path(secondary)
+      expect(secondary.reload.status).to eq("completed")
+      expect(own_edit.reload.needs_secondary_verification).to be(true) # handed off
+      expect(flagged_person.reload.needs_secondary_verification).to be(true)
+    end
+  end
+
+  describe "deactivated and escalation toggles" do
+    let!(:account) { create(:social_media_account, :entered, person: person, entered_by: other) }
+
+    it "marks an account deactivated keeping its URL, and reactivates on second toggle" do
+      url = account.url
+      patch toggle_deactivated_verification_account_path(account)
+
+      account.reload
+      expect(account.account_inactive).to be(true)
+      expect(account.url).to eq(url) # deactivated ≠ not found: data is kept
+
+      patch toggle_deactivated_verification_account_path(account)
+      expect(account.reload.account_inactive).to be(false)
+    end
+
+    it "escalates for admin review with a who/when stamp, and clears on second toggle" do
+      patch toggle_escalated_verification_account_path(account)
+
+      account.reload
+      expect(account.escalated_for_review).to be(true)
+      expect(account.escalated_by).to eq(verifier)
+      expect(account.escalated_at).to be_present
+
+      patch toggle_escalated_verification_account_path(account)
+      account.reload
+      expect(account.escalated_for_review).to be(false)
+      expect(account.escalated_by).to be_nil
+      expect(account.escalated_at).to be_nil
+    end
+
+    it "renders the toggle icons on secondary-verification screens too (not just validation)" do
+      flagged_person = create(:person, needs_secondary_verification: true)
+      flagged = create(:social_media_account, :entered, person: flagged_person,
+                       entered_by: verifier, needs_secondary_verification: true)
+      secondary = create(:assignment, :secondary_verification, user: other, person: flagged_person)
+      sign_in other
+
+      get verification_assignment_path(secondary)
+
+      expect(response.body).to include(toggle_deactivated_verification_account_path(flagged))
+      expect(response.body).to include(toggle_escalated_verification_account_path(flagged))
+    end
+
+    it "keeps a deactivated account out of the junkipedia-eligible scope" do
+      account.verify!(verifier)
+      expect(SocialMediaAccount.junkipedia_eligible).to include(account)
+
+      patch toggle_deactivated_verification_account_path(account)
+      expect(SocialMediaAccount.junkipedia_eligible).not_to include(account.reload)
     end
   end
 

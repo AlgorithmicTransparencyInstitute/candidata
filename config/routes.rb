@@ -169,6 +169,8 @@ Rails.application.routes.draw do
         patch :reject
         patch :update_notes
         patch :confirm_secondary
+        patch :toggle_deactivated
+        patch :toggle_escalated
       end
     end
   end

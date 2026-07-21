@@ -12,7 +12,12 @@ module Verification
     def show
       @person = @assignment.person
       if @assignment.task_type == 'secondary_verification'
-        @flagged_remaining = @person.social_media_accounts.needs_secondary_verification.count
+        flagged = @person.social_media_accounts.needs_secondary_verification.to_a
+        # Actionable = flagged accounts this user may verify/confirm (four-eyes).
+        # Their own entries/modifications are leftovers: they never block this
+        # user's completion — they hand off, still flagged, to the next cycle.
+        @flagged_remaining = flagged.count { |a| a.verifiable_by?(current_user) }
+        @flagged_leftover = flagged.size - @flagged_remaining
       end
       # Group all accounts by channel_type, regardless of verification status
       @campaign_accounts = @person.social_media_accounts.campaign.order(:platform)
@@ -75,19 +80,35 @@ module Verification
     end
 
     # Completion requires an explicit per-account sign-off: every flagged
-    # account must have been individually confirmed (AccountsController#confirm_secondary
-    # clears its flag). Completing then just clears the person-level flag.
+    # account THIS USER may act on must have been individually confirmed
+    # (AccountsController#confirm_secondary clears its flag). Flagged accounts
+    # the completer entered/modified themselves can't be resolved by them
+    # (four-eyes) so — mirroring data_validation's completion rule — they never
+    # block: completing hands them off, still flagged, to a fresh secondary
+    # cycle for another user. The cycle ends when a reviewer confirms without
+    # editing anything.
     def complete_secondary_verification
-      remaining = @assignment.person.social_media_accounts.needs_secondary_verification.count
-      if remaining > 0
+      flagged = @assignment.person.social_media_accounts.needs_secondary_verification.to_a
+      blocking = flagged.select { |a| a.verifiable_by?(current_user) }
+
+      if blocking.any?
         redirect_to verification_assignment_path(@assignment),
-                    alert: "#{remaining} flagged #{'account'.pluralize(remaining)} still need to be confirmed — click \"Confirm Verified\" on each flagged account."
+                    alert: "#{blocking.size} flagged #{'account'.pluralize(blocking.size)} still need to be confirmed — click \"Confirm Verified\" on each flagged account."
         return
       end
 
       @assignment.complete!
-      @assignment.person.clear_secondary_verification!
-      redirect_to verification_queue_path, notice: "Secondary verification completed!"
+
+      leftover = flagged - blocking # accounts the completer modified (non-admin)
+      if leftover.any?
+        # person + leftover accounts stay flagged → visible in the admin
+        # secondary-assignment finder for the next reviewer
+        notice = "Secondary verification completed! #{leftover.size} #{'account'.pluralize(leftover.size)} you modified will be re-reviewed by another user."
+      else
+        @assignment.person.clear_secondary_verification!
+        notice = "Secondary verification completed!"
+      end
+      redirect_to verification_queue_path, notice: notice
     end
 
     def set_assignment

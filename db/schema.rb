@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_07_14_190128) do
+ActiveRecord::Schema[8.0].define(version: 2026_07_21_213442) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pg_stat_statements"
@@ -354,9 +354,14 @@ ActiveRecord::Schema[8.0].define(version: 2026_07_14_190128) do
     t.datetime "junkipedia_enqueued_at"
     t.datetime "junkipedia_id_collected_at"
     t.text "junkipedia_last_error"
+    t.boolean "escalated_for_review", default: false, null: false
+    t.datetime "escalated_at"
+    t.bigint "escalated_by_id"
     t.index ["airtable_id"], name: "index_social_media_accounts_on_airtable_id", unique: true
     t.index ["channel_type"], name: "index_social_media_accounts_on_channel_type"
     t.index ["entered_by_id"], name: "index_social_media_accounts_on_entered_by_id"
+    t.index ["escalated_by_id"], name: "index_social_media_accounts_on_escalated_by_id"
+    t.index ["escalated_for_review"], name: "index_sma_on_escalated_for_review", where: "escalated_for_review"
     t.index ["junkipedia_channel_id"], name: "index_social_media_accounts_on_junkipedia_channel_id"
     t.index ["junkipedia_enqueued_at"], name: "index_social_media_accounts_on_junkipedia_enqueued_at"
     t.index ["person_id", "platform", "handle"], name: "idx_social_accounts_unique", unique: true
@@ -555,5 +560,6 @@ ActiveRecord::Schema[8.0].define(version: 2026_07_14_190128) do
   add_foreign_key "person_parties", "people"
   add_foreign_key "social_media_accounts", "people"
   add_foreign_key "social_media_accounts", "users", column: "entered_by_id"
+  add_foreign_key "social_media_accounts", "users", column: "escalated_by_id"
   add_foreign_key "social_media_accounts", "users", column: "verified_by_id"
 end

@@ -5,9 +5,12 @@ plus the #1 guidance banner:
 
 - Each flagged account now shows a red **Confirm Verified** button
   (`Verification::AccountsController#confirm_secondary`) that clears that
-  account's `needs_secondary_verification` flag. Guards: account must be
-  resolved (not in `needs_verification`) and four-eyes applies (the enterer
-  can't confirm their own account; admins exempt).
+  account's `needs_secondary_verification` flag. Confirming IS the
+  re-verification: an unverified flagged account is `verify!`d and unflagged
+  in one step (no second validation cycle). Four-eyes applies (the enterer/
+  modifier can't confirm their own account; admins exempt) — such accounts
+  never block completion; they hand off, still flagged, to the next
+  secondary cycle.
 - **Complete Secondary Verification** (renamed from "Mark Complete" on
   secondary tasks) is disabled with a remaining-count until every flagged
   account is individually confirmed; completing clears the person-level flag.

@@ -26,6 +26,14 @@
     end
   end
 
+  # Exceptional attention states tint the whole row, overriding status colors:
+  # escalated (yellow) wins over deactivated (slate) wins over status.
+  if account.escalated_for_review?
+    bg_color = "bg-yellow-50"
+  elsif account.account_inactive?
+    bg_color = "bg-slate-100"
+  end
+
   is_verified = account.research_status == 'verified'
   is_not_started = account.research_status == 'not_started'
   in_edit_mode = false # Will be toggled by JS
@@ -68,30 +76,38 @@
       <% if flag_pill %>
         <%= flag_pill %>
       <% end %>
+      <% if account.account_inactive? %>
+        <span class="px-2 py-0.5 text-xs rounded-full bg-slate-200 text-slate-700 shrink-0 cursor-help" title="Account deactivated on the platform — URL kept for the record.">⊘ Deactivated</span>
+      <% end %>
+      <% if account.escalated_for_review? %>
+        <span class="px-2 py-0.5 text-xs rounded-full bg-yellow-100 text-yellow-800 shrink-0 cursor-help" title="Escalated for admin review<%= " by #{account.escalated_by.name || account.escalated_by.email}" if account.escalated_by %> — see notes.">⚠ Escalated</span>
+      <% end %>
 
       <!-- Action Buttons (only show when assignment is in progress) -->
       <% if @assignment.in_progress? %>
         <div class="flex items-center gap-2 shrink-0">
-          <!-- Secondary-verification sign-off: each flagged account must be
-               individually confirmed before the assignment can be completed. -->
+          <!-- Secondary-verification sign-off: each flagged account this user
+               can act on must be individually confirmed before completion.
+               Their own entries/modifications never block — they hand off,
+               still flagged, to another user's secondary cycle. -->
+          <% flagged_own_entry = false %>
           <% if @assignment.task_type == 'secondary_verification' && account.needs_secondary_verification %>
-            <% if account.needs_verification? %>
-              <span class="px-2 py-0.5 text-xs rounded-full bg-amber-100 text-amber-800 shrink-0 cursor-help" title="Resolve this account first (verify or mark not found), then confirm it.">
-                Resolve first
-              </span>
-            <% elsif account.verifiable_by?(current_user) %>
-              <%= button_to "Confirm Verified", confirm_secondary_verification_account_path(account), method: :patch, class: "px-3 py-1 bg-red-600 text-white text-xs rounded-md hover:bg-red-700 transition-colors shrink-0", form: { data: { turbo: false } }, title: "Confirm this account is correct — clears its secondary-verification flag" %>
-            <% else %>
-              <span class="px-2 py-0.5 text-xs rounded-full bg-amber-100 text-amber-800 shrink-0 cursor-help" title="You entered this account — another user must confirm it.">
+            <% if !account.verifiable_by?(current_user) %>
+              <% flagged_own_entry = true %>
+              <span class="px-2 py-0.5 text-xs rounded-full bg-amber-100 text-amber-800 shrink-0 cursor-help" title="You entered or modified this account — it won't block your completion; another user will re-review it.">
                 Awaiting another reviewer
               </span>
+            <% else %>
+              <%= button_to "Confirm Verified", confirm_secondary_verification_account_path(account), method: :patch, class: "px-3 py-1 bg-red-600 text-white text-xs rounded-md hover:bg-red-700 transition-colors shrink-0", form: { data: { turbo: false } }, title: "Confirm this account is correct — re-verifies it and clears the flag in one step" %>
             <% end %>
           <% end %>
           <!-- Verify Button (checkmark icon) — hidden for your own entries (four-eyes rule) -->
           <% if !is_verified && !account.verifiable_by?(current_user) %>
-            <span class="px-2 py-0.5 text-xs rounded-full bg-amber-100 text-amber-800 shrink-0 group relative cursor-help" title="You entered this account — another user must verify it. Completing this task will flag it for secondary verification.">
-              Awaiting another verifier
-            </span>
+            <% unless flagged_own_entry # the secondary block above already shows the hand-off pill %>
+              <span class="px-2 py-0.5 text-xs rounded-full bg-amber-100 text-amber-800 shrink-0 group relative cursor-help" title="You entered this account — another user must verify it. Completing this task will flag it for secondary verification.">
+                Awaiting another verifier
+              </span>
+            <% end %>
           <% elsif !is_verified %>
             <%= button_to verify_verification_account_path(account), method: :patch, class: "p-1.5 rounded hover:bg-green-100 text-green-600 hover:text-green-700 transition-colors group relative", title: "Verify as accurate" do %>
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -130,6 +146,29 @@
             <svg data-notes-icon class="w-4 h-4 <%= account.research_notes.present? ? 'text-blue-600' : 'text-gray-300 hover:text-gray-500' %>" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"/></svg>
             <span class="absolute bottom-full right-0 mb-1 px-2 py-1 text-xs bg-gray-900 text-white rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"><%= account.research_notes.present? ? 'Edit notes' : 'Add notes' %></span>
           </button>
+
+          <!-- Deactivated toggle: URL kept, account no longer live on the platform.
+               Filled slate = ON (click again to reactivate). -->
+          <%= button_to toggle_deactivated_verification_account_path(account), method: :patch,
+                class: "p-1.5 rounded transition-colors group relative shrink-0 #{account.account_inactive? ? 'bg-slate-600 text-white hover:bg-slate-700 ring-2 ring-slate-300' : 'text-slate-400 hover:bg-slate-100 hover:text-slate-600'}",
+                form: { data: { turbo: false }, class: "inline" },
+                data: { confirm: account.account_inactive? ? "Reactivate this account?" : "Mark this account as deactivated? The URL is kept — use this when the account exists but is no longer active on the platform (not \"not found\")." } do %>
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/>
+            </svg>
+            <span class="absolute bottom-full right-0 mb-1 px-2 py-1 text-xs bg-gray-900 text-white rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"><%= account.account_inactive? ? "Deactivated — click to reactivate" : "Mark deactivated (URL kept)" %></span>
+          <% end %>
+
+          <!-- Escalate for admin review. Filled yellow = ON (click again to remove). -->
+          <%= button_to toggle_escalated_verification_account_path(account), method: :patch,
+                class: "p-1.5 rounded transition-colors group relative shrink-0 #{account.escalated_for_review? ? 'bg-yellow-400 text-yellow-900 hover:bg-yellow-500 ring-2 ring-yellow-300' : 'text-yellow-500 hover:bg-yellow-50 hover:text-yellow-700'}",
+                form: { data: { turbo: false }, class: "inline" },
+                data: { confirm: account.escalated_for_review? ? "Remove the escalation flag from this account?" : "Escalate this account for admin review? Please also add notes explaining the issue." } do %>
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"/>
+            </svg>
+            <span class="absolute bottom-full right-0 mb-1 px-2 py-1 text-xs bg-gray-900 text-white rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"><%= account.escalated_for_review? ? "Escalated — click to remove flag" : "Escalate for admin review" %></span>
+          <% end %>
         </div>
       <% end %>
     </div>

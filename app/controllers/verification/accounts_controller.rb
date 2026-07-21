@@ -157,9 +157,14 @@ module Verification
       end
     end
 
-    # Per-account secondary-verification sign-off. Clears the flag for ONE
-    # account; the assignment can only be completed once every flagged account
-    # has been confirmed this way (see AssignmentsController#complete_secondary_verification).
+    # Per-account secondary-verification sign-off. Secondary verification IS
+    # the re-verification of accounts changed during validation — confirming
+    # verifies the account (if it isn't already) AND clears the flag in one
+    # step; no second validation cycle. Four-eyes still applies: the account's
+    # enterer/modifier can't confirm it (their leftovers hand off to the next
+    # cycle on completion instead). The assignment can only be completed once
+    # every flagged account the user may act on has been confirmed
+    # (see AssignmentsController#complete_secondary_verification).
     # Full-page redirect (turbo: false on the button) so the flagged-remaining
     # count and the completion button state refresh together.
     def confirm_secondary
@@ -168,14 +173,9 @@ module Verification
         return
       end
 
-      if @account.needs_verification?
-        redirect_to verification_assignment_path(@assignment),
-                    alert: "#{@account.platform}: resolve this account first (verify, or mark not found) before confirming."
-        return
-      end
-
       return unless enforce_four_eyes!
 
+      @account.verify!(current_user) if @account.needs_verification?
       @account.clear_secondary_verification!
       remaining = @account.person.social_media_accounts.needs_secondary_verification.count
       notice = if remaining.zero?
@@ -183,6 +183,22 @@ module Verification
       else
         "#{@account.platform} confirmed. #{remaining} flagged #{'account'.pluralize(remaining)} remaining."
       end
+      redirect_to verification_assignment_path(@assignment), notice: notice
+    end
+
+    # Deactivated toggle: URL is kept — the account just isn't live on the
+    # platform anymore (e.g. candidate lost and shut it down). Distinct from
+    # "not found", which clears the data.
+    def toggle_deactivated
+      @account.toggle_deactivated!
+      notice = @account.account_inactive? ? "#{@account.platform} marked deactivated — URL kept, account excluded from active data." : "#{@account.platform} reactivated."
+      redirect_to verification_assignment_path(@assignment), notice: notice
+    end
+
+    # Escalation toggle: flags the account for admin review (add notes!).
+    def toggle_escalated
+      @account.toggle_escalated!(current_user)
+      notice = @account.escalated_for_review? ? "#{@account.platform} escalated for admin review — please add notes explaining why." : "#{@account.platform} escalation removed."
       redirect_to verification_assignment_path(@assignment), notice: notice
     end
 

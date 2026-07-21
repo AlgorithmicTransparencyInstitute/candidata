@@ -156,13 +156,26 @@ from the enterer. Completing clears `needs_secondary_verification` via the exist
 > **Update (July 2026): per-account sign-off.** The C completion gate was upgraded
 > from "all flagged accounts resolved" to an explicit per-account confirmation:
 > each flagged account shows a red **Confirm Verified** button
-> (`Verification::AccountsController#confirm_secondary`, four-eyes enforced,
-> account must be resolved first) that clears its own
-> `needs_secondary_verification` flag. The assignment's
+> (`Verification::AccountsController#confirm_secondary`, four-eyes enforced)
+> that clears its own `needs_secondary_verification` flag. **Confirming IS the
+> re-verification**: if the flagged account is unverified (entered/revised/
+> not_found — i.e. it was changed during validation), confirming calls
+> `verify!` and clears the flag in one step — flagged accounts never require a
+> separate "validate again" pass. The assignment's
 > **Complete Secondary Verification** button stays disabled (with a
 > remaining-count) until every flagged account has been individually confirmed;
 > completing then clears the person-level flag. Pinned by
 > `spec/requests/verification_flow_spec.rb` ("secondary verification tasks").
+>
+> **The completion gate applies rule B recursively (deadlock fix).** Only
+> flagged accounts the completer *may* act on (`verifiable_by?`) block
+> completion. Flagged accounts the completer entered or modified themselves —
+> a mid-review edit makes the account their own entry — can never be
+> verified/confirmed by them, so they don't block: completing hands them off,
+> still flagged (person flag kept too), to a fresh secondary task for another
+> user via the admin finder. The cycle terminates when a reviewer confirms
+> without editing anything. Rows show "Awaiting another reviewer" for these
+> hand-off accounts.
 >
 > **Row styling is task-aware.** The red "Needs Secondary Verification"
 > treatment (row background + badge + Confirm button) only appears when the
