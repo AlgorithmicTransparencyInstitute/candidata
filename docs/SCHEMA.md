@@ -125,7 +125,7 @@ Conventions worth knowing up front:
 
 - **DB-unique on `[person_id, platform, handle]`**; model validates handle uniqueness scoped to `[person_id, platform, channel_type]`
 - `belongs_to :person, :entered_by (User), :verified_by (User), :escalated_by (User)` — **`person` association uses `touch: true`**, so any account change bumps `people.updated_at` (the public API's `/api/v1/people?updated_since=` relies on this for incremental sync)
-- Workflow methods: `mark_entered!(user, url:, handle:)`, `mark_not_found!(user)`, `reset_status!`, `verify!(user, notes:)`, `reject!`, `revise!`, `clear_secondary_verification!`, `toggle_deactivated!` (flips `account_inactive` — URL kept; "account exists but is no longer live", vs not_found which clears data), `toggle_escalated!(user)` (flips `escalated_for_review` with who/when stamp)
+- Workflow methods: `mark_entered!(user, url:, handle:)`, `mark_not_found!(user)`, `reset_status!`, `verify!(user, notes:)`, `reject!`, `revise!`, `clear_secondary_verification!`, `toggle_deactivated!` (flips `account_inactive` — URL kept; "account exists but is no longer live", vs not_found which clears data; deactivation is a terminal disposition — deactivated accounts are exempt from the validation/secondary completion gates), `toggle_escalated!(user)` (flips `escalated_for_review` with who/when stamp)
 - Scope `escalated` (flagged for admin review — future admin work-list)
 - Junkipedia: `junkipedia_eligible` scope (verified + active + supported platform + url), sync-state scopes, **`after_commit` auto-enqueues to Junkipedia when an eligible account flips to `verified: true`** (no-op without `JUNKIPEDIA_API_TOKEN`)
 - `previous_url` digs through PaperTrail versions

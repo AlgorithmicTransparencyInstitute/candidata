@@ -83,6 +83,33 @@ RSpec.describe "Verification workflow", type: :request do
       expect(person.reload.needs_secondary_verification).to be(true)
     end
 
+    # Deactivation is a terminal disposition: a deactivated account is resolved
+    # by that very act and must never block completion (the Jean Monestime /
+    # assignment 2893 bug: "1 accounts still need verification" for an account
+    # the user had just marked deactivated).
+    it "completes when the only pending account is deactivated" do
+      create(:social_media_account, :verified, person: person)
+      dead = create(:social_media_account, :entered, person: person, entered_by: other,
+                    platform: "Twitter", account_inactive: true)
+
+      patch complete_verification_assignment_path(assignment)
+
+      expect(assignment.reload.status).to eq("completed")
+      expect(dead.reload.needs_secondary_verification).to be(false) # resolved, not handed off
+    end
+
+    it "does not flag the completer's own deactivated entry for secondary verification" do
+      create(:social_media_account, :verified, person: person)
+      own_dead = create(:social_media_account, :entered, person: person, entered_by: verifier,
+                        platform: "Instagram", account_inactive: true)
+
+      patch complete_verification_assignment_path(assignment)
+
+      expect(assignment.reload.status).to eq("completed")
+      expect(own_dead.reload.needs_secondary_verification).to be(false)
+      expect(person.reload.needs_secondary_verification).to be(false)
+    end
+
     it "keeps blocking a mix: someone else's pending account blocks even when own additions exist" do
       create(:social_media_account, :entered, person: person, entered_by: other)
       create(:social_media_account, :entered, person: person, entered_by: verifier, platform: "Instagram")
@@ -169,6 +196,16 @@ RSpec.describe "Verification workflow", type: :request do
       patch confirm_secondary_verification_account_path(second_flagged)
       patch complete_verification_assignment_path(secondary)
       expect(secondary.reload.status).to eq("completed")
+    end
+
+    it "does not require confirming a deactivated flagged account, and clears its flag on completion" do
+      flagged_account.update!(account_inactive: true)
+
+      patch complete_verification_assignment_path(secondary)
+
+      expect(secondary.reload.status).to eq("completed")
+      expect(flagged_account.reload.needs_secondary_verification).to be(false)
+      expect(flagged_person.reload.needs_secondary_verification).to be(false)
     end
 
     it "enforces four-eyes on confirmation: the enterer can't confirm their own account" do
@@ -258,6 +295,16 @@ RSpec.describe "Verification workflow", type: :request do
 
       expect(response.body).to include(toggle_deactivated_verification_account_path(flagged))
       expect(response.body).to include(toggle_escalated_verification_account_path(flagged))
+    end
+
+    it "renders a deactivated pending account without needs-verification framing" do
+      account.update!(account_inactive: true)
+      assignment.start!
+
+      get verification_assignment_path(assignment)
+
+      expect(response.body).to include("Deactivated")
+      expect(response.body).not_to include("Needs Verification")
     end
 
     it "keeps a deactivated account out of the junkipedia-eligible scope" do

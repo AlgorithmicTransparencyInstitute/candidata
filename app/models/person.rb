@@ -118,9 +118,11 @@ class Person < ApplicationRecord
     offices.joins(:officeholders).merge(Officeholder.as_of(date)).distinct
   end
 
-  # Check if any accounts were modified during validation and mark for secondary verification
+  # Check if any accounts were modified during validation and mark for secondary
+  # verification. Deactivated accounts are exempt — deactivation is a terminal
+  # disposition, so they don't enter the secondary-verification cycle.
   def mark_for_secondary_verification_if_needed!
-    modified_accounts = social_media_accounts.where(modified_during_validation: true)
+    modified_accounts = social_media_accounts.active.where(modified_during_validation: true)
 
     if modified_accounts.any?
       # Mark the modified accounts as needing secondary verification

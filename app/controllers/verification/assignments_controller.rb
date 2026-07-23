@@ -12,7 +12,9 @@ module Verification
     def show
       @person = @assignment.person
       if @assignment.task_type == 'secondary_verification'
-        flagged = @person.social_media_accounts.needs_secondary_verification.to_a
+        # Deactivated accounts are a terminal disposition — they don't need
+        # confirmation and never block completion (see `complete`).
+        flagged = @person.social_media_accounts.needs_secondary_verification.active.to_a
         # Actionable = flagged accounts this user may verify/confirm (four-eyes).
         # Their own entries/modifications are leftovers: they never block this
         # user's completion — they hand off, still flagged, to the next cycle.
@@ -52,7 +54,10 @@ module Verification
     private
 
     def complete_data_validation
-      pending = @assignment.person.social_media_accounts.needs_verification.to_a
+      # `.active` — marking an account deactivated is itself a resolution: the
+      # URL is kept for the record but the account no longer participates in
+      # the verification workflow, so it must not block completion.
+      pending = @assignment.person.social_media_accounts.needs_verification.active.to_a
       blocking = pending.select { |account| account.verifiable_by?(current_user) }
 
       if blocking.any?
@@ -88,7 +93,7 @@ module Verification
     # cycle for another user. The cycle ends when a reviewer confirms without
     # editing anything.
     def complete_secondary_verification
-      flagged = @assignment.person.social_media_accounts.needs_secondary_verification.to_a
+      flagged = @assignment.person.social_media_accounts.needs_secondary_verification.active.to_a
       blocking = flagged.select { |a| a.verifiable_by?(current_user) }
 
       if blocking.any?

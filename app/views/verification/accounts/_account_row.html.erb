@@ -6,12 +6,16 @@
   # status — verifying it turns it green — and the flag demotes to a small
   # informational pill (it's the secondary task's job, not this one's).
   secondary_context = @assignment.task_type == 'secondary_verification'
+  # Deactivated is a terminal disposition: the account is exempt from the
+  # verification/confirmation gates, so it never gets "needs …" framing —
+  # the ⊘ Deactivated badge carries the state instead.
+  is_deactivated = account.account_inactive?
   flag_pill = nil
-  if account.needs_secondary_verification && secondary_context
+  if account.needs_secondary_verification && secondary_context && !is_deactivated
     bg_color = "bg-red-50"
     status_badge = '<span class="px-2 py-0.5 text-xs rounded-full bg-red-100 text-red-700 shrink-0">Needs Secondary Verification</span>'.html_safe
   else
-    if account.needs_secondary_verification
+    if account.needs_secondary_verification && !is_deactivated
       flag_pill = '<span class="px-2 py-0.5 text-xs rounded-full border border-red-200 text-red-500 shrink-0" title="Another user will re-review this account in a secondary verification task.">Flagged for secondary review</span>'.html_safe
     end
     if account.research_status == 'verified'
@@ -19,7 +23,7 @@
       status_badge = '<span class="px-2 py-0.5 text-xs rounded-full bg-green-100 text-green-700 shrink-0">✓ Verified</span>'.html_safe
     elsif account.research_status == 'entered' || account.research_status == 'not_found'
       bg_color = "bg-blue-50"
-      status_badge = '<span class="px-2 py-0.5 text-xs rounded-full bg-blue-100 text-blue-700 shrink-0">Needs Verification</span>'.html_safe
+      status_badge = is_deactivated ? nil : '<span class="px-2 py-0.5 text-xs rounded-full bg-blue-100 text-blue-700 shrink-0">Needs Verification</span>'.html_safe
     else
       bg_color = "bg-white"
       status_badge = nil
@@ -91,7 +95,7 @@
                Their own entries/modifications never block — they hand off,
                still flagged, to another user's secondary cycle. -->
           <% flagged_own_entry = false %>
-          <% if @assignment.task_type == 'secondary_verification' && account.needs_secondary_verification %>
+          <% if @assignment.task_type == 'secondary_verification' && account.needs_secondary_verification && !is_deactivated %>
             <% if !account.verifiable_by?(current_user) %>
               <% flagged_own_entry = true %>
               <span class="px-2 py-0.5 text-xs rounded-full bg-amber-100 text-amber-800 shrink-0 cursor-help" title="You entered or modified this account — it won't block your completion; another user will re-review it.">
@@ -101,8 +105,11 @@
               <%= button_to "Confirm Verified", confirm_secondary_verification_account_path(account), method: :patch, class: "px-3 py-1 bg-red-600 text-white text-xs rounded-md hover:bg-red-700 transition-colors shrink-0", form: { data: { turbo: false } }, title: "Confirm this account is correct — re-verifies it and clears the flag in one step" %>
             <% end %>
           <% end %>
-          <!-- Verify Button (checkmark icon) — hidden for your own entries (four-eyes rule) -->
-          <% if !is_verified && !account.verifiable_by?(current_user) %>
+          <!-- Verify Button (checkmark icon) — hidden for your own entries (four-eyes rule)
+               and for deactivated accounts (deactivation resolves them). -->
+          <% if is_deactivated && !is_verified %>
+            <%# no verify affordance — the row is resolved by deactivation %>
+          <% elsif !is_verified && !account.verifiable_by?(current_user) %>
             <% unless flagged_own_entry # the secondary block above already shows the hand-off pill %>
               <span class="px-2 py-0.5 text-xs rounded-full bg-amber-100 text-amber-800 shrink-0 group relative cursor-help" title="You entered this account — another user must verify it. Completing this task will flag it for secondary verification.">
                 Awaiting another verifier

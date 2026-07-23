@@ -184,6 +184,16 @@ from the enterer. Completing clears `needs_secondary_verification` via the exist
 > the same account renders by research status (verifying turns it green) with a
 > muted "Flagged for secondary review" pill, since the flag belongs to a
 > different task/user.
+>
+> **Deactivated accounts are exempt from all completion gates (July 2026).**
+> Marking an account deactivated (`account_inactive: true`, URL kept) is a
+> terminal disposition — it resolves the account. Both `complete_data_validation`
+> and `complete_secondary_verification` scope their blocking sets with
+> `.active`, `mark_for_secondary_verification_if_needed!` skips inactive
+> accounts, and the row partial drops the "Needs Verification" / red-flag
+> framing (the ⊘ Deactivated badge carries the state). This fixed the
+> assignment-2893 bug where a validator couldn't complete because the gate
+> demanded verification of an account they had just marked deactivated.
 
 **D. Fix the `modified_during_validation` false positives.** First entry into a blank
 stub should not count as a "modification" (require the account to have had a previous

@@ -177,7 +177,7 @@ module Verification
 
       @account.verify!(current_user) if @account.needs_verification?
       @account.clear_secondary_verification!
-      remaining = @account.person.social_media_accounts.needs_secondary_verification.count
+      remaining = @account.person.social_media_accounts.needs_secondary_verification.active.count
       notice = if remaining.zero?
         "#{@account.platform} confirmed. All flagged accounts are confirmed — you can now complete the assignment."
       else
