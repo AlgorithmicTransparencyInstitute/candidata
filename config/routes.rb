@@ -175,6 +175,18 @@ Rails.application.routes.draw do
     end
   end
 
+  # Demographic research workspace — person metadata rather than social
+  # accounts, so it gets its own namespace instead of joining /verification.
+  namespace :demographics do
+    resources :assignments, only: [:index, :show, :update] do
+      member do
+        patch :start
+        patch :complete
+        patch :reopen
+      end
+    end
+  end
+
   # User profile
   resource :profile, only: [:show, :edit, :update]
 

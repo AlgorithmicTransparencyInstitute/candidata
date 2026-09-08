@@ -128,9 +128,17 @@ module Admin
       when 'has_secondary_verification'
         assigned_ids = Assignment.where(task_type: 'secondary_verification').select(:person_id)
         @people = @people.where(id: assigned_ids)
+      when 'no_demographic_research'
+        assigned_ids = Assignment.where(task_type: 'demographic_research').select(:person_id)
+        @people = @people.where.not(id: assigned_ids)
+      when 'has_demographic_research'
+        assigned_ids = Assignment.where(task_type: 'demographic_research').select(:person_id)
+        @people = @people.where(id: assigned_ids)
       when 'needs_secondary_verification'
         @people = @people.needs_secondary_verification
       end
+
+      apply_demographic_filters
 
       @people = @people.page(params[:page]).per(50)
 
@@ -190,8 +198,7 @@ module Admin
 
         # Four-eyes rule: secondary verification must go to someone other than the
         # user whose pending entries are the reason the person is flagged.
-        if task_type == 'secondary_verification' &&
-           person.social_media_accounts.needs_secondary_verification.needs_verification.where(entered_by_id: user.id).exists?
+        unless person.eligible_for_assignment?(user, task_type)
           ineligible += 1
           next
         end
@@ -218,7 +225,13 @@ module Admin
         assigned_to_user_id: user.id
       })
 
-      redirect_to admin_assignments_path, notice: "Created #{created} assignments#{skipped > 0 ? ", skipped #{skipped} (already assigned)" : ''}."
+      # `ineligible` used to be counted and then silently dropped, so an admin
+      # who selected 50 people and got 12 assignments had no idea why.
+      notice = "Created #{created} assignments#{skipped > 0 ? ", skipped #{skipped} (already assigned)" : ''}."
+      if ineligible.positive?
+        notice += " #{ineligible} skipped — #{user.name} entered those flagged accounts and can't verify their own work."
+      end
+      redirect_to admin_assignments_path, notice: notice
     end
 
     def edit
@@ -250,6 +263,32 @@ module Admin
     end
 
     private
+
+    # Demographic filters work two independent axes: whether the columns hold
+    # values at all, and how far the sourced review has got. Keeping them
+    # separate is the point — a person can have imported values nobody has
+    # ever checked, which is exactly who these assignments target.
+    def apply_demographic_filters
+      case params[:demographics_status]
+      when 'not_started' then @people = @people.demographics_not_started
+      when 'in_progress' then @people = @people.demographics_in_progress
+      when 'complete'    then @people = @people.demographics_complete
+      when 'incomplete'  then @people = @people.where.not(demographics_status: 'complete')
+      end
+
+      case params[:demographic_presence]
+      when 'any_present'  then @people = @people.any_core_demographic_present
+      when 'none_present' then @people = @people.no_core_demographics
+      when 'any_missing'  then @people = @people.missing_any_core_demographic
+      when 'all_present'  then @people = @people.all_core_demographics_present
+      end
+
+      if params[:missing_demographic_field].present? && DemographicField.key?(params[:missing_demographic_field])
+        @people = @people.missing_demographic_field(params[:missing_demographic_field])
+      end
+
+      @people = @people.with_disputed_demographics if params[:demographics_disputed] == '1'
+    end
 
     def set_assignment
       @assignment = Assignment.find(params[:id])

@@ -100,6 +100,12 @@ class Admin::PeopleController < Admin::BaseController
     user = User.find(params[:user_id])
     task_type = params[:task_type] || 'data_collection'
 
+    unless @person.eligible_for_assignment?(user, task_type)
+      redirect_to admin_person_path(@person),
+                  alert: "#{user.name} entered the accounts flagged on #{@person.full_name}, so they can't do the secondary verification. Assign it to someone else."
+      return
+    end
+
     assignment = @person.assignments.find_or_initialize_by(user: user, task_type: task_type)
     assignment.assigned_by = current_user
     assignment.status = 'pending'
@@ -187,9 +193,17 @@ class Admin::PeopleController < Admin::BaseController
 
     created = 0
     skipped = 0
+    ineligible = 0
 
     person_ids.each do |pid|
       person = Person.find(pid)
+
+      # Same four-eyes rule the main assignment finder enforces.
+      unless person.eligible_for_assignment?(user, task_type)
+        ineligible += 1
+        next
+      end
+
       assignment = person.assignments.find_or_initialize_by(user: user, task_type: task_type)
 
       if assignment.new_record?
@@ -204,7 +218,9 @@ class Admin::PeopleController < Admin::BaseController
       end
     end
 
-    redirect_to admin_assignments_path, notice: "Created #{created} assignments, skipped #{skipped} (already assigned)."
+    notice = "Created #{created} assignments, skipped #{skipped} (already assigned)."
+    notice += " #{ineligible} skipped — #{user.name} entered the flagged accounts and can't verify their own work." if ineligible.positive?
+    redirect_to admin_assignments_path, notice: notice
   end
 
   private
@@ -216,7 +232,10 @@ class Admin::PeopleController < Admin::BaseController
   def person_params
     params.require(:person).permit(:first_name, :middle_name, :last_name, :suffix, :gender, :race,
                                    :birth_date, :death_date, :photo_url, :website_official, :website_campaign,
-                                   :website_personal, :wikipedia_id, :state_of_residence, :person_uuid)
+                                   :website_personal, :wikipedia_id, :state_of_residence, :person_uuid,
+                                   # Demographic fields come off the registry, so a new one is
+                                   # permitted here automatically.
+                                   *DemographicField::KEYS)
   end
 
 end

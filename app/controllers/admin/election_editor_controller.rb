@@ -168,7 +168,12 @@ module Admin
         platformIcons: SocialMediaAccount::PLATFORMS.index_with { |p| helpers.platform_icon(p, size: 14) },
         outcomes: Candidate::OUTCOMES,
         genders: Person::GENDERS,
-        races: Person.distinct.where.not(race: [nil, '']).pluck(:race).sort,
+        # Canonical vocabulary first, then whatever legacy free-text values are
+        # still in the data. Previously this list was purely self-referential —
+        # it could only ever offer values already in the DB, so a canonical
+        # value could never be introduced through the editor.
+        races: (DemographicField::RACES +
+                Person.distinct.where.not(race: [nil, '']).pluck(:race)).uniq,
         rows: candidates.map { |c| candidate_row(c) }
       }
     end

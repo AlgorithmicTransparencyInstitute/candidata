@@ -38,6 +38,7 @@
               validation_count = current_user.assignments.data_validation.active.count
               secondary_count = current_user.assignments.secondary_verification.active.count
               collection_count = current_user.assignments.data_collection.active.count
+              demographics_count = current_user.assignments.demographic_research.active.count
             %>
 
             <%= link_to researcher_queue_path, class: "group flex items-center justify-center lg:justify-between px-2 lg:px-3 py-2 text-sm font-medium rounded-md relative #{request.path.start_with?('/researcher/queue') ? 'bg-gray-800 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white'}", title: "Collection" do %>
@@ -73,6 +74,18 @@
               </div>
               <% if secondary_count > 0 %>
                 <span class="lg:ml-2 px-1.5 lg:px-2 py-0.5 text-xs font-semibold rounded-full bg-red-500 text-white absolute top-1 right-1 lg:relative lg:top-auto lg:right-auto"><%= secondary_count %></span>
+              <% end %>
+            <% end %>
+
+            <%= link_to demographics_assignments_path, class: "group flex items-center justify-center lg:justify-between px-2 lg:px-3 py-2 text-sm font-medium rounded-md relative #{request.path.start_with?('/demographics') ? 'bg-gray-800 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white'}", title: "Demographics" do %>
+              <div class="flex items-center justify-center lg:justify-start">
+                <svg class="h-5 w-5 lg:mr-3 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" />
+                </svg>
+                <span class="hidden lg:inline">Demographics</span>
+              </div>
+              <% if demographics_count > 0 %>
+                <span class="lg:ml-2 px-1.5 lg:px-2 py-0.5 text-xs font-semibold rounded-full bg-teal-600 text-white absolute top-1 right-1 lg:relative lg:top-auto lg:right-auto"><%= demographics_count %></span>
               <% end %>
             <% end %>
 

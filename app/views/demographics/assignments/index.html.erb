@@ -1,0 +1,77 @@
+<div class="max-w-5xl mx-auto px-4 py-8">
+  <div class="mb-6">
+    <h1 class="text-2xl font-bold text-gray-900">Demographic Research</h1>
+    <p class="text-sm text-gray-600 mt-1">
+      Research and source demographic metadata for each assigned person. Every required field needs a
+      determination backed by a source — including an explicit "not publicly documented" where that's the honest answer.
+    </p>
+  </div>
+
+  <% if @assignments.any? %>
+    <div class="bg-white rounded-lg shadow divide-y divide-gray-200">
+      <% @assignments.each do |assignment| %>
+        <% person = assignment.person %>
+        <% unsettled = person.unsettled_demographic_fields %>
+        <% required = DemographicField.core_relevant_for(person).size %>
+        <% done = required - unsettled.size %>
+        <div class="p-4 flex items-center gap-4">
+          <% if person.photo_url.present? %>
+            <img src="<%= person.photo_url %>" alt="<%= person.full_name %>" class="w-10 h-10 rounded-full object-cover shrink-0">
+          <% else %>
+            <div class="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center shrink-0">
+              <span class="text-gray-500 text-sm font-medium"><%= person.first_name.first %><%= person.last_name.first %></span>
+            </div>
+          <% end %>
+
+          <div class="flex-1 min-w-0">
+            <p class="font-medium text-gray-900 truncate"><%= person.full_name %></p>
+            <p class="text-sm text-gray-500">
+              <%= person.state_of_residence.presence || 'Unknown state' %>
+              <% if person.primary_party %>· <%= person.primary_party.name %><% end %>
+            </p>
+          </div>
+
+          <div class="shrink-0 w-40">
+            <div class="flex items-center justify-between text-xs text-gray-500 mb-1">
+              <span><%= done %>/<%= required %> determined</span>
+              <span class="px-1.5 py-0.5 rounded <%= assignment.pending? ? 'bg-gray-100 text-gray-600' : 'bg-teal-100 text-teal-800' %>">
+                <%= assignment.status.humanize %>
+              </span>
+            </div>
+            <div class="w-full bg-gray-200 rounded-full h-1.5">
+              <div class="bg-teal-500 h-1.5 rounded-full" style="width: <%= required.zero? ? 100 : (done * 100 / required) %>%"></div>
+            </div>
+          </div>
+
+          <%= link_to (assignment.pending? ? "Start" : "Continue"),
+                      demographics_assignment_path(assignment),
+                      class: "shrink-0 px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 text-sm font-medium" %>
+        </div>
+      <% end %>
+    </div>
+  <% else %>
+    <div class="bg-white rounded-lg shadow p-10 text-center">
+      <p class="text-gray-500">No demographic research assignments right now.</p>
+      <%= link_to "Back to dashboard", researcher_root_path, class: "mt-3 inline-block text-teal-600 hover:text-teal-800 text-sm" %>
+    </div>
+  <% end %>
+
+  <% if @completed.any? %>
+    <div class="mt-8">
+      <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">Recently completed</h2>
+      <div class="bg-white rounded-lg shadow divide-y divide-gray-200">
+        <% @completed.each do |assignment| %>
+          <div class="px-4 py-3 flex items-center justify-between">
+            <span class="text-sm text-gray-900"><%= assignment.person.full_name %></span>
+            <div class="flex items-center gap-3">
+              <span class="text-xs text-gray-500">
+                <%= assignment.completed_at&.strftime('%b %-d, %Y') %>
+              </span>
+              <%= link_to "View", demographics_assignment_path(assignment), class: "text-sm text-teal-600 hover:text-teal-800" %>
+            </div>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  <% end %>
+</div>

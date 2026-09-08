@@ -19,6 +19,12 @@ class User < ApplicationRecord
   has_many :assignments_given, class_name: 'Assignment', foreign_key: 'assigned_by_id', dependent: :nullify
   has_many :entered_accounts, class_name: 'SocialMediaAccount', foreign_key: 'entered_by_id'
   has_many :verified_accounts, class_name: 'SocialMediaAccount', foreign_key: 'verified_by_id'
+  # Both FKs from demographic_verifications point here and are NO ACTION at the
+  # DB level, so without these a researcher who has recorded any determination
+  # could never be deleted. Nullify: the determination stands, we just lose the
+  # attribution — PaperTrail still has the history.
+  has_many :demographic_verifications, foreign_key: 'verified_by_id', dependent: :nullify
+  has_many :reviewed_people, class_name: 'Person', foreign_key: 'demographics_reviewed_by_id', dependent: :nullify
   has_many :visits, class_name: 'Ahoy::Visit', dependent: :destroy
 
   validates :role, inclusion: { in: ROLES }

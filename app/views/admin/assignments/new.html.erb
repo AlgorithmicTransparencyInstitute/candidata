@@ -77,37 +77,23 @@
               <!-- Task Type Selection -->
               <div>
                 <label class="block text-sm font-medium text-gray-700 mb-2">Task Type</label>
+                <%# Cards are generated from Assignment::TASK_TYPES so a new
+                    task type can't be missing here. The selected-state colours
+                    ride along in data-accent for the JS below to reapply. %>
                 <div class="space-y-2">
-                  <label class="flex items-center gap-3 p-3 rounded-lg border-2 cursor-pointer transition-colors task-type-option
-                    <%= @task_type == 'data_collection' ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-gray-300' %>">
-                    <input type="radio" name="task_type" value="data_collection"
-                           class="text-blue-600 focus:ring-blue-500"
-                           <%= 'checked' if @task_type == 'data_collection' %>>
-                    <div>
-                      <div class="font-medium text-gray-900 text-sm">Data Collection</div>
-                      <div class="text-xs text-gray-500">Find social media accounts</div>
-                    </div>
-                  </label>
-                  <label class="flex items-center gap-3 p-3 rounded-lg border-2 cursor-pointer transition-colors task-type-option
-                    <%= @task_type == 'data_validation' ? 'border-purple-500 bg-purple-50' : 'border-gray-200 hover:border-gray-300' %>">
-                    <input type="radio" name="task_type" value="data_validation"
-                           class="text-purple-600 focus:ring-purple-500"
-                           <%= 'checked' if @task_type == 'data_validation' %>>
-                    <div>
-                      <div class="font-medium text-gray-900 text-sm">Data Validation</div>
-                      <div class="text-xs text-gray-500">Verify collected accounts</div>
-                    </div>
-                  </label>
-                  <label class="flex items-center gap-3 p-3 rounded-lg border-2 cursor-pointer transition-colors task-type-option
-                    <%= @task_type == 'secondary_verification' ? 'border-orange-500 bg-orange-50' : 'border-gray-200 hover:border-gray-300' %>">
-                    <input type="radio" name="task_type" value="secondary_verification"
-                           class="text-orange-600 focus:ring-orange-500"
-                           <%= 'checked' if @task_type == 'secondary_verification' %>>
-                    <div>
-                      <div class="font-medium text-gray-900 text-sm">Secondary Verification</div>
-                      <div class="text-xs text-gray-500">Re-verify modified accounts</div>
-                    </div>
-                  </label>
+                  <% Assignment::TASK_TYPES.each do |type| %>
+                    <label class="flex items-center gap-3 p-3 rounded-lg border-2 cursor-pointer transition-colors task-type-option
+                      <%= @task_type == type ? task_type_accent_class(type) : 'border-gray-200 hover:border-gray-300' %>"
+                      data-accent="<%= task_type_accent_class(type) %>">
+                      <input type="radio" name="task_type" value="<%= type %>"
+                             class="<%= task_type_radio_class(type) %>"
+                             <%= 'checked' if @task_type == type %>>
+                      <div>
+                        <div class="font-medium text-gray-900 text-sm"><%= task_type_label(type) %></div>
+                        <div class="text-xs text-gray-500"><%= task_type_description(type) %></div>
+                      </div>
+                    </label>
+                  <% end %>
                 </div>
               </div>
             </div>
@@ -137,10 +123,12 @@
                 </button>
               </div>
 
-              <!-- Demographics Dropdown -->
+              <%# Renamed: this dropdown holds State and Party. The demographic
+                  data filters live in their own dropdown below. %>
+              <!-- Location & Party Dropdown -->
               <div class="relative inline-block flex-1">
                 <button type="button" onclick="toggleDropdown('demographics')" class="w-full px-3 py-2 text-sm bg-white border border-gray-300 rounded-md hover:bg-gray-50 flex items-center justify-between">
-                  <span>Demographics</span>
+                  <span>Location &amp; Party</span>
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
                   </svg>
@@ -156,6 +144,60 @@
                       <label class="block text-xs font-medium text-gray-700 mb-1">Party</label>
                       <%= select_tag :party_id, options_for_select([['All Parties', '']] + @parties.map { |p| [p.name, p.id] }, params[:party_id]),
                           class: "w-full rounded text-xs border-gray-300", onchange: "applyFilters()", id: "party_filter" %>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <%# Two independent axes, which is the whole point of this filter:
+                  "has a value" and "someone sourced it" are different states,
+                  and the interesting population is usually values-without-review. %>
+              <!-- Demographic Data Dropdown -->
+              <div class="relative inline-block flex-1">
+                <button type="button" onclick="toggleDropdown('demographic-data')" class="w-full px-3 py-2 text-sm bg-white border border-gray-300 rounded-md hover:bg-gray-50 flex items-center justify-between">
+                  <span>Demographic Data</span>
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                  </svg>
+                </button>
+                <div id="demographic-data-dropdown" class="hidden absolute z-10 mt-1 w-72 bg-white rounded-md shadow-lg border border-gray-200 p-3">
+                  <div class="space-y-2">
+                    <div>
+                      <label class="block text-xs font-medium text-gray-700 mb-1">Review status</label>
+                      <%= select_tag :demographics_status,
+                            options_for_select([['Any review status', ''],
+                                                ['Not started', 'not_started'],
+                                                ['In progress', 'in_progress'],
+                                                ['Complete', 'complete'],
+                                                ['Not yet complete', 'incomplete']], params[:demographics_status]),
+                            class: "w-full rounded text-xs border-gray-300", onchange: "applyFilters()", id: "demographics_status_filter" %>
+                    </div>
+                    <div>
+                      <label class="block text-xs font-medium text-gray-700 mb-1">Data present</label>
+                      <%# "All required fields" matches nobody until this feature has been
+                          worked — six of the eight core columns are brand new. "Has any
+                          demographic data" is the one that finds imported-but-unchecked people. %>
+                      <%= select_tag :demographic_presence,
+                            options_for_select([['Any', ''],
+                                                ['Has any demographic data', 'any_present'],
+                                                ['Has no demographic data at all', 'none_present'],
+                                                ['Missing at least one required field', 'any_missing'],
+                                                ['All required fields have a value', 'all_present']], params[:demographic_presence]),
+                            class: "w-full rounded text-xs border-gray-300", onchange: "applyFilters()", id: "demographic_presence_filter" %>
+                    </div>
+                    <div>
+                      <label class="block text-xs font-medium text-gray-700 mb-1">Missing a specific field</label>
+                      <%= select_tag :missing_demographic_field,
+                            options_for_select([['Any field', '']] + DemographicField.all.map { |f| [f.label, f.key] }, params[:missing_demographic_field]),
+                            class: "w-full rounded text-xs border-gray-300", onchange: "applyFilters()", id: "missing_demographic_field_filter" %>
+                    </div>
+                    <div>
+                      <label class="flex items-center gap-2 text-xs text-gray-700 pt-1">
+                        <%= check_box_tag :demographics_disputed, '1', params[:demographics_disputed] == '1',
+                              class: "rounded border-gray-300 text-teal-600 focus:ring-teal-500",
+                              onchange: "applyFilters()", id: "demographics_disputed_filter" %>
+                        Has a field where sources conflict
+                      </label>
                     </div>
                   </div>
                 </div>
@@ -237,10 +279,12 @@
                         ['No Data Collection', 'no_collection'],
                         ['No Data Validation', 'no_validation'],
                         ['No Secondary Verification', 'no_secondary_verification'],
+                        ['No Demographic Research', 'no_demographic_research'],
                         ['─── Has Specific Task ───', '', disabled: true],
                         ['Has Data Collection', 'has_collection'],
                         ['Has Data Validation', 'has_validation'],
                         ['Has Secondary Verification', 'has_secondary_verification'],
+                        ['Has Demographic Research', 'has_demographic_research'],
                         ['─── Special Filters ───', '', disabled: true],
                         ['Needs Secondary Verification', 'needs_secondary_verification']
                       ], params[:assignment_filter]),
@@ -336,22 +380,9 @@
                     </div>
 
                     <div class="flex items-center gap-2 shrink-0">
+                      <%= render 'admin/assignments/demographics_badge', person: person %>
                       <% existing_assignments.each do |a| %>
-                        <% badge_class = case a.task_type
-                          when 'data_collection' then 'bg-blue-100 text-blue-700'
-                          when 'data_validation' then 'bg-purple-100 text-purple-700'
-                          when 'secondary_verification' then 'bg-orange-100 text-orange-700'
-                          else 'bg-gray-100 text-gray-700'
-                        end %>
-                        <% badge_text = case a.task_type
-                          when 'data_collection' then 'DC'
-                          when 'data_validation' then 'DV'
-                          when 'secondary_verification' then 'SV'
-                          else 'UN'
-                        end %>
-                        <span class="px-2 py-0.5 text-xs rounded-full <%= badge_class %>">
-                          <%= badge_text %>
-                        </span>
+                        <%= task_type_badge(a, extra_classes: 'rounded-full') %>
                       <% end %>
                       <% if existing_assignments.empty? %>
                         <span class="text-xs text-gray-400">—</span>
@@ -418,11 +449,7 @@
     if (summary) {
       if (checked > 0 && researcher && taskType) {
         const name = researcher.closest('label').querySelector('.font-medium').textContent.trim();
-        const typeMap = {
-          'data_collection': 'Data Collection',
-          'data_validation': 'Data Validation',
-          'secondary_verification': 'Secondary Verification'
-        };
+        const typeMap = <%= raw Assignment::TASK_TYPE_LABELS.to_json %>;
         const type = typeMap[taskType.value] || taskType.value;
         summary.textContent = `Assign ${checked} ${checked === 1 ? 'person' : 'people'} to ${name} for ${type}`;
       } else {
@@ -479,19 +506,15 @@
   // Researcher and task type radios
   document.querySelectorAll('input[name="task_type"]').forEach(radio => {
     radio.addEventListener('change', function() {
+      // Accent classes come from each card's data-accent, so adding a task
+      // type needs no change here.
       document.querySelectorAll('.task-type-option').forEach(opt => {
-        opt.classList.remove('border-blue-500', 'bg-blue-50', 'border-purple-500', 'bg-purple-50', 'border-orange-500', 'bg-orange-50');
+        opt.classList.remove(...opt.dataset.accent.split(' '));
         opt.classList.add('border-gray-200');
       });
       const label = this.closest('label');
       label.classList.remove('border-gray-200');
-      if (this.value === 'data_collection') {
-        label.classList.add('border-blue-500', 'bg-blue-50');
-      } else if (this.value === 'data_validation') {
-        label.classList.add('border-purple-500', 'bg-purple-50');
-      } else if (this.value === 'secondary_verification') {
-        label.classList.add('border-orange-500', 'bg-orange-50');
-      }
+      label.classList.add(...label.dataset.accent.split(' '));
       updateSubmitButton();
     });
   });
@@ -540,7 +563,10 @@
       year: 'year_filter',
       ballot_id: 'ballot_filter',
       contest_id: 'contest_filter',
-      assignment_filter: 'assignment_filter'
+      assignment_filter: 'assignment_filter',
+      demographics_status: 'demographics_status_filter',
+      demographic_presence: 'demographic_presence_filter',
+      missing_demographic_field: 'missing_demographic_field_filter'
     };
 
     for (const [param, elementId] of Object.entries(filters)) {
@@ -548,6 +574,12 @@
       if (element && element.value) {
         params.set(param, element.value);
       }
+    }
+
+    // Checkbox: .value is always '1', so it has to be read off .checked.
+    const disputed = document.getElementById('demographics_disputed_filter');
+    if (disputed && disputed.checked) {
+      params.set('demographics_disputed', '1');
     }
 
     return params;

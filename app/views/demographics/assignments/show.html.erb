@@ -1,0 +1,204 @@
+<div class="max-w-7xl mx-auto px-4 py-8">
+  <div class="mb-6">
+    <%= link_to "← Back to Demographics Queue", demographics_assignments_path, class: "text-teal-600 hover:text-teal-800" %>
+  </div>
+
+  <% unsettled = @person.unsettled_demographic_fields %>
+
+  <!-- Person header -->
+  <div class="bg-white rounded-lg shadow mb-6">
+    <div class="px-6 py-5">
+      <div class="flex items-start gap-4">
+        <% if @person.photo_url.present? %>
+          <img src="<%= @person.photo_url %>" alt="<%= @person.full_name %>" class="w-20 h-20 rounded-lg object-cover">
+        <% else %>
+          <div class="w-20 h-20 rounded-lg bg-gray-200 flex items-center justify-center">
+            <span class="text-gray-500 font-medium text-2xl"><%= @person.first_name.first %><%= @person.last_name.first %></span>
+          </div>
+        <% end %>
+        <div class="flex-1 min-w-0">
+          <h1 class="text-2xl font-bold text-gray-900"><%= @person.full_name %></h1>
+          <div class="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-sm text-gray-600">
+            <% if @person.primary_party %>
+              <span><%= @person.primary_party.name %></span>
+            <% end %>
+            <% if @person.state_of_residence.present? %>
+              <span><%= @person.state_of_residence %></span>
+            <% end %>
+            <% @current_offices.each do |oh| %>
+              <span class="text-gray-700 font-medium">Current: <%= oh.office.title %></span>
+            <% end %>
+            <% if @current_offices.empty? && @candidacies.first %>
+              <span class="text-teal-700 font-medium">
+                Candidate: <%= @candidacies.first.contest.office&.title || 'Unknown Office' %>
+                <% if @candidacies.first.contest.ballot %>
+                  (<%= @candidacies.first.contest.ballot.year %>)
+                <% end %>
+              </span>
+            <% end %>
+          </div>
+        </div>
+        <div class="shrink-0 text-right">
+          <span class="px-3 py-1 text-sm rounded-full <%= @assignment.completed? ? 'bg-green-100 text-green-800' : 'bg-teal-100 text-teal-800' %>">
+            <%= @assignment.status.humanize %>
+          </span>
+          <p class="mt-2 text-sm <%= unsettled.any? ? 'text-gray-600' : 'text-green-700 font-medium' %>">
+            <% required = DemographicField.core_relevant_for(@person).size %>
+            <%= required - unsettled.size %> of <%= required %> required fields determined
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="flex flex-col lg:flex-row gap-6 items-start">
+    <!-- Left: the form -->
+    <div class="flex-1 min-w-0 order-2 lg:order-1">
+      <%= form_with url: demographics_assignment_path(@assignment), method: :patch, local: true, data: { turbo: false } do %>
+        <% DemographicField.grouped.each do |group, fields| %>
+          <% visible = fields.select { |f| f.relevant_for?(@person) } %>
+          <% next if visible.empty? %>
+          <div class="bg-white rounded-lg shadow mb-6">
+            <div class="px-6 py-3 border-b border-gray-200">
+              <h2 class="text-sm font-semibold text-gray-900 uppercase tracking-wide"><%= group %></h2>
+            </div>
+            <div class="p-4 space-y-3">
+              <% visible.each do |field| %>
+                <%= render 'field_row', field: field %>
+              <% end %>
+            </div>
+          </div>
+        <% end %>
+
+        <div class="bg-white rounded-lg shadow p-4 sticky bottom-4 border border-teal-100">
+          <div class="flex items-center justify-between gap-4">
+            <p class="text-sm text-gray-600">
+              <% if unsettled.any? %>
+                Still needs a determination:
+                <span class="font-medium text-gray-900"><%= unsettled.map(&:label).to_sentence %></span>
+              <% else %>
+                Every required field has a determination.
+              <% end %>
+            </p>
+            <%= submit_tag "Save Progress", class: "shrink-0 px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 text-sm font-medium cursor-pointer" %>
+          </div>
+        </div>
+      <% end %>
+
+      <!-- Completion -->
+      <div class="bg-white rounded-lg shadow p-4 mt-6">
+        <% if @assignment.completed? %>
+          <div class="flex items-center justify-between">
+            <p class="text-sm text-green-700 font-medium">This assignment is complete.</p>
+            <%= button_to "Reopen", reopen_demographics_assignment_path(@assignment), method: :patch,
+                          class: "px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 text-sm font-medium" %>
+          </div>
+        <% elsif unsettled.any? %>
+          <div class="flex items-center justify-between gap-4">
+            <p class="text-sm text-gray-600">
+              Record a determination for every required field — including
+              <strong>Not publicly documented</strong> where the answer genuinely isn't available — to complete this assignment.
+            </p>
+            <span class="shrink-0 px-4 py-2 bg-gray-200 text-gray-500 rounded-lg text-sm font-medium cursor-not-allowed"
+                  title="<%= unsettled.size %> fields still need a determination">
+              Complete (<%= unsettled.size %> left)
+            </span>
+          </div>
+        <% else %>
+          <div class="flex items-center justify-between gap-4">
+            <p class="text-sm text-gray-600">All required fields have a sourced determination.</p>
+            <%= button_to "Complete Demographic Research", complete_demographics_assignment_path(@assignment), method: :patch,
+                          class: "shrink-0 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm font-medium",
+                          data: { confirm: "Complete demographic research for #{@person.full_name}?" } %>
+          </div>
+        <% end %>
+      </div>
+    </div>
+
+    <!-- Right: sourcing reference -->
+    <div class="w-full lg:w-80 shrink-0 order-1 lg:order-2 lg:sticky lg:top-4">
+      <div class="bg-white rounded-lg shadow">
+        <div class="px-4 py-3 border-b border-gray-200">
+          <h2 class="text-sm font-semibold text-gray-900">Sources for this person</h2>
+          <p class="text-xs text-gray-500 mt-0.5">Start here, then cite what you used.</p>
+        </div>
+
+        <div class="p-4 space-y-4">
+          <div>
+            <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Websites</h3>
+            <% websites = { 'Campaign site' => @person.website_campaign, 'Official site' => @person.website_official, 'Personal site' => @person.website_personal }.select { |_, v| v.present? } %>
+            <% if websites.any? %>
+              <ul class="space-y-1">
+                <% websites.each do |label, url| %>
+                  <li>
+                    <a href="<%= url %>" target="_blank" rel="noopener" class="text-sm text-teal-700 hover:text-teal-900 hover:underline break-all"><%= label %></a>
+                  </li>
+                <% end %>
+              </ul>
+            <% else %>
+              <p class="text-sm text-gray-400">None on file</p>
+            <% end %>
+          </div>
+
+          <div>
+            <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Wikipedia</h3>
+            <% if @person.wikipedia_id.present? %>
+              <a href="https://en.wikipedia.org/wiki/<%= @person.wikipedia_id %>" target="_blank" rel="noopener"
+                 class="text-sm text-teal-700 hover:text-teal-900 hover:underline break-all"><%= @person.wikipedia_id.tr('_', ' ') %></a>
+            <% else %>
+              <p class="text-sm text-gray-400">No article on file</p>
+            <% end %>
+          </div>
+
+          <div>
+            <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">
+              Social accounts <span class="text-gray-400 normal-case font-normal">(<%= @social_accounts.size %>)</span>
+            </h3>
+            <% if @social_accounts.any? %>
+              <ul class="space-y-1">
+                <% @social_accounts.each do |account| %>
+                  <li class="flex items-center gap-1.5">
+                    <a href="<%= account.url %>" target="_blank" rel="noopener" class="text-sm text-teal-700 hover:text-teal-900 hover:underline truncate">
+                      <%= account.platform %>
+                    </a>
+                    <% if account.verified? %>
+                      <span class="text-xs text-green-600" title="Verified account">✓</span>
+                    <% end %>
+                    <span class="text-xs text-gray-400 truncate"><%= account.display_name %></span>
+                  </li>
+                <% end %>
+              </ul>
+            <% else %>
+              <p class="text-sm text-gray-400">None on file</p>
+            <% end %>
+          </div>
+
+          <div class="pt-3 border-t border-gray-200">
+            <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Search</h3>
+            <ul class="space-y-1">
+              <li>
+                <a href="https://www.google.com/search?q=<%= u("\"#{@person.full_name}\" #{@person.state_of_residence}") %>"
+                   target="_blank" rel="noopener" class="text-sm text-teal-700 hover:text-teal-900 hover:underline">Google this person</a>
+              </li>
+              <li>
+                <a href="https://ballotpedia.org/Special:Search?search=<%= u(@person.full_name) %>"
+                   target="_blank" rel="noopener" class="text-sm text-teal-700 hover:text-teal-900 hover:underline">Ballotpedia</a>
+              </li>
+              <li>
+                <a href="https://en.wikipedia.org/w/index.php?search=<%= u(@person.full_name) %>"
+                   target="_blank" rel="noopener" class="text-sm text-teal-700 hover:text-teal-900 hover:underline">Wikipedia search</a>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-teal-50 border border-teal-200 rounded-lg p-4 mt-4 text-xs text-teal-900 space-y-2">
+        <p class="font-semibold">Recording a determination</p>
+        <p><strong>Verified</strong> — you found the answer and can cite where.</p>
+        <p><strong>Not publicly documented</strong> — you looked and it isn't available. This is a real answer, not a gap.</p>
+        <p><strong>Sources conflict</strong> — sources disagree. Explain in the note; an admin will resolve it.</p>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,26 @@
+<%#
+  Demographic coverage at a glance, so an admin picking people for a
+  demographic research batch can see who actually needs the work.
+
+  Two independent signals, deliberately kept apart:
+    the dot  — how much of the data is *present*
+    the pill — how far the *review* has got
+  Imported values nobody has checked show as filled-but-unreviewed, which is
+  exactly the population these assignments exist to work through.
+%>
+<% present = DemographicField.core_relevant_for(person).count { |f| person.demographic_present?(f.key) } %>
+<% required = DemographicField.core_relevant_for(person).size %>
+<% status = person.demographics_status %>
+
+<span class="flex items-center gap-1 shrink-0"
+      title="<%= present %> of <%= required %> demographic fields have a value · review: <%= status.humanize %>">
+  <span class="text-xs text-gray-400 tabular-nums"><%= present %>/<%= required %></span>
+  <% case status %>
+  <% when 'complete' %>
+    <span class="px-2 py-0.5 text-xs rounded-full bg-green-100 text-green-700">DR ✓</span>
+  <% when 'in_progress' %>
+    <span class="px-2 py-0.5 text-xs rounded-full bg-teal-100 text-teal-700">DR ◐</span>
+  <% else %>
+    <span class="px-2 py-0.5 text-xs rounded-full bg-gray-100 text-gray-500">DR</span>
+  <% end %>
+</span>

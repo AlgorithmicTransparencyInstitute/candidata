@@ -404,7 +404,10 @@ class ElectionEditorCsvImport
     case value.downcase
     when 'male', 'm' then 'Male'
     when 'female', 'f', 'w' then 'Female'
-    when 'other', 'nonbinary', 'non-binary', 'nb' then 'Other'
+    # Person::GENDERS now carries Non-binary as its own value, so stop folding
+    # it into the catch-all — that was discarding information the source stated.
+    when 'nonbinary', 'non-binary', 'non binary', 'nb', 'enby', 'x' then 'Non-binary'
+    when 'other' then 'Other'
     else
       warnings << "Unrecognized gender #{raw.inspect} — left blank"
       nil

@@ -79,6 +79,14 @@
         background: #e9d5ff;
         color: #6b21a8;
       }
+      .badge-secondary_verification {
+        background: #fee2e2;
+        color: #991b1b;
+      }
+      .badge-demographic_research {
+        background: #ccfbf1;
+        color: #115e59;
+      }
       .badge-pending {
         background: #fef3c7;
         color: #92400e;
@@ -144,8 +152,14 @@
               </div>
               <div class="assignment-meta">
                 <div class="meta-item">
-                  <span class="badge <%= assignment.task_type == 'data_collection' ? 'badge-collection' : 'badge-validation' %>">
-                    <%= assignment.task_type == 'data_collection' ? 'Data Collection' : 'Data Validation' %>
+                  <%# Email CSS can't use the Tailwind classes, so the badge class is keyed off
+                      task_type directly. data_collection/data_validation keep their historic
+                      class names; the newer types use their task_type verbatim. %>
+                  <% badge_class = { 'data_collection' => 'badge-collection',
+                                     'data_validation' => 'badge-validation' }
+                                   .fetch(assignment.task_type, "badge-#{assignment.task_type}") %>
+                  <span class="badge <%= badge_class %>">
+                    <%= task_type_label(assignment) %>
                   </span>
                 </div>
                 <div class="meta-item">

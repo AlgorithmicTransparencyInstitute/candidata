@@ -19,6 +19,8 @@ module Researcher
           @assignments = @assignments.data_validation
         when 'secondary_verification'
           @assignments = @assignments.secondary_verification
+        when 'demographic_research'
+          @assignments = @assignments.demographic_research
         when 'pending'
           @assignments = @assignments.pending
         when 'in_progress'

@@ -30,6 +30,20 @@ FactoryBot.define do
     trait :secondary_verification do
       task_type { "secondary_verification" }
     end
+
+    trait :demographic_research do
+      task_type { "demographic_research" }
+    end
+  end
+
+  factory :demographic_verification do
+    person
+    field_key { "gender" }
+    status { "verified" }
+    value_snapshot { "Female" }
+    source_url { "https://example.com/bio" }
+    verified_at { Time.current }
+    association :verified_by, factory: :user
   end
 
   factory :social_media_account do

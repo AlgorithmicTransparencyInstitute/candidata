@@ -218,8 +218,8 @@
             <div class="flex-1 min-w-0">
               <%= render 'admin/assignments/person_card', person: assignment.person %>
               <div class="mt-2 flex items-center gap-2">
-                <span class="px-2 py-1 text-xs rounded-full <%= assignment.task_type == 'data_collection' ? 'bg-blue-100 text-blue-800' : 'bg-purple-100 text-purple-800' %>">
-                  <%= assignment.task_type.humanize %>
+                <span class="px-2 py-1 text-xs rounded-full <%= task_type_badge_class(assignment) %>">
+                  <%= task_type_label(assignment) %>
                 </span>
                 <%= link_to "View Assignment", admin_assignment_path(assignment), class: "text-xs text-blue-600 hover:text-blue-800" %>
               </div>

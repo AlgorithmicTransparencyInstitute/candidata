@@ -26,7 +26,7 @@
               </div>
               <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">Task Type</label>
-                <%= select_tag :task_type, options_for_select([['Data Collection - Find accounts', 'data_collection'], ['Data Validation - Verify accounts', 'data_validation']], params[:task_type]), class: "block w-full rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 text-sm" %>
+                <%= select_tag :task_type, options_for_select(task_type_options(describe: true), params[:task_type]), class: "block w-full rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 text-sm" %>
               </div>
             </div>
           </div>

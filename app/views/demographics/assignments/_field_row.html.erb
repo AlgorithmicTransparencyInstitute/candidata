@@ -1,0 +1,67 @@
+<%#
+  One demographic field: the value, the researcher's determination, and the
+  evidence behind it. The row is tinted by determination status so a
+  half-finished person is readable at a glance.
+%>
+<% verification = @verifications[field.key.to_s] %>
+<%# On a failed save, redisplay what the researcher typed rather than what was
+    in the database before the submission. %>
+<% submitted = @submitted_evidence&.dig(field.key)&.to_h&.symbolize_keys %>
+<% status     = submitted ? submitted[:status]     : verification&.status %>
+<% source_url = submitted ? submitted[:source_url] : verification&.source_url %>
+<% notes      = submitted ? submitted[:notes]      : verification&.notes %>
+<% error = @field_errors&.dig(field.key) %>
+
+<div class="rounded-lg border p-4 <%= demographic_row_class(status, error: error.present?) %>">
+  <div class="flex items-start justify-between gap-3 mb-2">
+    <div class="min-w-0">
+      <label class="block text-sm font-semibold text-gray-900"><%= field.label %></label>
+      <% if field.hint.present? %>
+        <p class="text-xs text-gray-500 mt-0.5"><%= field.hint %></p>
+      <% end %>
+    </div>
+    <div class="shrink-0 flex items-center gap-2">
+      <% unless field.core %>
+        <span class="text-xs text-gray-400">optional</span>
+      <% end %>
+      <span class="px-2 py-0.5 text-xs font-medium rounded-full <%= demographic_status_badge_class(status) %>">
+        <%= demographic_status_label(status) %>
+      </span>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+    <div>
+      <%= demographic_value_input(field, @person, error: error.present?) %>
+    </div>
+    <div>
+      <%= select_tag "evidence[#{field.key}][status]",
+                     options_for_select(DemographicsHelper::DETERMINATION_OPTIONS, status),
+                     class: demographic_input_classes %>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3">
+    <div>
+      <%= url_field_tag "evidence[#{field.key}][source_url]", source_url,
+                        placeholder: "Source link (where you found it)",
+                        class: demographic_input_classes %>
+    </div>
+    <div>
+      <%= text_field_tag "evidence[#{field.key}][notes]", notes,
+                         placeholder: "Evidence note — quote, page, or why sources conflict",
+                         class: demographic_input_classes %>
+    </div>
+  </div>
+
+  <% if error.present? %>
+    <p class="mt-2 text-xs text-red-700 font-medium"><%= field.label %> <%= error %></p>
+  <% end %>
+
+  <% if verification&.verified_at.present? %>
+    <p class="mt-2 text-xs text-gray-500">
+      Last determined by <%= verification.verified_by&.name || verification.verified_by&.email || 'unknown' %>
+      on <%= verification.verified_at.strftime('%b %-d, %Y') %>
+    </p>
+  <% end %>
+</div>

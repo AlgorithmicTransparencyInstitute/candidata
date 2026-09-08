@@ -8,6 +8,7 @@
           <li><a href="#data-collection" class="text-blue-600 hover:text-blue-800">Data Collection Queue</a></li>
           <li><a href="#account-types" class="text-blue-600 hover:text-blue-800">Campaign vs. Official Accounts</a></li>
           <li><a href="#secondary-verification" class="text-blue-600 hover:text-blue-800">Understanding Secondary Verification</a></li>
+          <li><a href="#demographic-research" class="text-blue-600 hover:text-blue-800">Demographic Research</a></li>
           <li><a href="#verification-methods" class="text-blue-600 hover:text-blue-800">Verification Methods</a></li>
           <li><a href="#url-formatting" class="text-blue-600 hover:text-blue-800">Proper URL Formatting</a></li>
           <li><a href="#platform-guides" class="text-blue-600 hover:text-blue-800">Platform-Specific Guides</a></li>
@@ -401,6 +402,101 @@
                   <p>The two-person verification process ensures high data quality. If you modify data during verification, it gets extra scrutiny to catch and correct any errors. This is a good thing—it means the data we collect is accurate and reliable!</p>
                 </div>
               </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Demographic Research -->
+      <section id="demographic-research">
+        <h2 class="text-2xl font-bold text-gray-900 mb-4">Demographic Research</h2>
+
+        <div class="prose max-w-none space-y-4">
+          <p class="text-gray-700">
+            Demographic research assignments are about the person rather than their social accounts. You research
+            and record metadata—race, gender, date of birth, marital and parental status, education, and military
+            service—and, for every field, <strong>where you found the answer</strong>. You'll find these under
+            <strong>Demographics</strong> in the sidebar.
+          </p>
+
+          <div class="bg-teal-50 border-l-4 border-teal-400 p-4 rounded-r-lg">
+            <h3 class="text-lg font-semibold text-teal-900 mb-2">The one rule that matters: a blank field is not an answer</h3>
+            <p class="text-sm text-teal-800">
+              Plenty of candidates have no public record of their marital status or date of birth. That's a normal
+              result, not a failure, and you should record it as such rather than guessing or leaving the field
+              empty. Every required field needs a determination before you can complete the assignment—and
+              "Not publicly documented" is one of the valid determinations.
+            </p>
+          </div>
+
+          <h3 class="text-lg font-semibold text-gray-900 mt-6 mb-3">The three determinations</h3>
+          <div class="space-y-3">
+            <div class="border-l-4 border-green-400 bg-green-50 p-4 rounded-r-lg">
+              <p class="font-semibold text-green-900">Verified</p>
+              <p class="text-sm text-green-800 mt-1">
+                You found the answer and can cite where. Requires both a value and a source link or note—the system
+                will refuse a "Verified" determination with no evidence behind it.
+              </p>
+            </div>
+            <div class="border-l-4 border-slate-400 bg-slate-50 p-4 rounded-r-lg">
+              <p class="font-semibold text-slate-900">Not publicly documented</p>
+              <p class="text-sm text-slate-700 mt-1">
+                You looked and it genuinely isn't available. No value needed. Add a note about where you searched.
+                This settles the field and counts toward completing the assignment.
+              </p>
+            </div>
+            <div class="border-l-4 border-amber-400 bg-amber-50 p-4 rounded-r-lg">
+              <p class="font-semibold text-amber-900">Sources conflict</p>
+              <p class="text-sm text-amber-800 mt-1">
+                Sources disagree with each other. Explain the conflict in the note. This does <strong>not</strong>
+                settle the field—it flags the person for an admin to resolve, and the assignment stays incomplete
+                until it's sorted out.
+              </p>
+            </div>
+          </div>
+
+          <h3 class="text-lg font-semibold text-gray-900 mt-6 mb-3">How the page works</h3>
+          <ul class="list-disc list-inside space-y-2 text-gray-700">
+            <li><strong>Right side (sourcing panel):</strong> everything already on file for this person—campaign
+              and official websites, Wikipedia article, and every social account we hold—plus one-click Google,
+              Ballotpedia and Wikipedia searches. Start here.</li>
+            <li><strong>Left side (the form):</strong> fields grouped into Identity, Family, Education and Service.
+              Each row has the value, your determination, a source link, and an evidence note.</li>
+            <li><strong>Save Progress</strong> saves the whole person at once. You can come back and finish later.</li>
+            <li>Row colours track your determinations: green verified, grey not-documented, amber conflict, red if
+              something needs fixing.</li>
+            <li>Some fields only appear when they're relevant—<em>Branch</em> shows up once you record military
+              service, <em>Number of children</em> once you record that the person has children.</li>
+          </ul>
+
+          <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-r-lg mt-4">
+            <h3 class="text-sm font-medium text-yellow-800">Race and ethnicity</h3>
+            <div class="mt-2 text-sm text-yellow-700">
+              <p>
+                Select every category that applies—it's a multi-select for a reason. Always prefer the person's own
+                self-description (campaign bio, official biography, their own statements) over inference from a
+                photo or a surname. If you can't find a self-description, "Not publicly documented" is the right
+                answer.
+              </p>
+              <p class="mt-2">
+                Some people have an older, non-standard race value from an earlier import. You'll see it as an
+                amber checkbox marked <em>non-standard</em>, already ticked. It stays exactly as it is until you
+                change it—so tick the standard categories that apply and untick the old value only when you're
+                confident the new selection is right.
+              </p>
+            </div>
+          </div>
+
+          <div class="bg-blue-50 border-l-4 border-blue-400 p-4 rounded-r-lg mt-4">
+            <h3 class="text-sm font-medium text-blue-900">Nothing saves until everything validates</h3>
+            <div class="mt-2 text-sm text-blue-800">
+              <p>
+                If any field on the page has a problem—a "Verified" with no source, say—the whole submission is
+                rejected and nothing is written. Fix the highlighted field and save again. This is deliberate: it
+                keeps values and their evidence from ever drifting apart. Everything you typed is still on the
+                page, so fixing one field never costs you the rest of your work. Source links must be ordinary
+                <code>http://</code> or <code>https://</code> web addresses.
+              </p>
             </div>
           </div>
         </div>

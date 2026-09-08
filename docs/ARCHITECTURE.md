@@ -321,10 +321,34 @@ Manage research assignments.
 | `mark_incomplete` | Reopen completed assignment |
 
 **Features:**
-- Create data_collection, data_validation, secondary_verification tasks
+- Create data_collection, data_validation, secondary_verification, demographic_research tasks
 - Bulk creation from people list
 - View researcher progress
 - Monitor completion
+
+**Demographic filters (`new`).** A private `apply_demographic_filters` narrows
+the candidate-people list on two deliberately independent axes — a person can
+have values nobody has checked (imported data) or a review with no values
+(researcher looked, nothing is documented), so neither axis alone can express
+the most useful population, "has values but nobody checked them".
+
+| Param | Values | Person scope |
+|-------|--------|--------------|
+| `demographics_status` | `not_started` / `in_progress` / `complete` / `incomplete` | `demographics_not_started`, `demographics_in_progress`, `demographics_complete`, `where.not(demographics_status: 'complete')` |
+| `demographic_presence` | `any_missing` / `all_present` | `missing_any_core_demographic`, `all_core_demographics_present` |
+| `missing_demographic_field` | any `DemographicField` key (validated with `DemographicField.key?`) | `missing_demographic_field(key)` |
+| `demographics_disputed` | `1` | `with_disputed_demographics` |
+
+Two related `assignment_status` values also exist: `no_demographic_research` /
+`has_demographic_research` (people without/with a demographic_research
+assignment).
+
+In the `new` view, the dropdown formerly labelled "Demographics" — which only
+ever held State and Party — is now **Location & Party**; the filters above
+live in a new **Demographic Data** dropdown. Each person row renders
+`admin/assignments/_demographics_badge`: an `n/8` value-coverage count plus a
+`DR` review pill (grey = not started, teal ◐ = in progress, green ✓ =
+complete).
 
 ---
 
@@ -559,6 +583,71 @@ Queue of accounts to verify.
 
 ---
 
+### Demographics Controllers
+
+Demographic research workspace (`/demographics`) — person metadata rather than
+social accounts, which is why it gets its own namespace instead of joining
+`/verification`. It renders inside `layout 'researcher'`, so researchers stay
+in the same sidebar (the fourth item, "Demographics", teal).
+
+Routes (`config/routes.rb`):
+
+```ruby
+namespace :demographics do
+  resources :assignments, only: [:index, :show, :update] do
+    member do
+      patch :start
+      patch :complete
+      patch :reopen
+    end
+  end
+end
+```
+
+#### demographics/AssignmentsController
+Demographic research queue and form. Access: `researcher` or `admin`.
+
+| Action | Purpose |
+|--------|---------|
+| `index` | Queue of the user's active demographic_research assignments + last 10 completed |
+| `show` | Two-column research page (form + sourcing panel); auto-starts a pending assignment |
+| `update` | Save one whole-person submission via `DemographicsReview` |
+| `start` | Mark as in_progress |
+| `complete` | Mark as completed (gated — see below) |
+| `reopen` | Return to pending |
+
+**Before actions:**
+- `set_assignment` — scoped to `current_user.assignments.demographic_research`, also sets `@person`
+- `load_reference_material` (on `show`/`update`) — loads everything needed to source an answer without leaving the page: `@social_accounts` (active, non-blank URL, verified first), `@current_offices`, `@candidacies`, and `@verifications` indexed by `field_key`
+
+**Registry-driven strong params.** Both param filters are derived from
+`DemographicField` rather than hand-listed, so adding a field to the registry
+needs no controller change:
+
+```ruby
+params.require(:values).permit(*DemographicField::ALL.reject(&:multi_select?).map(&:key), race: [])
+params.require(:evidence).permit(DemographicField::KEYS.index_with { [:status, :source_url, :notes] })
+```
+
+**Whole-person save.** One submission writes every field at once; a per-field
+save would multiply page loads by twelve. On failure the action re-renders
+`show` with `@field_errors` and `422 Unprocessable Entity`, and **nothing** is
+persisted.
+
+**Completion gate.** `complete` refuses while
+`person.unsettled_demographic_fields` is non-empty — every *core* field that is
+*relevant* to that person needs a settled determination (`verified` or
+`unknown`; `disputed` deliberately does not settle). The alert names the
+outstanding fields. On success it calls
+`person.refresh_demographics_status!(reviewer: current_user)`.
+
+Unlike the social-account workflow there is no four-eyes rule here yet —
+demographic research is single-pass, and `disputed` is the escalation route.
+
+See `docs/DEMOGRAPHIC_RESEARCH.md` for the design record.
+
+---
+
 ### Authentication Controllers
 
 #### Devise Controllers (`app/controllers/users/`)
@@ -685,6 +774,76 @@ Junkipedia API v2 client.
 - Rate limit aware
 - Detailed error handling
 - Channel format detection (URL → platform code)
+
+---
+
+### DemographicsReview
+Applies one submission of the demographic research form.
+
+**Purpose:** Write demographic values onto a Person *and* their per-field
+evidence trail as a single unit, so a person is never left with values saved
+but their evidence lost — which would look like verified data nobody can trace.
+
+**Key Method:**
+- `save(values:, evidence:)` — returns a `Result` struct (`success?`, `errors`, `settled_count`)
+  - `values` — `{ gender: "Male", race: ["White"], birth_date: "1970-01-02", … }`
+  - `evidence` — `{ gender: { status:, source_url:, notes: }, … }`
+
+**Pipeline (one `ActiveRecord::Base.transaction`, rolled back on any error):**
+1. `apply_values` — assign each registry field to the Person (`race` round-trips through `Person#race_values=`)
+2. `clear_irrelevant_dependents` — a dependent field that no longer applies ("Veteran" → "Never served") has its value nulled *and* its `DemographicVerification` row destroyed
+3. `validate_evidence` — reject bad submissions before anything is written
+4. `person.save` (model errors merged into `errors`)
+5. `apply_evidence` — upsert one `DemographicVerification` per field, stamped with `value_snapshot`, `verified_by`, `verified_at`, `assignment`
+6. `person.refresh_demographics_status!(reviewer:)` — refresh the rollup the admin filters read
+
+**Rejected submissions:**
+- `verified` or `disputed` with neither `source_url` nor `notes` (`EVIDENCE_REQUIRED_STATUSES`) — a determination that asserts a fact has to say where the fact came from
+- `verified` with no value (the error points the researcher at "Not publicly documented")
+- a status outside `DemographicVerification::STATUSES`
+
+A field submitted with a **blank** status leaves any existing determination
+alone — the researcher simply hasn't ruled on it in this pass.
+
+---
+
+## Helpers (View Layer)
+
+### AssignmentHelper
+One place that knows how a task type is named, coloured and routed.
+
+**Purpose:** This logic used to be inlined at every call site — eight copies,
+four of them two-way ternaries that quietly labelled `secondary_verification`
+tasks as "Data Validation" (including in reminder emails). Adding a fourth task
+type made that unsustainable. Anything that renders a task type now comes
+through here.
+
+**Key Methods:**
+- `task_type_label` / `task_type_short_label` / `task_type_abbreviation` / `task_type_description` — naming, off `Assignment::TASK_TYPE_*` constants
+- `task_type_badge_class` / `solid` / `pill` / `accent` / `radio` / `text_class` — the five Tailwind class sets per type (blue = collection, purple = validation, red = secondary, teal = demographics)
+- `task_type_badge(assignment, extra_classes:)` — the `DC` / `DV` / `SV` / `DR` pill used in admin lists
+- `task_type_options(include_all:, describe:)` — dropdown options driven off `Assignment::TASK_TYPES`, so a new type can never be missing from a select (which is how `secondary_verification` ended up unselectable in three admin screens)
+- `assignment_workspace` — `:researcher` (data_collection), `:demographics` (demographic_research), `:verification` (everything else)
+- `assignment_path_for` / `start_assignment_path_for` / `assignment_queue_path_for` — route to the owning workspace
+
+**Gotcha:** Tailwind class strings are written out **literally** in each
+lookup table, never interpolated from a colour name. `app/helpers/**/*.rb` is a
+Tailwind content path, so `"bg-#{color}-100"` is invisible to the scanner and
+would compile to nothing.
+
+---
+
+### DemographicsHelper
+Rendering for the demographic research form.
+
+**Purpose:** Draw the value control for a field from its registry entry, so a
+new `DemographicField` shows up in the UI with no view change.
+
+**Key Methods:**
+- `demographic_value_input(field, person, error:)` — dispatches on `field.kind`: `:select` → select tag, `:multi_select` → checkbox grid (race, with a hidden blank entry so "cleared everything" is a real submission rather than a missing key), `:date` → date field, `:integer` → number field, else text field. The control is always named `values[<key>]`.
+- `demographic_row_class(status, error:)` / `demographic_status_badge_class(status)` — status tints so a half-finished person reads at a glance: green verified, slate not-documented, amber conflict, red error
+- `demographic_status_label(status)` — via `DemographicVerification::STATUS_LABELS`
+- `DETERMINATION_OPTIONS` — the determination select's four choices
 
 ---
 
@@ -839,6 +998,7 @@ Alternate flows:
 | /profile | Yes | Any | View/edit own profile |
 | /researcher | Yes | researcher | View assignments, enter social media data |
 | /verification | Yes | researcher/admin | Verify accounts, reject/revise |
+| /demographics | Yes | researcher/admin | Research and source person demographics |
 | /admin | Yes | admin | CRUD all entities, manage users, Junkipedia dashboard |
 
 ---
@@ -897,6 +1057,8 @@ app/views/
 │   ├── assignments/
 │   ├── accounts/
 │   └── queue/
+├── demographics/                  # Demographic research workspace
+│   └── assignments/               # index, show, _field_row
 ├── devise/                        # Authentication templates
 └── user_mailer/                   # Email templates
 ```
@@ -944,6 +1106,7 @@ AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_REGION, AWS_BUCKET
 - Admin: `/admin/*` — full CRUD
 - Researcher: `/researcher/*` — data entry
 - Verifier: `/verification/*` — review
+- Demographics: `/demographics/*` — person metadata research (researcher/admin, renders in the researcher layout)
 - Public: `/` — browsing only
 
 **2. Assignment Workflow**
@@ -967,4 +1130,10 @@ AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_REGION, AWS_BUCKET
 - PaperTrail versions on all core models
 - User tracking (entered_by, verified_by)
 - Timestamps (entered_at, verified_at)
+
+**6. Registry-Driven Fields**
+- `DemographicField` is the single source of truth for the demographic metadata researchers collect: key, label, kind, options, hint, group, dependency, and whether the field counts toward "complete"
+- The researcher form, the admin filters, the permitted params, the `Person` inclusion validations and completeness scopes, and the specs all derive from it
+- Adding a field is one registry entry plus a column on `people` — there is no second list to update
+- Dependent fields declare `depends_on` and are hidden, uncounted, and cleared when the parent answer stops making them relevant
 

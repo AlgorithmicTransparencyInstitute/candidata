@@ -58,7 +58,9 @@ The application centers around political data entities:
 - **Officeholder** - Person holding an Office (with term dates, elected_year, appointed flag)
 - **SocialMediaAccount** - Social handles linked to Person (11 platforms: Facebook, Twitter, Instagram, YouTube, TikTok, BlueSky, TruthSocial, Gettr, Rumble, Telegram, Threads). Tracks Junkipedia sync state via `junkipedia_channel_id`, `junkipedia_enqueued_at`, `junkipedia_id_collected_at`, `junkipedia_last_error`.
 - **User** - System users with roles (admin, researcher)
-- **Assignment** - Work assignments for data gathering/validation
+- **Assignment** - Work assignments. Four `task_type`s: `data_collection`, `data_validation`, `secondary_verification`, `demographic_research`. Render task types through `AssignmentHelper` (label/short label/colour/badge/path) — never inline the mapping.
+- **DemographicField** - Registry (not a table) defining every demographic field researchers collect: key, label, kind, options, hint, group, dependency. The researcher form, admin filters, permitted params and completeness rollup all derive from it — **adding a field is one entry here plus a column on `people`**.
+- **DemographicVerification** - Per-person-per-field evidence trail (status verified/unknown/disputed, source_url, notes, who/when). A missing row means nobody looked; `unknown` means someone looked and the answer isn't public — that distinction is the point.
 
 ### Temporal Query Scopes
 
@@ -90,7 +92,8 @@ The application has three distinct user workspaces:
 
 1. **Admin** (`/admin`) - Full CRUD on all models, user management, bulk assignment creation
 2. **Researcher** (`/researcher`) - Data entry workspace for social media accounts, view and complete assignments
-3. **Verification** (`/verification`) - Review and verify researcher-entered data
+3. **Verification** (`/verification`) - Review and verify researcher-entered data (data_validation + secondary_verification)
+4. **Demographics** (`/demographics`) - Research and source person-level demographic metadata. Separate from `/verification` because it works person metadata rather than social accounts. See `docs/DEMOGRAPHIC_RESEARCH.md`.
 
 ### Data Staging Pattern
 
@@ -124,6 +127,7 @@ Researchers assign data gathering tasks to users via the Assignment model:
 
 ## Key Services
 
+- **DemographicsReview** (`app/services/demographics_review.rb`) - Transactional save for one demographic research submission: applies values to Person, validates + writes the per-field evidence rows, refreshes the `demographics_status` rollup. All-or-nothing, so values are never persisted without the evidence behind them.
 - **AirtableService** (`app/services/airtable_service.rb`) - HTTP client for Airtable API integration
 - **CandidateImportService** (`app/services/candidate_import_service.rb`) - Orchestrates candidate data import
 - **JunkipediaService** (`app/services/junkipedia_service.rb`) - Junkipedia API v2 client (channels, search, lists). Handles rate-limit headers and exposes `handle_from(account)` to extract a Junkipedia-style handle from a SocialMediaAccount URL.
@@ -200,6 +204,7 @@ Comprehensive documentation covering schema, architecture, features, and APIs. *
 | **docs/PUBLIC_API.md** | Consumer-facing public API docs: auth, endpoints, filters, examples, sync recipe |
 | **docs/openapi.yaml** | Machine-readable OpenAPI 3.1 contract, served publicly at `/api/v1/openapi.json` |
 | **docs/VERIFICATION_WORKFLOW.md** | The data collection → validation → secondary verification system: state machine, completion gates, four-eyes rule, design record |
+| **docs/DEMOGRAPHIC_RESEARCH.md** | The demographic research assignment type: the "a blank field is not an answer" rule, the field registry, evidence model, completion gate, admin filters |
 | **docs/ELECTION_EDITOR.md** | Spreadsheet bulk candidate entry: architecture, endpoints, save semantics, next-pass TODOs |
 
 ## Tests

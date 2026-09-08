@@ -7,6 +7,12 @@
 > before changing this flow. The "Current state" sections below describe the system
 > BEFORE this change and remain as the design record; quirks #1–#4 are now fixed.
 
+> **Scope:** this document covers the **social-account** workflow only — data collection,
+> data validation and secondary verification. The fourth assignment type,
+> **demographic research** (person metadata: race, gender, DOB, education, military
+> service), is a separate flow with its own workspace, completion gate and evidence
+> model, and no four-eyes rule. See `docs/DEMOGRAPHIC_RESEARCH.md`.
+
 Written 2026-06-12 while investigating the **completion deadlock**: a verifier who adds
 a new account during a validation task cannot complete the task, because the account
 they added needs verification, and policy says they can't verify their own entry.

@@ -8,6 +8,7 @@ module Researcher
       @research_assignments = current_user.assignments.data_collection.active.includes(person: :social_media_accounts)
       @verification_assignments = current_user.assignments.data_validation.active.includes(person: :social_media_accounts)
       @secondary_assignments = current_user.assignments.secondary_verification.active.includes(person: :social_media_accounts)
+      @demographic_assignments = current_user.assignments.demographic_research.active.includes(person: :demographic_verifications)
       @completed_assignments = current_user.assignments.completed.includes(:person).order(completed_at: :desc).limit(10)
 
       @stats = {
@@ -17,6 +18,8 @@ module Researcher
         in_progress_verification: @verification_assignments.in_progress.count,
         pending_secondary: @secondary_assignments.pending.count,
         in_progress_secondary: @secondary_assignments.in_progress.count,
+        pending_demographics: @demographic_assignments.pending.count,
+        in_progress_demographics: @demographic_assignments.in_progress.count,
         completed_total: current_user.assignments.completed.count
       }
     end

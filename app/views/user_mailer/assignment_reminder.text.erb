@@ -10,7 +10,7 @@ YOUR PENDING ASSIGNMENTS:
 <% @incomplete_assignments.each do |assignment| %>
 
 - <%= assignment.person.full_name %>
-  Task: <%= assignment.task_type == 'data_collection' ? 'Data Collection' : 'Data Validation' %>
+  Task: <%= task_type_label(assignment) %>
   Status: <%= assignment.status.humanize %>
   Assigned: <%= time_ago_in_words(assignment.created_at) %> ago
 <% end %>

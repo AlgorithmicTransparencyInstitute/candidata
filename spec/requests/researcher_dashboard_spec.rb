@@ -1,9 +1,9 @@
 require 'rails_helper'
 
-# The researcher dashboard must give all three task types the same treatment:
-# data_collection, data_validation, AND secondary_verification (which was
+# The researcher dashboard must give all four task types the same treatment:
+# data_collection, data_validation, secondary_verification (which was
 # missing — secondary tasks were invisible unless the researcher happened to
-# visit /verification directly).
+# visit /verification directly), and demographic_research.
 RSpec.describe "Researcher dashboard", type: :request do
   let(:researcher) { create(:user, role: "researcher") }
   let(:admin) { create(:user, :admin) }
@@ -49,5 +49,43 @@ RSpec.describe "Researcher dashboard", type: :request do
 
     expect(response.body).to include("1 accounts flagged for re-review")
     expect(response.body).to include("Continue")
+  end
+
+  it "shows demographic research in its own column, routed to its own workspace" do
+    demographics = assign!(person_named("Demi", "Graphic"), "demographic_research", "pending")
+
+    get researcher_root_path
+
+    expect(response.body).to include("Demi Graphic")
+    expect(response.body).to include("Demographic Research")
+    expect(response.body).to include(demographics_assignment_path(demographics))
+    expect(response.body).to include(start_demographics_assignment_path(demographics))
+  end
+
+  it "counts demographic assignments in the sidebar badge" do
+    assign!(person_named("Demi", "Graphic"), "demographic_research", "pending")
+
+    get researcher_root_path
+
+    expect(response.body).to include(demographics_assignments_path)
+  end
+
+  it "routes every task type to the right workspace from the All Assignments list" do
+    collection   = assign!(person_named("Colin", "Collect"), "data_collection", "pending")
+    validation   = assign!(person_named("Val", "Verify"), "data_validation", "pending")
+    secondary    = assign!(person_named("Sec", "Second"), "secondary_verification", "pending")
+    demographics = assign!(person_named("Demi", "Graphic"), "demographic_research", "pending")
+
+    get researcher_assignments_path
+
+    expect(response).to have_http_status(:ok)
+    expect(response.body).to include(researcher_assignment_path(collection))
+    expect(response.body).to include(verification_assignment_path(validation))
+    expect(response.body).to include(verification_assignment_path(secondary))
+    expect(response.body).to include(demographics_assignment_path(demographics))
+    # Labels come from one helper now, so secondary is no longer rendered as
+    # "Data Validation" by a two-way ternary.
+    expect(response.body).to include("Secondary Verification")
+    expect(response.body).to include("Demographic Research")
   end
 end

@@ -94,13 +94,42 @@ Conventions worth knowing up front:
 ## People & parties
 
 ### Person
-`first_name` (required), `last_name` (required), `middle_name`, `suffix`, `name_source` (name string exactly as it appeared in the import source — provenance, fill-if-blank only), `gender` (Male/Female/Other), `race`, `birth_date`, `death_date`, `state_of_residence`, `photo_url`, `website_official`, `website_campaign`, `website_personal`, `person_uuid` (unique), `wikipedia_id`, `party_affiliation_id` (legacy FK), `needs_secondary_verification`
+`first_name` (required), `last_name` (required), `middle_name`, `suffix`, `name_source` (name string exactly as it appeared in the import source — provenance, fill-if-blank only), `gender` (one of `DemographicField::GENDERS` — Male/Female/Non-binary/Other), `race`, `birth_date`, `death_date`, `state_of_residence`, `photo_url`, `website_official`, `website_campaign`, `website_personal`, `person_uuid` (unique), `wikipedia_id`, `party_affiliation_id` (legacy FK), `needs_secondary_verification`
 
-- `has_many :candidates, :contests (through), :officeholders, :offices (through), :social_media_accounts (dependent: :destroy), :assignments (dependent: :destroy)`
+**Demographic columns** (researcher-collected, see `DemographicField`): `birth_year` (year-only findings, when a full `birth_date` isn't documented), `marital_status`, `children_status`, `children_count`, `education_level`, `education_type`, `education_institution`, `military_service`, `military_branch`
+
+**Demographic review rollup** (denormalized, maintained by `DemographicsReview` via `refresh_demographics_status!`): `demographics_status` (`not_started`/`in_progress`/`complete`, default `not_started`, indexed), `demographics_reviewed_at`, `demographics_reviewed_by_id`
+
+- `has_many :candidates, :contests (through), :officeholders, :offices (through), :social_media_accounts (dependent: :destroy), :assignments (dependent: :destroy), :demographic_verifications (dependent: :destroy)`
 - `has_many :person_parties / :parties` + legacy `belongs_to :party_affiliation`
 - ⚠️ `candidates`/`officeholders` have **no `dependent:` option** — destroying a person with candidacies raises an FK violation. Remove candidacies first (the election editor deletes candidacies, never people).
 - Scopes: `current_officeholders`, `former_officeholders`, `officeholders_as_of`, `candidates_in_year`, `election_winners_in_year`, `election_losers_in_year`, `by_state` (→ `state_of_residence`), `by_party`, `needs_secondary_verification`
+- Demographic scopes: `demographics_not_started` / `demographics_in_progress` / `demographics_complete` / `demographics_reviewed` (review status), `missing_demographic_field(key)` / `missing_any_core_demographic` / `any_core_demographic_present` / `no_core_demographics` / `all_core_demographics_present` (value presence), `with_disputed_demographics`
+- ⚠️ `all_core_demographics_present` matches **zero** rows today — six of the eight core columns are new and NULL everywhere. Use `any_core_demographic_present` for the "imported but never checked" admin recipe.
+- `eligible_for_assignment?(user, task_type)` — the four-eyes rule for secondary verification, shared by all three assignment-creation paths (`Admin::AssignmentsController#create`, `Admin::PeopleController#assign_researcher`, `#create_bulk_assignments`)
 - Methods: `full_name`, `formal_name`, `primary_party`, `primary_party=`, `add_party`, `current_officeholder?`, `candidate_in_year?`, `current_offices`, secondary-verification helpers
+- Demographic methods: `race_values` / `race_values=` (race is a **comma-joined multi-value string**, the convention the imported data already used — `"Multiracial, Hispanic or Latino, White"`), `demographic_value(key)`, `demographic_present?(key)`, `missing_demographic_fields`, `unsettled_demographic_fields`, `demographics_complete?`, `demographic_verification_for(key)`, `refresh_demographics_status!(reviewer:)`
+- ⚠️ `race` has **no inclusion validation** — 31 legacy free-text variants exist in production data, and validating would make those records unsaveable from the election editor. The new demographic UI constrains race through `DemographicField::RACES` instead. The other demographic selects *are* validated off the registry.
+
+### DemographicField (registry, not a table)
+`app/models/demographic_field.rb` — the single source of truth for which demographic fields exist, their labels, kinds, option vocabularies, hints, groups and dependencies. The researcher form, admin filters, permitted params, completeness rollup and specs all derive from it, so **adding a field is one entry here plus a column on `people`**.
+
+- `ALL` / `KEYS` / `CORE_KEYS` (fields that count toward "complete") / `GROUPS` (form sections: Identity, Family, Education, Service)
+- `relevant_for(person)` / `core_relevant_for(person)` — dependent detail fields (`children_count`, `military_branch`) drop out until their parent answer makes them meaningful
+- `blank_value_sql(key)` — the SQL fragment behind the presence filters (string columns treat `''` as absent)
+- Option lists deliberately contain **no "Unknown" entry** — "we looked and it isn't documented" is a *determination status*, not a value
+
+### DemographicVerification
+`person_id` (required), `field_key` (required, one of `DemographicField::KEYS`, unique per person), `status` (required, default `verified`: verified/unknown/disputed), `value_snapshot`, `source_url`, `notes`, `verified_by_id`, `verified_at`, `assignment_id`
+
+The evidence trail behind one demographic claim about one person. **A missing row means nobody has looked** — which is a different state from "someone looked and the answer isn't public" (`unknown`), and that distinction is the reason this table exists.
+
+- Unique index on `[person_id, field_key]`; `belongs_to :person, :verified_by (User, optional), :assignment (optional)`
+- `source_url` is format-validated to `http(s)://` — it is researcher-supplied and rendered into an `href` an admin clicks, so a `javascript:` URL must never be storable. `DemographicsHelper#safe_source_url` guards the render side too.
+- **Deletion:** these are the first FKs pointing at `assignments` and `users`, both NO ACTION in the DB. The Rails side must match or the destroy raises `InvalidForeignKey`: `Person dependent: :destroy` (evidence is about that person), `Assignment dependent: :nullify` and `User#verified_by dependent: :nullify` (the determination outlives the work ticket and the account).
+- `SETTLED_STATUSES = %w[verified unknown]` — a field is settled once someone stands behind a determination. `disputed` deliberately does **not** settle it: it's a request for a second opinion and keeps the person short of "complete".
+- Scopes: `settled`, `disputed`, `for_field(key)`; methods `field`, `label`, `status_label`, `settled?`, `evidence?`
+- PaperTrail versioned
 
 ### Party
 `name` (required, unique), `abbreviation` (required, unique), `ideology`
@@ -131,12 +160,14 @@ Conventions worth knowing up front:
 - `previous_url` digs through PaperTrail versions
 
 ### Assignment
-`user_id` (required), `assigned_by_id` (required), `person_id` (required), `task_type` (required: data_collection/data_validation/secondary_verification), `status` (default "pending": pending/in_progress/completed), `completed_at`, `notes`
+`user_id` (required), `assigned_by_id` (required), `person_id` (required), `task_type` (required: data_collection/data_validation/secondary_verification/**demographic_research**), `status` (default "pending": pending/in_progress/completed), `completed_at`, `notes`
 
 - **Unique on `[user_id, person_id, task_type]`**
 - `belongs_to :user, :assigned_by (User), :person`
 - Scopes: `pending`, `in_progress`, `completed`, per-task-type, `for_user`, `active`
-- Methods: `start!`, `complete!`, `reopen!`
+- `verification_tasks` = data_validation + secondary_verification (the two types worked in `/verification`). **`demographic_research` is deliberately outside it** — it works person metadata rather than social accounts and has its own `/demographics` workspace.
+- Presentation constants — `TASK_TYPE_LABELS`, `TASK_TYPE_SHORT_LABELS` (the sidebar's single words), `TASK_TYPE_COLORS`, `TASK_TYPE_ABBREVIATIONS` (DC/DV/SV/DR) — consumed through `AssignmentHelper`. Rendering a task type anywhere should go through that helper; before it existed the mapping was inlined in eight places, four of them two-way ternaries that silently labelled secondary tasks "Data Validation" (including in reminder emails).
+- Methods: `start!`, `complete!`, `reopen!`, `label`, `short_label`, `color`, `abbreviation`, `demographic_research?`
 
 ### User
 `email` (required, unique), `encrypted_password`, `name` (single column — **no first/last name columns**), `role` (default `"researcher_assistant"`; admin/researcher/…), `provider`/`uid` (OAuth), `avatar_url`, Devise trackable + invitable columns (`sign_in_count`, `invitation_token`, `invited_by_*`, …)

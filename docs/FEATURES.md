@@ -130,10 +130,13 @@ Access documentation about the app.
 **Path:** `/researcher`
 
 Researcher overview and task management. One card per task type — **Data
-Collection**, **Data Validation**, and **Secondary Verification** — each
-listing the user's active assignments with a Start/Continue button.
-Secondary verification assignments link into the verification workspace
-(`/verification/assignments/:id`), which owns that flow.
+Collection**, **Data Validation**, **Secondary Verification** and
+**Demographics** (teal) — each listing the user's active assignments with a
+Start/Continue button. Secondary verification assignments link into the
+verification workspace (`/verification/assignments/:id`), which owns that
+flow; demographic research links into `/demographics/assignments/:id`. The
+sidebar carries a matching fourth item, **Demographics**, with a count badge
+of active demographic assignments.
 
 **Shows:**
 - Pending assignments (how many, per task type)
@@ -225,6 +228,85 @@ Linear queue of accounts needing research (pagination support).
 
 ---
 
+### 6. Demographic Research
+**Path:** `/demographics`
+
+Collect, confirm and source demographic metadata about a person — gender,
+race/ethnicity, date of birth, marital and parental status, education, military
+service — and record **where each answer came from**.
+
+**The governing rule: a blank field is not an answer.**
+
+Everywhere else in the app, "no value" means "not done yet". That breaks down
+here, because plenty of candidates simply have no public record of their
+marital status or date of birth. If blank meant unfinished, those people would
+sit in the queue forever and researchers would be pushed toward guessing. So
+**"Not publicly documented" is a real, finished answer** — you looked, it isn't
+available, and you say so. That is why the value dropdowns contain no
+"Unknown" option: an "Unknown" *value* would collapse "nobody looked" and "we
+looked, it isn't public" into one state, and those are exactly the two states
+an admin needs to tell apart.
+
+**The Queue** (`/demographics`)
+
+- One row per assigned person: photo, name, state, party
+- An `n/n determined` counter and progress bar showing how many required fields already have a determination
+- Pending / In progress pill, and a **Start** or **Continue** button
+- Your last 10 completed demographic assignments below
+
+**The Research Page** (`/demographics/assignments/:id`)
+
+Two columns:
+
+- **Left — the form.** Fields grouped into **Identity** (gender, race/ethnicity, date of birth, birth year), **Family** (marital status, children, number of children), **Education** (highest level, institution type, institution name) and **Service** (military service, branch). Every row carries a value control, a determination select, a source URL and an evidence note. Rows are tinted by determination — green verified, slate not-documented, amber conflict, red error — so a half-finished person reads at a glance. One **Save Progress** button saves the whole person at once.
+- **Right (sticky) — sourcing.** Everything needed to source an answer without leaving the page: the person's campaign / official / personal sites, their Wikipedia article, every active social account with its handle, and prefilled **Google**, **Ballotpedia** and **Wikipedia** searches for their name.
+
+Detail fields stay hidden until they mean something: "Number of children"
+appears only after "Has children", "Branch" only after a military service
+answer other than "Never served". Changing the parent answer clears the detail
+*and* its evidence, so nobody keeps a branch after "Never served".
+
+**The Three Determinations**
+
+| Determination | Meaning | Evidence |
+|---------------|---------|----------|
+| **Verified** | You found the answer and can cite where | Requires a value **and** a source URL or note |
+| **Not publicly documented** | You looked and it isn't available — a real answer | No value and no source required |
+| **Sources conflict** | Sources disagree — a request for a second opinion | Requires a source URL or note |
+
+Leaving a field's determination blank is allowed: it just means you haven't
+ruled on that field in this pass, and any existing determination is left alone.
+
+**Evidence Requirement**
+
+A determination that asserts a fact has to say where the fact came from. The
+save is rejected — with **nothing** written — if you:
+
+- mark a field **Verified** or **Sources conflict** with neither a source link nor a note
+- mark a field **Verified** without entering a value (the error points you at "Not publicly documented")
+
+The whole submission succeeds or fails together, so a person is never left
+with values saved but their evidence lost.
+
+**Completion Gate**
+
+"Complete Demographic Research" stays disabled until every **required** field
+that applies to this person has a *settled* determination — Verified or Not
+publicly documented. **Sources conflict does not settle a field**; it is an
+escalation, and it keeps the person short of complete. Optional fields (birth
+year, number of children, institution name, branch) never block completion,
+and neither do detail fields that don't apply. The page and the queue both
+name exactly which fields are outstanding.
+
+**Workflow:**
+1. Open `/demographics` and click Start on an assigned person
+2. Work down the form, using the sourcing panel on the right
+3. For each required field: enter a value and mark it **Verified** with a source, or mark it **Not publicly documented**, or flag **Sources conflict**
+4. Click "Save Progress" (as often as you like — the banner tells you what still needs a determination)
+5. When every required field is settled, click "Complete Demographic Research"
+
+---
+
 ## Verifier Features
 
 **Workspace:** `/verification`
@@ -235,7 +317,7 @@ Linear queue of accounts needing research (pagination support).
 
 Overview of verification tasks (both data_validation and
 secondary_verification). Each row is styled by task type: validation rows
-(purple, "N accounts to verify") vs secondary rows (indigo, "N accounts
+(purple, "N accounts to verify") vs secondary rows (red, "N accounts
 flagged for re-review").
 
 **Shows:**
@@ -509,6 +591,41 @@ Assign data collection tasks.
 3. Select researcher
 4. System creates assignment for each person
 
+**Task Types:** the assignment builder (`/admin/assignments/new`) offers four
+cards — Data Collection, Data Validation, Secondary Verification, and
+**Demographic Research** ("Research and source candidate demographics", teal).
+
+**Finding people who need demographic research.** The person finder has a
+**Demographic Data** dropdown filtering on two deliberately independent axes:
+
+| Filter | Options | Answers |
+|--------|---------|---------|
+| **Review status** | Not started / In progress / Complete / Not yet complete | Has anyone worked this person? |
+| **Data present** | Has any demographic data / Has none at all / Missing at least one required field / All required fields have a value | Is there a value in the column at all? |
+| **Missing a specific field** | Any single demographic field | Who has no date of birth? |
+| **Sources conflict** | checkbox | Who has a field a researcher flagged as disputed? |
+
+Presence and review are different things, and the most useful population is
+usually the *intersection*: **"has imported values, but nobody ever checked
+them"** — Data present = *Has any demographic data* plus Review status
+= *Not started*. On the 2026 candidate pool that finds ~1,905 of 2,627 people.
+
+⚠️ Use *Has any demographic data*, not *All required fields have a value*, for
+that recipe. Most demographic columns are new and empty for every existing
+person, so *All required fields* matches nobody until researchers have worked
+through a batch. There are also
+**No Demographic Research** / **Has Demographic Research** options in the
+assignment-status filter for people without or with an existing task.
+
+**Coverage badge.** Every person row in the finder shows two signals side by
+side: an `n/8` count of how many required demographic fields have a **value**,
+and a **DR** review pill — grey (not started), teal ◐ (in progress), green ✓
+(complete). Filled-but-unreviewed rows are exactly the population these
+assignments exist to work through.
+
+The dropdown previously labelled "Demographics" — which only ever held State
+and Party — is now called **Location & Party**.
+
 ---
 
 ### 9. Junkipedia Integration Dashboard
@@ -672,6 +789,20 @@ User tracking on all data entry and verification.
 7. If data modified: Secondary verification auto-created
 ```
 
+### Demographic Research Workflow
+
+```
+1. Open /demographics
+2. See assigned people with an n/n "determined" progress bar
+3. Click Start → two-column research page
+4. For each required field, using the sourcing panel on the right:
+   a. Enter a value + source/note → "Verified"
+   b. OR "Not publicly documented" (a real answer — blank is not)
+   c. OR "Sources conflict" (escalation; does NOT settle the field)
+5. Save Progress (whole person saves at once; all-or-nothing)
+6. When every required field is settled → "Complete Demographic Research"
+```
+
 ### Admin Workflow
 
 ```
@@ -695,6 +826,7 @@ User tracking on all data entry and verification.
 | Understand structure | Browse Offices/Bodies/Districts | `/offices`, `/bodies`, `/districts` |
 | Research handles | Researcher Dashboard | `/researcher` |
 | Verify entries | Verification Dashboard | `/verification` |
+| Source a candidate's demographics | Demographic Research | `/demographics` |
 | Manage system | Admin Dashboard | `/admin` |
 | Monitor Junkipedia | Junkipedia Dashboard | `/admin/junkipedia` |
 | Track changes | View version history | Any account detail (admin/verification) |

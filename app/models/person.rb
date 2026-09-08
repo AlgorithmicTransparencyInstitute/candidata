@@ -15,15 +15,38 @@ class Person < ApplicationRecord
   has_many :social_media_accounts, dependent: :destroy
   has_many :assignments, dependent: :destroy
   has_many :assigned_researchers, through: :assignments, source: :user
+  has_many :demographic_verifications, dependent: :destroy
+  belongs_to :demographics_reviewed_by, class_name: 'User', optional: true
 
-  GENDERS = %w[Male Female Other].freeze
+  GENDERS = DemographicField::GENDERS
   SUFFIXES = %w[Jr. Sr. II III IV V].freeze
-  
+
+  DEMOGRAPHICS_STATUSES = %w[not_started in_progress complete].freeze
+
   validates :first_name, presence: true
   validates :last_name, presence: true
   validates :person_uuid, uniqueness: true, allow_nil: true
   validates :airtable_id, uniqueness: true, allow_nil: true
   validates :gender, inclusion: { in: GENDERS, allow_blank: true }
+  validates :demographics_status, inclusion: { in: DEMOGRAPHICS_STATUSES }
+
+  # Registry-driven inclusion for the demographic selects. `race` is
+  # deliberately excluded: it is a comma-joined multi-value column that already
+  # holds 31 legacy free-text variants, and validating it would make every
+  # legacy record unsaveable from the election editor. The new UI constrains
+  # race through the registry instead.
+  DemographicField::ALL.each do |field|
+    next unless field.select?
+    next if field.key == :gender # validated above against Person::GENDERS
+
+    validates field.key, inclusion: { in: field.options, allow_blank: true }
+  end
+
+  validates :children_count, numericality: { only_integer: true, greater_than_or_equal_to: 0,
+                                             less_than: 30, allow_nil: true }
+  validates :birth_year, numericality: { only_integer: true, greater_than: 1900,
+                                         less_than_or_equal_to: -> (_) { Date.current.year },
+                                         allow_nil: true }
 
   # Scopes for filtering by political status
   scope :current_officeholders, -> { 
@@ -48,7 +71,46 @@ class Person < ApplicationRecord
   scope :by_state, ->(state) { where(state_of_residence: state) }
   scope :by_party, ->(party) { joins(:parties).where(parties: { id: party }) }
   scope :needs_secondary_verification, -> { where(needs_secondary_verification: true) }
-  
+
+  # --- Demographic research ---------------------------------------------
+  # Two independent axes the admin assignment finder filters on:
+  #   presence   — is there a value in the column at all?
+  #   validation — has a researcher made a sourced determination about it?
+  # A person can have values with no review (imported data nobody checked) or
+  # a review with no values (researcher looked, nothing is documented).
+  scope :demographics_not_started, -> { where(demographics_status: 'not_started') }
+  scope :demographics_in_progress, -> { where(demographics_status: 'in_progress') }
+  scope :demographics_complete,    -> { where(demographics_status: 'complete') }
+  scope :demographics_reviewed,    -> { where.not(demographics_status: 'not_started') }
+
+  scope :missing_demographic_field, ->(key) {
+    where(DemographicField.blank_value_sql(key))
+  }
+
+  scope :missing_any_core_demographic, -> {
+    where(DemographicField::CORE_KEYS.map { |k| DemographicField.blank_value_sql(k) }.join(' OR '))
+  }
+
+  scope :all_core_demographics_present, -> {
+    where.not(DemographicField::CORE_KEYS.map { |k| DemographicField.blank_value_sql(k) }.join(' OR '))
+  }
+
+  # Six of the eight core columns are new and NULL for every existing row, so
+  # "all present" matches nobody until the feature has been worked. These two
+  # are what the admin filter actually needs today: they separate people who
+  # carry imported demographic data from people who have none at all.
+  scope :any_core_demographic_present, -> {
+    where.not(DemographicField::CORE_KEYS.map { |k| DemographicField.blank_value_sql(k) }.join(' AND '))
+  }
+
+  scope :no_core_demographics, -> {
+    where(DemographicField::CORE_KEYS.map { |k| DemographicField.blank_value_sql(k) }.join(' AND '))
+  }
+
+  scope :with_disputed_demographics, -> {
+    where(id: DemographicVerification.disputed.select(:person_id))
+  }
+
   def full_name
     parts = [first_name, middle_name, last_name, suffix].compact_blank
     parts.join(' ')
@@ -137,5 +199,93 @@ class Person < ApplicationRecord
   def clear_secondary_verification!
     update!(needs_secondary_verification: false)
     social_media_accounts.update_all(needs_secondary_verification: false, modified_during_validation: false)
+  end
+
+  # Four-eyes rule for secondary verification: the task can't go to the user
+  # whose own pending entries are the reason this person is flagged, because
+  # they aren't allowed to verify their own work. Lives here so every
+  # assignment-creation path enforces it — it used to exist only in
+  # Admin::AssignmentsController#create, leaving the per-person and bulk-assign
+  # paths able to create an assignment nobody could ever complete.
+  def eligible_for_assignment?(user, task_type)
+    return true unless task_type == 'secondary_verification'
+
+    !social_media_accounts.needs_secondary_verification
+                          .needs_verification
+                          .where(entered_by_id: user.id)
+                          .exists?
+  end
+
+  # --- Demographic research ---------------------------------------------
+
+  # Race is a comma-joined multi-value string (the convention the imported data
+  # already used, e.g. "Multiracial, Hispanic or Latino, White").
+  def race_values
+    DemographicField::RaceValue.split(race)
+  end
+
+  def race_values=(values)
+    self.race = DemographicField::RaceValue.join(values)
+  end
+
+  def demographic_value(key)
+    key.to_sym == :race ? race_values : public_send(key)
+  end
+
+  def demographic_present?(key)
+    value = demographic_value(key)
+    value.is_a?(Array) ? value.any? : value.present?
+  end
+
+  # Fields that apply to this person (dependent detail fields drop out until
+  # their parent answer makes them relevant) and still have no value.
+  def missing_demographic_fields
+    DemographicField.core_relevant_for(self).reject { |f| demographic_present?(f.key) }
+  end
+
+  def demographic_verification_for(key)
+    demographic_verifications.detect { |v| v.field_key == key.to_s }
+  end
+
+  # Core fields still awaiting a researcher's determination. A field is settled
+  # by a verified or unknown status — "we looked and it isn't documented" is a
+  # finished answer, a blank column on its own is not.
+  def unsettled_demographic_fields
+    DemographicField.core_relevant_for(self).reject do |field|
+      demographic_verification_for(field.key)&.settled?
+    end
+  end
+
+  def demographics_complete?
+    unsettled_demographic_fields.empty?
+  end
+
+  # Recompute the denormalized rollup the admin filters read. Called by
+  # DemographicsReview whenever a determination is saved; kept here so a
+  # console fix or backfill can reach it too.
+  def refresh_demographics_status!(reviewer: nil)
+    verifications = demographic_verifications.reload
+
+    status = if verifications.empty?
+      'not_started'
+    elsif demographics_complete?
+      'complete'
+    else
+      'in_progress'
+    end
+
+    attrs = { demographics_status: status }
+    if verifications.any?
+      attrs[:demographics_reviewed_at] = verifications.filter_map(&:verified_at).max || Time.current
+      attrs[:demographics_reviewed_by] = reviewer if reviewer
+    else
+      # Back to not_started: leaving the old reviewer and timestamp behind would
+      # claim someone reviewed a person who now has no determinations at all.
+      attrs[:demographics_reviewed_at] = nil
+      attrs[:demographics_reviewed_by] = nil
+    end
+
+    update!(attrs)
+    status
   end
 end

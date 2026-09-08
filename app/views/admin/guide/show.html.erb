@@ -16,12 +16,13 @@
           <a href="#monitoring-progress" class="block text-blue-700 hover:text-blue-900">4. Monitoring Researcher Progress</a>
           <a href="#reassignment" class="block text-blue-700 hover:text-blue-900">5. Finding Tasks for Re-assignment</a>
           <a href="#secondary-verification" class="block text-blue-700 hover:text-blue-900">6. Understanding Secondary Verification</a>
-          <a href="#uncompleting" class="block text-blue-700 hover:text-blue-900">7. Un-completing Assignments</a>
-          <a href="#managing-records" class="block text-blue-700 hover:text-blue-900">8. Managing Records</a>
-          <a href="#election-editor" class="block text-blue-700 hover:text-blue-900">9. Election Editor (Bulk Candidate Entry)</a>
-          <a href="#change-history" class="block text-blue-700 hover:text-blue-900">10. Change History &amp; Audit Trail</a>
-          <a href="#api-tokens" class="block text-blue-700 hover:text-blue-900">11. Public API Token Management</a>
-          <a href="#faqs" class="block text-blue-700 hover:text-blue-900">12. FAQs</a>
+          <a href="#demographic-research" class="block text-blue-700 hover:text-blue-900">7. Demographic Research</a>
+          <a href="#uncompleting" class="block text-blue-700 hover:text-blue-900">8. Un-completing Assignments</a>
+          <a href="#managing-records" class="block text-blue-700 hover:text-blue-900">9. Managing Records</a>
+          <a href="#election-editor" class="block text-blue-700 hover:text-blue-900">10. Election Editor (Bulk Candidate Entry)</a>
+          <a href="#change-history" class="block text-blue-700 hover:text-blue-900">11. Change History &amp; Audit Trail</a>
+          <a href="#api-tokens" class="block text-blue-700 hover:text-blue-900">12. Public API Token Management</a>
+          <a href="#faqs" class="block text-blue-700 hover:text-blue-900">13. FAQs</a>
         </nav>
       </div>
 
@@ -68,11 +69,13 @@
       <section id="creating-assignments" class="mb-8">
         <h2 class="text-2xl font-bold text-gray-900 mb-4">3. Creating New Assignments</h2>
         <div class="prose prose-sm max-w-none">
-          <p class="text-gray-700 mb-4">Assignments are how you distribute work to researchers. There are two types of assignments:</p>
+          <p class="text-gray-700 mb-4">Assignments are how you distribute work to researchers. There are four types of assignments:</p>
 
           <ul class="list-disc list-inside space-y-2 text-gray-700 mb-4">
             <li><strong>Data Collection:</strong> Find and enter social media accounts for politicians</li>
             <li><strong>Data Validation:</strong> Verify accounts that have been entered by other researchers</li>
+            <li><strong>Secondary Verification:</strong> Re-review accounts that were changed during validation</li>
+            <li><strong>Demographic Research:</strong> Research and source candidate demographics (see section 7)</li>
           </ul>
 
           <h3 class="text-lg font-semibold text-gray-900 mt-6 mb-3">Steps to Create Assignments:</h3>
@@ -81,7 +84,7 @@
             <li><strong>Step 1 - Select Researcher & Task Type:</strong>
               <ul class="list-disc list-inside ml-6 mt-2 space-y-1">
                 <li>Choose a researcher from the list (shows their current workload)</li>
-                <li>Select task type: Data Collection or Data Validation</li>
+                <li>Select task type: Data Collection, Data Validation, Secondary Verification or Demographic Research</li>
               </ul>
             </li>
             <li><strong>Step 2 - Filter & Select People:</strong>
@@ -223,9 +226,74 @@
         </div>
       </section>
 
-      <!-- Section 7: Un-completing Assignments -->
+      <!-- Section 7: Demographic Research -->
+      <section id="demographic-research" class="mb-8">
+        <h2 class="text-2xl font-bold text-gray-900 mb-4">7. Demographic Research</h2>
+        <div class="prose prose-sm max-w-none">
+          <p class="text-gray-700 mb-4">
+            Demographic research assignments cover person-level metadata rather than social accounts: race, gender,
+            date of birth, marital and parental status, education and military service. For every field the researcher
+            records both an answer and the evidence behind it.
+          </p>
+
+          <div class="mt-4 p-4 bg-teal-50 border-l-4 border-teal-400">
+            <p class="text-sm text-teal-800">
+              <strong>The governing rule:</strong> a blank field is not an answer. Researchers settle each required
+              field either with a sourced value ("Verified") or with an explicit "Not publicly documented" — which
+              is a real, finished answer for the many candidates who have no public record of, say, their marital
+              status. An assignment can't be completed until every required field is settled one way or the other.
+            </p>
+          </div>
+
+          <h3 class="text-lg font-semibold text-gray-900 mt-6 mb-3">Finding people who need this work</h3>
+          <p class="text-gray-700 mb-3">
+            On the Create Assignments screen, the <strong>Demographic Data</strong> dropdown filters on two
+            independent things — and the distinction matters:
+          </p>
+          <ul class="list-disc list-inside space-y-2 text-gray-700 mb-4">
+            <li><strong>Data present</strong> — does the record hold a value at all?</li>
+            <li><strong>Review status</strong> — has a researcher actually sourced it? (Not started / In progress / Complete)</li>
+          </ul>
+          <div class="mt-4 p-4 bg-blue-50 border-l-4 border-blue-400">
+            <p class="text-sm text-blue-800">
+              <strong>The most useful combination</strong> is "Has any demographic data" + "Not started". That finds
+              people whose demographics were filled in by an import but never checked by anyone — exactly the
+              population these assignments exist to work through. Neither filter alone finds them. Note: use
+              <em>"Has any demographic data"</em>, not <em>"All required fields have a value"</em> — most of the
+              demographic fields are new and empty for everyone, so "all" will match nobody until researchers have
+              worked through a batch.
+            </p>
+          </div>
+          <p class="text-gray-700 mt-4 mb-3">
+            You can also filter to people <strong>missing one specific field</strong> (say, everyone with no date of
+            birth), or to people who have a field where <strong>sources conflict</strong> and a researcher has asked
+            for a second opinion.
+          </p>
+          <p class="text-gray-700 mb-3">
+            Each person row shows a coverage badge: <strong>n/8</strong> for how many required fields have a value,
+            plus a <strong>DR</strong> pill for review state — grey (not started), teal (in progress), green ✓ (complete).
+          </p>
+
+          <h3 class="text-lg font-semibold text-gray-900 mt-6 mb-3">Reviewing the results</h3>
+          <p class="text-gray-700 mb-3">
+            A person's admin page now has a <strong>Demographics</strong> table listing every field with its current
+            value, the researcher's determination, who made it and when, and the source link or evidence note behind
+            it. This is where you resolve a "Sources conflict" flag.
+          </p>
+
+          <div class="mt-4 p-4 bg-yellow-50 border-l-4 border-yellow-400">
+            <p class="text-sm text-yellow-800">
+              <strong>Note:</strong> unlike account validation, demographic research has no four-eyes rule — it is
+              single-pass. "Sources conflict" is the escalation route, and it keeps a person out of "Complete" until
+              an admin sorts it out.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Section 8: Un-completing Assignments -->
       <section id="uncompleting" class="mb-8">
-        <h2 class="text-2xl font-bold text-gray-900 mb-4">7. Un-completing Assignments</h2>
+        <h2 class="text-2xl font-bold text-gray-900 mb-4">8. Un-completing Assignments</h2>
         <div class="prose prose-sm max-w-none">
           <p class="text-gray-700 mb-4">If an assignment was completed prematurely or needs additional work, you can mark it as incomplete:</p>
 
@@ -301,7 +369,7 @@
 
       <!-- Section 9: Election Editor -->
       <section id="election-editor" class="mb-8">
-        <h2 class="text-2xl font-bold text-gray-900 mb-4">9. Election Editor (Bulk Candidate Entry)</h2>
+        <h2 class="text-2xl font-bold text-gray-900 mb-4">10. Election Editor (Bulk Candidate Entry)</h2>
         <div class="prose prose-sm max-w-none">
           <p class="text-gray-700 mb-4">The Election Editor is a spreadsheet-style screen for quickly building out the candidate list for an election — names, party, outcome, demographics, and a first pass of social media handles — all in one grid. Open it from the <strong>Editor</strong> link on the <%= link_to "Elections", admin_elections_path, target: "_blank", class: "text-blue-600" %> list or from an election's detail page.</p>
 
@@ -332,7 +400,7 @@
 
       <!-- Section 10: Change History -->
       <section id="change-history" class="mb-8">
-        <h2 class="text-2xl font-bold text-gray-900 mb-4">10. Change History &amp; Audit Trail</h2>
+        <h2 class="text-2xl font-bold text-gray-900 mb-4">11. Change History &amp; Audit Trail</h2>
         <div class="prose prose-sm max-w-none">
           <p class="text-gray-700 mb-4">Every edit to core records (people, candidates, elections, ballots, contests, offices, social media accounts, assignments) is automatically recorded with its full before/after values, a timestamp, and <strong>who made the change</strong>.</p>
 
@@ -353,7 +421,7 @@
 
       <!-- Section 11: Public API Token Management -->
       <section id="api-tokens" class="mb-8">
-        <h2 class="text-2xl font-bold text-gray-900 mb-4">11. Public API Token Management</h2>
+        <h2 class="text-2xl font-bold text-gray-900 mb-4">12. Public API Token Management</h2>
         <div class="prose prose-sm max-w-none">
           <p class="text-gray-700 mb-4">Candidata exposes a read-only public API (<code class="bg-gray-100 px-1 rounded">/api/v1/*</code>) for external services that need ground truth about candidates, election winners, and current officeholders — see <code class="bg-gray-100 px-1 rounded">docs/PUBLIC_API.md</code> for the full consumer contract (endpoints, filters, payload shapes, sync recipe). Access is controlled with bearer tokens managed here.</p>
 

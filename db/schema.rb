@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_07_21_213442) do
+ActiveRecord::Schema[8.0].define(version: 2026_08_31_140100) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pg_stat_statements"
@@ -191,6 +191,25 @@ ActiveRecord::Schema[8.0].define(version: 2026_07_21_213442) do
     t.index ["party"], name: "index_contests_on_party"
   end
 
+  create_table "demographic_verifications", force: :cascade do |t|
+    t.bigint "person_id", null: false
+    t.string "field_key", null: false
+    t.string "status", default: "verified", null: false
+    t.string "value_snapshot"
+    t.string "source_url"
+    t.text "notes"
+    t.bigint "verified_by_id"
+    t.datetime "verified_at"
+    t.bigint "assignment_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["assignment_id"], name: "index_demographic_verifications_on_assignment_id"
+    t.index ["person_id", "field_key"], name: "index_demographic_verifications_on_person_id_and_field_key", unique: true
+    t.index ["person_id"], name: "index_demographic_verifications_on_person_id"
+    t.index ["status"], name: "index_demographic_verifications_on_status"
+    t.index ["verified_by_id"], name: "index_demographic_verifications_on_verified_by_id"
+  end
+
   create_table "districts", force: :cascade do |t|
     t.string "state", null: false
     t.integer "district_number"
@@ -306,8 +325,25 @@ ActiveRecord::Schema[8.0].define(version: 2026_07_21_213442) do
     t.string "wikipedia_id"
     t.boolean "needs_secondary_verification", default: false, null: false
     t.string "name_source"
+    t.integer "birth_year"
+    t.string "marital_status"
+    t.string "children_status"
+    t.integer "children_count"
+    t.string "education_level"
+    t.string "education_type"
+    t.string "education_institution"
+    t.string "military_service"
+    t.string "military_branch"
+    t.string "demographics_status", default: "not_started", null: false
+    t.datetime "demographics_reviewed_at"
+    t.bigint "demographics_reviewed_by_id"
     t.index ["airtable_id"], name: "index_people_on_airtable_id", unique: true
+    t.index ["demographics_reviewed_by_id"], name: "index_people_on_demographics_reviewed_by_id"
+    t.index ["demographics_status"], name: "index_people_on_demographics_status"
+    t.index ["education_level"], name: "index_people_on_education_level"
     t.index ["first_name", "last_name"], name: "index_people_on_first_name_and_last_name"
+    t.index ["marital_status"], name: "index_people_on_marital_status"
+    t.index ["military_service"], name: "index_people_on_military_service"
     t.index ["needs_secondary_verification"], name: "index_people_on_needs_secondary_verification"
     t.index ["party_affiliation_id"], name: "index_people_on_party_affiliation_id"
     t.index ["person_uuid"], name: "index_people_on_person_uuid", unique: true
@@ -551,11 +587,15 @@ ActiveRecord::Schema[8.0].define(version: 2026_07_21_213442) do
   add_foreign_key "candidates", "people"
   add_foreign_key "contests", "ballots"
   add_foreign_key "contests", "offices"
+  add_foreign_key "demographic_verifications", "assignments"
+  add_foreign_key "demographic_verifications", "people"
+  add_foreign_key "demographic_verifications", "users", column: "verified_by_id"
   add_foreign_key "officeholders", "offices"
   add_foreign_key "officeholders", "people"
   add_foreign_key "offices", "bodies"
   add_foreign_key "offices", "districts"
   add_foreign_key "people", "parties", column: "party_affiliation_id"
+  add_foreign_key "people", "users", column: "demographics_reviewed_by_id"
   add_foreign_key "person_parties", "parties"
   add_foreign_key "person_parties", "people"
   add_foreign_key "social_media_accounts", "people"
