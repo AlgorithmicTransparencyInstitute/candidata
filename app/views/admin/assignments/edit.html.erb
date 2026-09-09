@@ -1,0 +1,67 @@
+<%#
+  Reassignment. The action and route existed but had no template, so this page
+  500'd — there was no way in the UI to move an assignment to a different
+  researcher. Deactivating a cohort strands their open assignments, so that
+  gap had to be closed alongside it.
+%>
+<div class="max-w-2xl mx-auto px-4 py-8">
+  <div class="mb-6">
+    <%= link_to "← Back to assignment", admin_assignment_path(@assignment), class: "text-blue-600 hover:text-blue-800" %>
+  </div>
+
+  <div class="bg-white rounded-lg shadow">
+    <div class="px-6 py-4 border-b border-gray-200">
+      <h1 class="text-2xl font-bold text-gray-900">Edit assignment</h1>
+      <p class="text-sm text-gray-600 mt-1">
+        <%= task_type_label(@assignment) %> · <%= link_to @assignment.person.full_name, admin_person_path(@assignment.person), class: "text-blue-600 hover:text-blue-800" %>
+      </p>
+    </div>
+
+    <% if @assignment.user.deactivated? %>
+      <div class="mx-6 mt-4 bg-amber-50 border-l-4 border-amber-400 p-3 rounded-r-lg">
+        <p class="text-sm text-amber-900">
+          <strong><%= @assignment.user.name.presence || @assignment.user.email %></strong> is deactivated and can no longer
+          sign in, so this assignment is stranded. Reassign it to an active researcher.
+        </p>
+      </div>
+    <% end %>
+
+    <%= form_with model: @assignment, url: admin_assignment_path(@assignment), method: :patch, local: true, class: "p-6 space-y-5" do |f| %>
+      <% if @assignment.errors.any? %>
+        <div class="bg-red-50 border border-red-200 rounded-lg p-3">
+          <ul class="list-disc list-inside text-sm text-red-700">
+            <% @assignment.errors.full_messages.each do |msg| %>
+              <li><%= msg %></li>
+            <% end %>
+          </ul>
+        </div>
+      <% end %>
+
+      <div>
+        <%= f.label :user_id, "Assigned researcher", class: "block text-sm font-medium text-gray-700 mb-1" %>
+        <%# @researchers is active researchers plus the current assignee, so a
+            deactivated holder is still selectable-but-visible rather than
+            silently swapped out on save. %>
+        <%= f.select :user_id,
+              @researchers.map { |u| ["#{u.name.presence || u.email}#{u.deactivated? ? ' (deactivated)' : ''}", u.id] },
+              {}, class: "w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" %>
+      </div>
+
+      <div>
+        <%= f.label :status, class: "block text-sm font-medium text-gray-700 mb-1" %>
+        <%= f.select :status, Assignment::STATUSES.map { |s| [s.humanize, s] }, {},
+              class: "w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" %>
+      </div>
+
+      <div>
+        <%= f.label :notes, class: "block text-sm font-medium text-gray-700 mb-1" %>
+        <%= f.text_area :notes, rows: 3, class: "w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" %>
+      </div>
+
+      <div class="flex items-center gap-3 pt-2">
+        <%= f.submit "Save changes", class: "px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium cursor-pointer" %>
+        <%= link_to "Cancel", admin_assignment_path(@assignment), class: "px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 text-sm" %>
+      </div>
+    <% end %>
+  </div>
+</div>

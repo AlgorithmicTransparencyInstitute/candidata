@@ -27,10 +27,60 @@ class User < ApplicationRecord
   has_many :reviewed_people, class_name: 'Person', foreign_key: 'demographics_reviewed_by_id', dependent: :nullify
   has_many :visits, class_name: 'Ahoy::Visit', dependent: :destroy
 
+  belongs_to :deactivated_by, class_name: 'User', optional: true
+
   validates :role, inclusion: { in: ROLES }
 
   scope :admins, -> { where(role: 'admin') }
   scope :researchers, -> { where(role: 'researcher') }
+
+  # Researchers arrive and leave in cohorts. Deactivation is a soft state:
+  # their work stays attributed to them (entered_by, verified_by, PaperTrail
+  # whodunnit), they just stop appearing in pickers and stop being able to
+  # sign in.
+  #
+  # `researchers` deliberately still means ALL researchers — stats and history
+  # need the full set. Anywhere a human is being CHOSEN, use
+  # `active_researchers`.
+  scope :active, -> { where(deactivated_at: nil) }
+  scope :inactive, -> { where.not(deactivated_at: nil) }
+  scope :active_researchers, -> { researchers.active }
+  scope :in_cohort, ->(cohort) { where(cohort: cohort) }
+
+  def active?
+    deactivated_at.nil?
+  end
+
+  def deactivated?
+    !active?
+  end
+
+  # Devise checks this on sign-in AND on every authenticated request, so
+  # deactivating someone ends their current session too — which is the point.
+  # Without this, "inactive" would be cosmetic and a departed researcher would
+  # keep their access to production data.
+  def active_for_authentication?
+    super && active?
+  end
+
+  def inactive_message
+    active? ? super : :account_deactivated
+  end
+
+  def deactivate!(by: nil)
+    update!(deactivated_at: Time.current, deactivated_by: by)
+  end
+
+  def reactivate!
+    update!(deactivated_at: nil, deactivated_by: nil)
+  end
+
+  # Work that would be stranded by deactivating this person. Surfaced before
+  # an admin confirms, so a cohort rollover doesn't quietly park assignments
+  # with someone who can no longer log in.
+  def open_assignments_count
+    assignments.active.count
+  end
 
   def self.from_omniauth(auth)
     # First check if there's an existing user with this provider/uid
@@ -50,14 +100,16 @@ class User < ApplicationRecord
       end
       user.update(name: auth.info.name) if user.name.blank?
     else
-      # Create a brand new user
-      user = create(
-        email: auth.info.email,
-        password: Devise.friendly_token[0, 20],
-        name: auth.info.name,
-        provider: auth.provider,
-        uid: auth.uid
-      )
+      # Candidata is invitation-only: an OAuth identity we've never invited
+      # does not get an account. This used to be enforced by accident — the
+      # record was built without a role, failed the ROLES validation, and the
+      # user saw "Role is not included in the list". Same outcome, but stated
+      # on purpose so nobody "fixes" the validation and opens self-registration
+      # to anyone with a Google account.
+      user = new(email: auth.info.email, name: auth.info.name,
+                 provider: auth.provider, uid: auth.uid)
+      user.errors.add(:base, 'No Candidata account exists for this email address. Ask an administrator for an invitation.')
+      return user
     end
 
     # Always update avatar from OAuth provider if available

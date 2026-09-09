@@ -13,6 +13,7 @@
           <a href="#inviting-researchers" class="block text-blue-700 hover:text-blue-900">1. Inviting Researchers</a>
           <a href="#inviting-admins" class="block text-blue-700 hover:text-blue-900">2. Inviting Admins</a>
           <a href="#creating-assignments" class="block text-blue-700 hover:text-blue-900">3. Creating New Assignments</a>
+          <a href="#researcher-cohorts" class="block text-blue-700 hover:text-blue-900">3b. Retiring a Researcher Cohort</a>
           <a href="#monitoring-progress" class="block text-blue-700 hover:text-blue-900">4. Monitoring Researcher Progress</a>
           <a href="#reassignment" class="block text-blue-700 hover:text-blue-900">5. Finding Tasks for Re-assignment</a>
           <a href="#secondary-verification" class="block text-blue-700 hover:text-blue-900">6. Understanding Secondary Verification</a>
@@ -101,6 +102,57 @@
 
           <div class="mt-4 p-4 bg-blue-50 border-l-4 border-blue-400">
             <p class="text-sm text-blue-800"><strong>Tip:</strong> Balance workloads by checking the "active tasks" count shown next to each researcher's name. The system color-codes workloads: green (0), yellow (1-9), red (10+).</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Section 3b: Researcher Cohorts -->
+      <section id="researcher-cohorts" class="mb-8">
+        <h2 class="text-2xl font-bold text-gray-900 mb-4">3b. Retiring a Researcher Cohort</h2>
+        <div class="prose prose-sm max-w-none">
+          <p class="text-gray-700 mb-4">
+            Researchers usually arrive and leave in groups. When a cohort finishes, <strong>deactivate them —
+            don't delete them.</strong>
+          </p>
+
+          <div class="mt-4 p-4 bg-blue-50 border-l-4 border-blue-400">
+            <p class="text-sm text-blue-800">
+              <strong>Why not delete?</strong> Every account a researcher entered or verified is attributed to
+              them, and that history is what makes the data auditable. Deleting them would either destroy that
+              trail or fail outright — so the app will refuse and tell you to deactivate instead. A deactivated
+              researcher keeps their full history, stops showing up when you're picking someone for an assignment,
+              and can no longer sign in (including any session they already had open).
+            </p>
+          </div>
+
+          <h3 class="text-lg font-semibold text-gray-900 mt-6 mb-3">Retiring a whole cohort at once</h3>
+          <ol class="list-decimal list-inside space-y-3 text-gray-700">
+            <li>Give the group a <strong>Cohort</strong> label when you invite or edit them — free text, like "Fall 2026".</li>
+            <li>Go to <%= link_to "Users", admin_users_path, target: "_blank", class: "text-blue-600 hover:text-blue-800" %> and filter by that cohort.</li>
+            <li>Tick the people you're retiring (or use <strong>Select all shown</strong>).</li>
+            <li>Click <strong>Deactivate selected</strong>. Your own account is always left alone, even if you tick it.</li>
+          </ol>
+
+          <h3 class="text-lg font-semibold text-gray-900 mt-6 mb-3">Handling their leftover work</h3>
+          <p class="text-gray-700 mb-3">
+            If someone still has open assignments when you deactivate them, the confirmation tells you how many,
+            and the user list flags those rows as <strong>stranded</strong>. Nobody can work them until they're
+            moved, so reassign them: open the assignment and click <strong>Reassign / Edit</strong>, then pick an
+            active researcher.
+          </p>
+
+          <h3 class="text-lg font-semibold text-gray-900 mt-6 mb-3">Bringing someone back</h3>
+          <p class="text-gray-700 mb-3">
+            Open their user page and click <strong>Reactivate</strong>. They can sign in again immediately and
+            reappear in the assignment pickers. Nothing was lost while they were away.
+          </p>
+
+          <div class="mt-4 p-4 bg-yellow-50 border-l-4 border-yellow-400">
+            <p class="text-sm text-yellow-800">
+              <strong>Note:</strong> the Users list now shows <em>Active</em> people by default. Use the
+              <em>Deactivated</em> or <em>All</em> toggle to find past researchers — their history and any
+              stranded assignments are still there.
+            </p>
           </div>
         </div>
       </section>

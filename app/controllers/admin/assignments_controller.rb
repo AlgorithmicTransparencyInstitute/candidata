@@ -33,7 +33,9 @@ module Admin
     end
 
     def new
-      @researchers = User.researchers.order(:name)
+      # Only people who can actually do the work — a deactivated researcher
+      # can't sign in, so assigning to them parks the task indefinitely.
+      @researchers = User.active_researchers.order(:name)
       @researcher_workloads = Assignment.where(user_id: @researchers.pluck(:id))
                                         .active
                                         .group(:user_id)
@@ -184,6 +186,15 @@ module Admin
       task_type = params[:task_type] || 'data_collection'
       person_ids = params[:person_ids] || []
 
+      # The picker only offers active researchers, but a stale form or a
+      # deactivation that landed mid-session would otherwise park work with
+      # someone who can no longer sign in.
+      if user.deactivated?
+        redirect_to new_admin_assignment_path,
+                    alert: "#{user.name.presence || user.email} is deactivated and can't be assigned work. Reactivate them first, or pick someone else."
+        return
+      end
+
       if person_ids.empty?
         redirect_to new_admin_assignment_path, alert: "Please select at least one person."
         return
@@ -236,14 +247,14 @@ module Admin
     end
 
     def edit
-      @researchers = User.researchers.order(:name)
+      @researchers = researchers_for_reassignment
     end
 
     def update
       if @assignment.update(assignment_params)
         redirect_to admin_assignment_path(@assignment), notice: "Assignment updated."
       else
-        @researchers = User.researchers.order(:name)
+        @researchers = researchers_for_reassignment
         render :edit, status: :unprocessable_entity
       end
     end
@@ -264,6 +275,13 @@ module Admin
     end
 
     private
+
+    # Active researchers, plus whoever currently holds this assignment even if
+    # they've been deactivated — otherwise the edit form silently drops the
+    # current assignee and saving would reassign the task to someone else.
+    def researchers_for_reassignment
+      User.active_researchers.or(User.where(id: @assignment.user_id)).order(:name)
+    end
 
     # Which demographic fields this batch of assignments must settle. Unknown
     # keys are dropped rather than trusted — the model rejects them too, but a

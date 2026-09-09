@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_09_09_150000) do
+ActiveRecord::Schema[8.0].define(version: 2026_09_09_170000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pg_stat_statements"
@@ -558,6 +558,12 @@ ActiveRecord::Schema[8.0].define(version: 2026_09_09_150000) do
     t.string "invited_by_type"
     t.bigint "invited_by_id"
     t.integer "invitations_count", default: 0
+    t.datetime "deactivated_at"
+    t.bigint "deactivated_by_id"
+    t.string "cohort"
+    t.index ["cohort"], name: "index_users_on_cohort"
+    t.index ["deactivated_at"], name: "index_users_on_deactivated_at"
+    t.index ["deactivated_by_id"], name: "index_users_on_deactivated_by_id"
     t.index ["email"], name: "index_users_on_email", unique: true
     t.index ["invitation_token"], name: "index_users_on_invitation_token", unique: true
     t.index ["invited_by_id"], name: "index_users_on_invited_by_id"
@@ -603,4 +609,5 @@ ActiveRecord::Schema[8.0].define(version: 2026_09_09_150000) do
   add_foreign_key "social_media_accounts", "users", column: "entered_by_id"
   add_foreign_key "social_media_accounts", "users", column: "escalated_by_id"
   add_foreign_key "social_media_accounts", "users", column: "verified_by_id"
+  add_foreign_key "users", "users", column: "deactivated_by_id"
 end

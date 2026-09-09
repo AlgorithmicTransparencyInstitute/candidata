@@ -13,10 +13,15 @@
         <span class="px-3 py-1 text-sm rounded-full <%= @user.admin? ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800' %>">
           <%= @user.role.titleize %>
         </span>
-        <% if @user.invitation_token.present? && !@user.invitation_accepted? %>
+        <% if @user.deactivated? %>
+          <span class="px-3 py-1 text-sm rounded-full bg-gray-200 text-gray-700">Deactivated</span>
+        <% elsif @user.invitation_token.present? && !@user.invitation_accepted? %>
           <span class="px-3 py-1 text-sm rounded-full bg-yellow-100 text-yellow-800">Invited</span>
         <% elsif @user.invitation_accepted? %>
           <span class="px-3 py-1 text-sm rounded-full bg-green-100 text-green-800">Active</span>
+        <% end %>
+        <% if @user.cohort.present? %>
+          <span class="px-3 py-1 text-sm rounded-full bg-gray-100 text-gray-700">Cohort: <%= @user.cohort %></span>
         <% end %>
         <%= link_to "Edit", edit_admin_user_path(@user), class: "px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300" %>
       </div>
@@ -128,7 +133,7 @@
         </svg>
         Send Password Reset
       <% end %>
-      <% if @user.researcher? && @user.assignments.where(status: ['pending', 'in_progress']).any? %>
+      <% if @user.active? && @user.researcher? && @user.assignments.where(status: ['pending', 'in_progress']).any? %>
         <%= button_to send_assignment_reminder_admin_user_path(@user), method: :post, data: { confirm: "Send assignment reminder email to #{@user.email}?" }, class: "inline-flex items-center px-4 py-2 text-sm font-medium text-teal-700 bg-teal-50 border border-teal-200 rounded-lg hover:bg-teal-100 cursor-pointer" do %>
           <svg class="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" />
@@ -136,7 +141,7 @@
           Send Assignment Reminder
         <% end %>
       <% end %>
-      <% if @user.researcher? %>
+      <% if @user.active? && @user.researcher? %>
         <%= button_to impersonate_admin_user_path(@user), method: :post, data: { confirm: "View the site as #{@user.name || @user.email}?" }, class: "inline-flex items-center px-4 py-2 text-sm font-medium text-purple-700 bg-purple-50 border border-purple-200 rounded-lg hover:bg-purple-100 cursor-pointer" do %>
           <svg class="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
@@ -144,7 +149,21 @@
           Become User
         <% end %>
       <% end %>
-      <%= button_to admin_user_path(@user), method: :delete, data: { confirm: "Are you sure you want to delete #{@user.name || @user.email}? This action cannot be undone." }, class: "inline-flex items-center px-4 py-2 text-sm font-medium text-red-700 bg-red-50 border border-red-200 rounded-lg hover:bg-red-100 cursor-pointer" do %>
+      <%# Deactivation is the normal way to retire someone. Deleting a
+          researcher who has entered or verified anything hits a NO ACTION
+          foreign key and 500s — and would erase their attribution if it
+          didn't. %>
+      <% if @user.deactivated? %>
+        <%= button_to "Reactivate", reactivate_admin_user_path(@user), method: :patch,
+              data: { confirm: "Reactivate #{@user.name || @user.email}? They will be able to sign in again." },
+              class: "inline-flex items-center px-4 py-2 text-sm font-medium text-green-700 bg-green-50 border border-green-200 rounded-lg hover:bg-green-100 cursor-pointer" %>
+      <% elsif @user != current_user %>
+        <% open_count = @user.open_assignments_count %>
+        <%= button_to "Deactivate", deactivate_admin_user_path(@user), method: :patch,
+              data: { confirm: "Deactivate #{@user.name || @user.email}? They keep their work history but can no longer sign in." + (open_count.positive? ? " They still hold #{open_count} open #{'assignment'.pluralize(open_count)} — you'll need to reassign those." : "") },
+              class: "inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-lg hover:bg-gray-200 cursor-pointer" %>
+      <% end %>
+      <%= button_to admin_user_path(@user), method: :delete, data: { confirm: "Are you sure you want to delete #{@user.name || @user.email}? This erases the account permanently. Prefer Deactivate — it keeps their work attributed to them." }, class: "inline-flex items-center px-4 py-2 text-sm font-medium text-red-700 bg-red-50 border border-red-200 rounded-lg hover:bg-red-100 cursor-pointer" do %>
         <svg class="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
         </svg>

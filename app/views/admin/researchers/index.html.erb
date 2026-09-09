@@ -10,6 +10,16 @@
         <label class="block text-sm font-medium text-gray-700 mb-1">Search Researcher</label>
         <input type="text" name="search" value="<%= params[:search] %>" placeholder="Name or email..." class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
       </div>
+      <%# Defaults to active. Past cohorts stay reachable so their history and
+          any stranded assignments are still findable. %>
+      <div class="w-48">
+        <label class="block text-sm font-medium text-gray-700 mb-1">Account</label>
+        <select name="status" class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" onchange="this.form.submit()">
+          <option value="active" <%= 'selected' if @status == 'active' %>>Active (<%= @status_counts[:active] %>)</option>
+          <option value="inactive" <%= 'selected' if @status == 'inactive' %>>Deactivated (<%= @status_counts[:inactive] %>)</option>
+          <option value="all" <%= 'selected' if @status == 'all' %>>All</option>
+        </select>
+      </div>
       <div class="w-64">
         <label class="block text-sm font-medium text-gray-700 mb-1">Filter by Status</label>
         <select name="filter" class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" onchange="this.form.submit()">

@@ -569,10 +569,11 @@ User administration and access control.
 - Send invitations via email
 - Generate shareable invitation links
 - Resend invitations
-- Edit user info (name, email, role)
+- Edit user info (name, email, role, cohort)
 - Reset password
 - View user activity (last login, sign-in count)
-- Delete users
+- **Deactivate / reactivate** users, individually or a whole cohort at once
+- Delete users (rarely the right move — see below)
 - **Impersonate users** (for debugging)
 - Send task reminders
 
@@ -580,6 +581,26 @@ User administration and access control.
 - **admin** — Full system access
 - **researcher** — Data entry workspace
 - **verifier** — Verification workspace (can also be combined with researcher)
+
+#### Deactivating researchers
+
+Researchers come and go in cohorts. **Deactivate, don't delete.** A deactivated
+user keeps every record they entered or verified attributed to them; they just
+stop appearing anywhere a person is being chosen, and they can no longer sign
+in — including any session they already had open. Deleting a researcher who has
+done real work fails outright (their entered/verified records reference them),
+and the app now says so and points at deactivation instead.
+
+- The user list **defaults to Active**, with Deactivated / All toggles and a count on each.
+- A **Cohort** label (free text, e.g. "Fall 2026") groups a batch. Tick a group and use **Deactivate selected** to retire the whole cohort in one action. Your own account is always left active.
+- Deactivating someone with open assignments warns you how many are now **stranded**; those rows are flagged in the list so they can be reassigned.
+- **Reassign** an assignment from `/admin/assignments/:id` → *Reassign / Edit*. The dropdown offers active researchers plus the current holder, so a deactivated assignee is visible rather than silently swapped out.
+- Reminder-email and impersonate buttons disappear for deactivated users — neither does anything useful for someone who can't sign in.
+
+Every picker is filtered to active researchers: the assignment builder, the
+per-person assign form, and bulk assign. The server refuses a deactivated
+assignee on all three paths (and on `POST /api/people/bulk_assign`) in case a
+stale form posts one anyway.
 
 ---
 

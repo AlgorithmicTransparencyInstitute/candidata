@@ -6,10 +6,20 @@ module Impersonatable
     helper_method :true_current_user
   end
 
-  # Override Devise's current_user to support impersonation
+  # Override Devise's current_user to support impersonation.
+  #
+  # This path bypasses Warden, so Devise's active_for_authentication? check
+  # never runs on it — an impersonated session would otherwise outlive the
+  # user's deactivation. Drop back to the real admin if the impersonated
+  # account is no longer active.
   def current_user
     if session[:impersonating_user_id].present?
-      User.find_by(id: session[:impersonating_user_id])
+      impersonated = User.find_by(id: session[:impersonating_user_id])
+      return impersonated if impersonated&.active?
+
+      session.delete(:impersonating_user_id)
+      session.delete(:admin_user_id)
+      super
     else
       super
     end

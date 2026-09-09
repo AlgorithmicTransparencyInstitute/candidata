@@ -1,8 +1,19 @@
 module Admin
   class ResearchersController < Admin::BaseController
     def index
-      @researchers = User.where(role: 'researcher')
-                         .includes(:assignments)
+      @researchers = User.where(role: 'researcher').includes(:assignments)
+
+      # Default to the current cohort; past researchers stay reachable via the
+      # toggle so their history and any stranded assignments are still findable.
+      @status = params[:status].presence || 'active'
+      case @status
+      when 'active'   then @researchers = @researchers.active
+      when 'inactive' then @researchers = @researchers.inactive
+      end
+      @status_counts = {
+        active: User.researchers.active.count,
+        inactive: User.researchers.inactive.count
+      }
 
       # Apply search
       if params[:search].present?

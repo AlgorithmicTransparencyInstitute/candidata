@@ -106,6 +106,8 @@ Rails.application.routes.draw do
       collection do
         get :export_invitations
         post :stop_impersonating
+        # Cohort rollover: deactivate a whole graduating group in one action.
+        post :bulk_deactivate
       end
       member do
         post :resend_invitation
@@ -113,6 +115,8 @@ Rails.application.routes.draw do
         post :impersonate
         post :generate_invitation_link
         post :send_assignment_reminder
+        patch :deactivate
+        patch :reactivate
       end
     end
     resources :api_tokens, only: [:index, :new, :create] do

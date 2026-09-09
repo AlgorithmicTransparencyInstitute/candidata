@@ -1,10 +1,22 @@
 module Admin
   class UsersController < Admin::BaseController
-    before_action :set_user, only: [:show, :edit, :update, :destroy, :resend_invitation, :send_reset_password, :impersonate, :generate_invitation_link, :send_assignment_reminder]
+    before_action :set_user, only: [:show, :edit, :update, :destroy, :resend_invitation, :send_reset_password, :impersonate, :generate_invitation_link, :send_assignment_reminder, :deactivate, :reactivate]
 
     def index
       @users = User.order(:name)
       @users = @users.where(role: params[:role]) if params[:role].present?
+      @users = @users.where(cohort: params[:cohort]) if params[:cohort].present?
+
+      # Default to active only: the list exists to work with current people,
+      # and 21 of 41 researchers are already dormant.
+      @status = params[:status].presence || 'active'
+      case @status
+      when 'active'   then @users = @users.active
+      when 'inactive' then @users = @users.inactive
+      end
+
+      @cohorts = User.where.not(cohort: [nil, '']).distinct.order(:cohort).pluck(:cohort)
+      @counts = { active: User.active.count, inactive: User.inactive.count }
       @users = @users.page(params[:page]).per(50)
     end
 
@@ -45,6 +57,62 @@ module Admin
     def destroy
       @user.destroy
       redirect_to admin_users_path, notice: "User deleted."
+    rescue ActiveRecord::InvalidForeignKey
+      # entered_by / verified_by on social_media_accounts are NO ACTION with no
+      # `dependent:` option, so deleting anyone who has done real work raises.
+      # Deactivation is the answer, and now it says so instead of 500ing.
+      redirect_to admin_user_path(@user),
+                  alert: "#{@user.name.presence || @user.email} can't be deleted — they entered or verified records that are attributed to them. Deactivate them instead: they keep their history but lose access."
+    end
+
+    # Deactivation, not deletion: their work stays attributed to them, they
+    # just stop appearing in pickers and can no longer sign in (Devise checks
+    # active_for_authentication? on every request, so this ends any live
+    # session too).
+    def deactivate
+      if @user == current_user
+        redirect_to admin_user_path(@user), alert: "You can't deactivate your own account."
+        return
+      end
+
+      open_count = @user.open_assignments_count
+      @user.deactivate!(by: current_user)
+
+      notice = "#{@user.name.presence || @user.email} deactivated. Their past work stays attributed to them."
+      if open_count.positive?
+        notice += " They still hold #{open_count} open #{'assignment'.pluralize(open_count)} — reassign those to someone active."
+      end
+      redirect_to admin_user_path(@user), notice: notice
+    end
+
+    def reactivate
+      @user.reactivate!
+      redirect_to admin_user_path(@user), notice: "#{@user.name.presence || @user.email} reactivated and can sign in again."
+    end
+
+    # Cohort rollover in one action.
+    def bulk_deactivate
+      ids = Array(params[:user_ids]).map(&:to_s)
+      # Never let an admin lock themselves out mid-rollover.
+      users = User.where(id: ids).where.not(id: current_user.id).active
+
+      if users.empty?
+        redirect_to admin_users_path, alert: "No active users selected."
+        return
+      end
+
+      stranded = users.sum(&:open_assignments_count)
+      names = users.map { |u| u.name.presence || u.email }
+      users.each { |u| u.deactivate!(by: current_user) }
+
+      notice = "Deactivated #{names.size} #{'user'.pluralize(names.size)}: #{names.to_sentence}."
+      if stranded.positive?
+        notice += " They held #{stranded} open #{'assignment'.pluralize(stranded)} between them — reassign those to someone active."
+      end
+      if ids.include?(current_user.id.to_s)
+        notice += " (Your own account was left active.)"
+      end
+      redirect_to admin_users_path, notice: notice
     end
 
     def resend_invitation
@@ -81,6 +149,11 @@ module Admin
 
       if @user.admin?
         redirect_to admin_user_path(@user), alert: "Cannot impersonate other admins."
+        return
+      end
+
+      if @user.deactivated?
+        redirect_to admin_user_path(@user), alert: "#{@user.name.presence || @user.email} is deactivated. Reactivate them first if you need to view the app as them."
         return
       end
 
@@ -190,11 +263,11 @@ module Admin
     end
 
     def user_params
-      params.require(:user).permit(:name, :email, :role, :password, :password_confirmation)
+      params.require(:user).permit(:name, :email, :role, :cohort, :password, :password_confirmation)
     end
 
     def user_edit_params
-      params.require(:user).permit(:name, :email, :role)
+      params.require(:user).permit(:name, :email, :role, :cohort)
     end
   end
 end

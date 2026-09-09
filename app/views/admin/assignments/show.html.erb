@@ -10,6 +10,7 @@
       </div>
       <div class="flex items-center gap-2">
         <%= assignment_status_badge(@assignment.status) %>
+        <%= link_to "Reassign / Edit", edit_admin_assignment_path(@assignment), class: "px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300" %>
         <% if @assignment.completed? %>
           <%= button_to "Mark Incomplete", mark_incomplete_admin_assignment_path(@assignment), method: :patch, class: "px-4 py-2 bg-orange-600 text-white rounded hover:bg-orange-700", data: { confirm: "Are you sure you want to mark this assignment as incomplete?" } %>
         <% else %>

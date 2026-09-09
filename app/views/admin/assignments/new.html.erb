@@ -69,7 +69,19 @@
                     </label>
                   <% end %>
                   <% if @researchers.empty? %>
-                    <div class="text-center text-gray-500 py-4 text-sm">No researchers found. <br><%= link_to "Invite one first", new_admin_invitation_path, class: "text-blue-600 hover:text-blue-800" %>.</div>
+                    <%# This list is active researchers only, so "empty" can now
+                        mean every researcher has been deactivated. %>
+                    <% deactivated_count = User.researchers.inactive.count %>
+                    <div class="text-center text-gray-500 py-4 text-sm">
+                      No active researchers.
+                      <% if deactivated_count.positive? %>
+                        <br><%= pluralize(deactivated_count, 'researcher') %> deactivated —
+                        <%= link_to "reactivate someone", admin_users_path(role: 'researcher', status: 'inactive'), class: "text-blue-600 hover:text-blue-800" %>
+                        or <%= link_to "invite a new one", new_admin_invitation_path, class: "text-blue-600 hover:text-blue-800" %>.
+                      <% else %>
+                        <br><%= link_to "Invite one first", new_admin_invitation_path, class: "text-blue-600 hover:text-blue-800" %>.
+                      <% end %>
+                    </div>
                   <% end %>
                 </div>
               </div>

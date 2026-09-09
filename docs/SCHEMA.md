@@ -174,11 +174,22 @@ The evidence trail behind one demographic claim about one person. **A missing ro
 - Methods: `start!`, `complete!`, `reopen!`, `label`, `short_label`, `color`, `abbreviation`, `demographic_research?`
 
 ### User
-`email` (required, unique), `encrypted_password`, `name` (single column — **no first/last name columns**), `role` (default `"researcher_assistant"`; admin/researcher/…), `provider`/`uid` (OAuth), `avatar_url`, Devise trackable + invitable columns (`sign_in_count`, `invitation_token`, `invited_by_*`, …)
+`email` (required, unique), `encrypted_password`, `name` (single column — **no first/last name columns**), `role` (`ROLES = %w[admin researcher]`), `provider`/`uid` (OAuth), `avatar_url`, Devise trackable + invitable columns (`sign_in_count`, `invitation_token`, `invited_by_*`, …), `deactivated_at`, `deactivated_by_id`, `cohort`
 
-- Devise: invitable, database_authenticatable, registerable, recoverable, rememberable, validatable, trackable, omniauthable (Google OAuth2 + Entra ID)
+- Devise: invitable, database_authenticatable, registerable, recoverable, rememberable, validatable, trackable, omniauthable (Google OAuth2 + Entra ID). **No `:lockable`, `:confirmable` or `:timeoutable`.**
 - `has_many :assignments`, entered/verified social accounts
 - Role helpers: `admin?`, `researcher?`
+- ⚠️ The `role` **column default is still `"researcher_assistant"`**, which is not in `ROLES` — a bare `User.new` builds an invalid record. This is load-bearing for the OAuth path (see below); don't "fix" the default without reading that first.
+
+**Deactivation (soft state).** Researchers arrive and leave in cohorts, so retiring one must not delete them: their work stays attributed via `social_media_accounts.entered_by/verified_by`, `demographic_verifications.verified_by` and PaperTrail `whodunnit`. Deleting instead raises `InvalidForeignKey` for anyone who ever entered or verified an account (those FKs are NO ACTION with no `dependent:` option) — `Admin::UsersController#destroy` now rescues that and points at deactivation.
+
+- Scopes: `active` / `inactive` / `active_researchers` / `in_cohort(name)`. **`researchers` still means ALL researchers** — stats and history need the full set. Anywhere a human is *chosen*, use `active_researchers`.
+- Methods: `active?`, `deactivated?`, `deactivate!(by:)`, `reactivate!`, `open_assignments_count` (work that would be stranded)
+- `active_for_authentication?` returns false when deactivated. Devise checks this on **every authenticated request**, not just sign-in, so deactivating someone ends their live session. Message key: `devise.failure.account_deactivated`.
+- ⚠️ `Impersonatable#current_user` bypasses Warden entirely, so it needs its own check — it drops the impersonation and falls back to the real admin if the impersonated user is deactivated.
+- `cohort` is a free-text label ("Fall 2026") used to group a batch for bulk deactivation on `/admin/users`.
+
+**Invitation-only OAuth.** `User.from_omniauth` refuses an identity that has no existing account, returning an unpersisted user with an explanatory error. This used to be enforced by accident (no role → failed `ROLES` validation → confusing "Role is not included in the list"); it is now explicit so nobody opens self-registration to any Google account by fixing the validation.
 
 ### ApiToken
 `name` (required), `token_digest` (required, unique, SHA-256 of the plaintext token — plaintext itself is never stored), `created_by_id` (optional FK → users), `last_used_at`, `revoked_at`

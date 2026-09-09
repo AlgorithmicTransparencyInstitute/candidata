@@ -41,6 +41,16 @@ module Api
     # { person_ids: [], user_id:, task_type: "data_collection", notes: "" }
     def bulk_assign
       user = User.find(params.require(:user_id))
+
+      # Deactivated researchers can't sign in, so assigning to them parks the
+      # work where nobody will see it.
+      if user.deactivated?
+        render json: { error: { code: "USER_DEACTIVATED",
+                                message: "#{user.name.presence || user.email} is deactivated and can't be assigned work." } },
+               status: :unprocessable_entity
+        return
+      end
+
       people = Person.where(id: Array(params.require(:person_ids)))
       task_type = params[:task_type].presence || "data_collection"
 

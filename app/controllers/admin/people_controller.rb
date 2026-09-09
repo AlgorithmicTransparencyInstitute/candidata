@@ -54,7 +54,7 @@ class Admin::PeopleController < Admin::BaseController
     end
 
     @people = @people.order(:last_name, :first_name).page(params[:page]).per(50)
-    @researchers = User.researchers.order(:name)
+    @researchers = User.active_researchers.order(:name)
     @states = State.order(:name)
     @parties = Party.order(:name)
   end
@@ -100,6 +100,12 @@ class Admin::PeopleController < Admin::BaseController
     user = User.find(params[:user_id])
     task_type = params[:task_type] || 'data_collection'
 
+    if user.deactivated?
+      redirect_to admin_person_path(@person),
+                  alert: "#{user.name.presence || user.email} is deactivated and can't be assigned work."
+      return
+    end
+
     unless @person.eligible_for_assignment?(user, task_type)
       redirect_to admin_person_path(@person),
                   alert: "#{user.name} entered the accounts flagged on #{@person.full_name}, so they can't do the secondary verification. Assign it to someone else."
@@ -124,7 +130,7 @@ class Admin::PeopleController < Admin::BaseController
   end
 
   def bulk_assign
-    @researchers = User.researchers.order(:name)
+    @researchers = User.active_researchers.order(:name)
     @states = State.order(:name)
     @parties = Party.order(:name)
     @people = Person.includes(:parties, :social_media_accounts, :officeholders, :person_parties)
@@ -190,6 +196,12 @@ class Admin::PeopleController < Admin::BaseController
     user = User.find(params[:user_id])
     task_type = params[:task_type] || 'data_collection'
     person_ids = params[:person_ids] || []
+
+    if user.deactivated?
+      redirect_to bulk_assign_admin_people_path,
+                  alert: "#{user.name.presence || user.email} is deactivated and can't be assigned work."
+      return
+    end
 
     created = 0
     skipped = 0
