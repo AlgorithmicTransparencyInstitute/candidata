@@ -11,8 +11,9 @@
     <div class="bg-white rounded-lg shadow divide-y divide-gray-200">
       <% @assignments.each do |assignment| %>
         <% person = assignment.person %>
-        <% unsettled = person.unsettled_demographic_fields %>
-        <% required = DemographicField.core_relevant_for(person).size %>
+        <%# Progress is measured against what THIS assignment asked for. %>
+        <% unsettled = assignment.unsettled_demographic_fields(person) %>
+        <% required = assignment.demographic_fields_required_for(person).size %>
         <% done = required - unsettled.size %>
         <div class="p-4 flex items-center gap-4">
           <% if person.photo_url.present? %>
@@ -29,6 +30,11 @@
               <%= person.state_of_residence.presence || 'Unknown state' %>
               <% if person.primary_party %>· <%= person.primary_party.name %><% end %>
             </p>
+            <% if assignment.scoped_demographics? %>
+              <p class="text-xs text-teal-700 truncate" title="<%= assignment.demographic_scope_summary %>">
+                <%= assignment.demographic_scope_summary %> only
+              </p>
+            <% end %>
           </div>
 
           <div class="shrink-0 w-40">

@@ -101,19 +101,51 @@ a branch after "Never served".
 ## Completion gate
 
 `Demographics::AssignmentsController#complete` blocks unless
-`person.unsettled_demographic_fields` is empty — every **core** field that is
-**relevant** to that person has a settled determination. The alert names the
-outstanding fields.
+`assignment.unsettled_demographic_fields` is empty — every field **this
+assignment requires** that is **relevant** to that person has a settled
+determination. The alert names the outstanding fields.
 
-Note the two qualifiers. Optional fields (`birth_year`, `children_count`,
-`education_institution`, `military_branch`) never block. Irrelevant dependents
-never block.
-
-Completing refreshes `people.demographics_status` to `complete`.
+Note the two qualifiers. Fields outside the assignment's scope never block.
+Irrelevant dependents never block.
 
 Unlike the social-account workflow there is **no four-eyes rule here yet** —
 demographic research is single-pass. The `disputed` status is the escalation
 route: it survives completion attempts and shows up in the admin filter.
+
+## Scoped assignments (a subset of fields)
+
+An assigner can narrow a task to specific fields — "just get me race and gender
+for these 500 people" — by ticking them on the creation form. The list is
+stored on `assignments.required_demographic_fields` (a Postgres string array).
+
+**Blank means every core field.** That is the historic behaviour and the
+default, so existing rows needed no backfill and an assigner who ignores the
+picker gets what they got before.
+
+| Method on `Assignment` | Returns |
+|---|---|
+| `scoped_demographics?` | is this task narrowed? |
+| `demographic_fields_required` | the registry fields in scope (all core if blank) |
+| `demographic_fields_required_for(person)` | …minus irrelevant dependents |
+| `unsettled_demographic_fields(person)` | …minus the ones already settled — the gate |
+| `demographic_scope_summary` | human list for the UI |
+
+### The rule that keeps this honest
+
+**A scoped assignment does not feed `people.demographics_status`.** That rollup
+means "every core field settled", and the admin filters depend on it. If a
+two-field task could mark a person `complete`, the filter admins use to find
+outstanding work would quietly stop finding it.
+
+So a narrow task completing leaves the person at `in_progress`, and the
+completion notice says so explicitly: *"Demographic research completed for
+Gender and Race / ethnicity. 6 other fields on this person remain
+unresearched."* Assignment-level completeness and person-level completeness are
+different questions, and the UI answers both rather than conflating them.
+
+Out-of-scope fields stay **visible and editable** on the research page, badged
+*optional* rather than *required* — a researcher who spots a date of birth
+while sourcing race should be able to record it. They just don't block.
 
 ---
 
@@ -142,7 +174,12 @@ not now.
 
 Each person row shows a coverage badge: `n/8` values present, plus a `DR`
 pill for review state (grey = not started, teal ◐ = in progress, green ✓ =
-complete).
+complete). That badge is always person-level — it measures all eight core
+fields regardless of how any individual assignment was scoped.
+
+When **Demographic Research** is the selected task type, a **Fields to
+research** picker appears with quick presets (All fields / Race & gender /
+Identity). Leaving everything unticked requires all core fields.
 
 The existing dropdown labelled "Demographics" — which only ever held State and
 Party — was renamed **Location & Party**.

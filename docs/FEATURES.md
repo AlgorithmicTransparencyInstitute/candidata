@@ -290,13 +290,25 @@ with values saved but their evidence lost.
 
 **Completion Gate**
 
-"Complete Demographic Research" stays disabled until every **required** field
-that applies to this person has a *settled* determination — Verified or Not
-publicly documented. **Sources conflict does not settle a field**; it is an
-escalation, and it keeps the person short of complete. Optional fields (birth
-year, number of children, institution name, branch) never block completion,
-and neither do detail fields that don't apply. The page and the queue both
-name exactly which fields are outstanding.
+"Complete Demographic Research" stays disabled until every field **this
+assignment requires** that applies to this person has a *settled*
+determination — Verified or Not publicly documented. **Sources conflict does
+not settle a field**; it is an escalation, and it keeps the person short of
+complete. Fields outside the assignment's scope never block completion, and
+neither do detail fields that don't apply. The page and the queue both name
+exactly which fields are outstanding.
+
+**Scoped assignments.** An admin can narrow a task to a subset of fields —
+often just race and gender. When they do, the page says which fields the task
+covers and every row is badged **required** or **optional**. The optional rows
+stay fully editable: a researcher who spots a date of birth while sourcing race
+should record it, it just won't hold up the assignment.
+
+Finishing a narrowed task does **not** mark the person demographically
+complete — their other fields genuinely haven't been researched, so they stay
+*In progress* and remain findable in the admin filters. The completion message
+spells this out: *"Demographic research completed for Gender and Race /
+ethnicity. 6 other fields on this person remain unresearched."*
 
 **Workflow:**
 1. Open `/demographics` and click Start on an assigned person
@@ -594,6 +606,14 @@ Assign data collection tasks.
 **Task Types:** the assignment builder (`/admin/assignments/new`) offers four
 cards — Data Collection, Data Validation, Secondary Verification, and
 **Demographic Research** ("Research and source candidate demographics", teal).
+
+**Fields to research.** Selecting Demographic Research reveals a field picker
+with a checkbox per demographic field and quick presets (*All fields*, *Race &
+gender*, *Identity*). Ticking a subset narrows the task: it completes once
+those fields are settled. Leaving everything unticked requires all core fields,
+which is the default. The whole batch created in one submission shares the same
+field list. See the completion-gate note above for why a narrowed task
+deliberately leaves the person at *In progress*.
 
 **Finding people who need demographic research.** The person finder has a
 **Demographic Data** dropdown filtering on two deliberately independent axes:

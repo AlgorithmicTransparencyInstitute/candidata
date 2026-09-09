@@ -3,7 +3,11 @@
     <%= link_to "← Back to Demographics Queue", demographics_assignments_path, class: "text-teal-600 hover:text-teal-800" %>
   </div>
 
-  <% unsettled = @person.unsettled_demographic_fields %>
+  <%# The gate is the ASSIGNMENT's field list, which may be a subset. Other
+      fields stay editable — a researcher who spots a DOB while sourcing race
+      should be able to record it — they just don't block completion. %>
+  <% unsettled = @assignment.unsettled_demographic_fields(@person) %>
+  <% required_keys = @assignment.demographic_fields_required_for(@person).map(&:key) %>
 
   <!-- Person header -->
   <div class="bg-white rounded-lg shadow mb-6">
@@ -43,9 +47,14 @@
             <%= @assignment.status.humanize %>
           </span>
           <p class="mt-2 text-sm <%= unsettled.any? ? 'text-gray-600' : 'text-green-700 font-medium' %>">
-            <% required = DemographicField.core_relevant_for(@person).size %>
-            <%= required - unsettled.size %> of <%= required %> required fields determined
+            <% required = required_keys.size %>
+            <%= required - unsettled.size %> of <%= required %> required <%= 'field'.pluralize(required) %> determined
           </p>
+          <% if @assignment.scoped_demographics? %>
+            <p class="mt-1 text-xs text-teal-700 max-w-xs ml-auto">
+              This task covers <strong><%= @assignment.demographic_scope_summary %></strong> only.
+            </p>
+          <% end %>
         </div>
       </div>
     </div>
@@ -64,7 +73,7 @@
             </div>
             <div class="p-4 space-y-3">
               <% visible.each do |field| %>
-                <%= render 'field_row', field: field %>
+                <%= render 'field_row', field: field, required_here: required_keys.include?(field.key) %>
               <% end %>
             </div>
           </div>

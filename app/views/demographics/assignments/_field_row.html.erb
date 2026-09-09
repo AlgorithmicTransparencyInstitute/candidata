@@ -21,7 +21,11 @@
       <% end %>
     </div>
     <div class="shrink-0 flex items-center gap-2">
-      <% unless field.core %>
+      <%# "Required" is per-assignment, not per-field: a task narrowed to race
+          and gender leaves the rest recordable but not blocking. %>
+      <% if required_here %>
+        <span class="px-1.5 py-0.5 text-xs font-medium rounded bg-teal-50 text-teal-700 border border-teal-200">required</span>
+      <% else %>
         <span class="text-xs text-gray-400">optional</span>
       <% end %>
       <span class="px-2 py-0.5 text-xs font-medium rounded-full <%= demographic_status_badge_class(status) %>">

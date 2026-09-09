@@ -51,7 +51,7 @@
                   </div>
                 <% elsif assignment.demographic_research? %>
                   <div class="text-sm text-gray-500 mt-1">
-                    <% unsettled = assignment.person.unsettled_demographic_fields.size %>
+                    <% unsettled = assignment.unsettled_demographic_fields.size %>
                     <% if unsettled > 0 %>
                       <span class="text-teal-600"><%= unsettled %> <%= 'field'.pluralize(unsettled) %> need a determination</span>
                     <% else %>

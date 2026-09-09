@@ -49,6 +49,18 @@ class Assignment < ApplicationRecord
   validates :task_type, presence: true, inclusion: { in: TASK_TYPES }
   validates :status, presence: true, inclusion: { in: STATUSES }
   validates :user_id, uniqueness: { scope: [:person_id, :task_type], message: 'already has this task for this person' }
+  validate :required_demographic_fields_are_known
+
+  # An unknown key would silently drop out of the gate and let the assignment
+  # complete without the work being done.
+  def required_demographic_fields_are_known
+    return if required_demographic_fields.blank?
+
+    unknown = required_demographic_fields.map(&:to_s) - DemographicField::KEYS.map(&:to_s)
+    return if unknown.empty?
+
+    errors.add(:required_demographic_fields, "contains unknown field(s): #{unknown.join(', ')}")
+  end
 
   scope :pending, -> { where(status: 'pending') }
   scope :in_progress, -> { where(status: 'in_progress') }
@@ -112,5 +124,56 @@ class Assignment < ApplicationRecord
 
   def demographic_research?
     task_type == 'demographic_research'
+  end
+
+  # --- Scoped demographic research --------------------------------------
+  #
+  # An assigner can narrow a demographic task to a subset of fields ("just get
+  # me race and gender for these 500 people"). The subset gates completion of
+  # THIS assignment only.
+  #
+  # It deliberately does NOT feed `people.demographics_status`: a person whose
+  # race and gender were sourced is not demographically complete, and letting a
+  # narrow task claim otherwise would quietly break the admin filters that
+  # depend on that rollup meaning "all core fields settled". Person-level
+  # completeness stays person-level; see Person#demographics_complete?.
+
+  # Blank means every core field — the historic behaviour, and what an assigner
+  # gets if they don't narrow the task.
+  def scoped_demographics?
+    required_demographic_fields.present?
+  end
+
+  def demographic_fields_required
+    return DemographicField::ALL.select(&:core) unless scoped_demographics?
+
+    keys = required_demographic_fields.map(&:to_s)
+    DemographicField::ALL.select { |field| keys.include?(field.key.to_s) }
+  end
+
+  # Dependent detail fields still drop out when the parent answer makes them
+  # irrelevant, exactly as they do for an unscoped task.
+  def demographic_fields_required_for(target = person)
+    demographic_fields_required.select { |field| field.relevant_for?(target) }
+  end
+
+  def unsettled_demographic_fields(target = person)
+    demographic_fields_required_for(target).reject do |field|
+      target.demographic_verification_for(field.key)&.settled?
+    end
+  end
+
+  def demographic_fields_complete?(target = person)
+    unsettled_demographic_fields(target).empty?
+  end
+
+  def required_demographic_field?(key)
+    demographic_fields_required.any? { |field| field.key.to_s == key.to_s }
+  end
+
+  def demographic_scope_summary
+    return 'All demographic fields' unless scoped_demographics?
+
+    demographic_fields_required.map(&:label).to_sentence
   end
 end

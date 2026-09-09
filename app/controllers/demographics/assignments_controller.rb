@@ -28,8 +28,9 @@ module Demographics
 
       if result.success?
         @person.reload
+        remaining = @assignment.unsettled_demographic_fields(@person).size
         redirect_to demographics_assignment_path(@assignment),
-                    notice: "Saved. #{@person.unsettled_demographic_fields.size} #{'field'.pluralize(@person.unsettled_demographic_fields.size)} still need a determination."
+                    notice: "Saved. #{remaining} #{'field'.pluralize(remaining)} still need a determination."
       else
         @field_errors = result.errors
         # The rollback restores the DB but @person keeps the submitted values in
@@ -48,11 +49,16 @@ module Demographics
       redirect_to demographics_assignment_path(@assignment), notice: "Demographic research started."
     end
 
-    # Completion gate: every core field that applies to this person needs a
-    # determination — a sourced value, or an explicit "not publicly
-    # documented". Leaving a field blank is not an answer.
+    # Completion gate: every field REQUIRED BY THIS ASSIGNMENT that applies to
+    # this person needs a determination — a sourced value, or an explicit "not
+    # publicly documented". Leaving a field blank is not an answer.
+    #
+    # The scope is the assignment's, not the person's: a task narrowed to race
+    # and gender completes on those two. The person-level rollup below still
+    # measures all core fields, so a narrow task can complete while the person
+    # remains "in progress" — which is the honest description of that state.
     def complete
-      unsettled = @assignment.person.unsettled_demographic_fields
+      unsettled = @assignment.unsettled_demographic_fields(@person)
 
       if unsettled.any?
         redirect_to demographics_assignment_path(@assignment),
@@ -62,7 +68,7 @@ module Demographics
 
       @assignment.complete!
       @assignment.person.refresh_demographics_status!(reviewer: current_user)
-      redirect_to demographics_assignments_path, notice: "Demographic research completed!"
+      redirect_to demographics_assignments_path, notice: completion_notice
     end
 
     def reopen
@@ -71,6 +77,18 @@ module Demographics
     end
 
     private
+
+    # Be explicit when a narrowed task finishes but the person still has gaps,
+    # so nobody reads "completed" as "this person's demographics are done".
+    def completion_notice
+      return "Demographic research completed!" unless @assignment.scoped_demographics?
+
+      still_open = @person.unsettled_demographic_fields.size
+      return "Demographic research completed!" if still_open.zero?
+
+      "Demographic research completed for #{@assignment.demographic_scope_summary}. " \
+        "#{still_open} other #{'field'.pluralize(still_open)} on this person remain unresearched."
+    end
 
     def set_assignment
       @assignment = current_user.assignments.demographic_research.find(params[:id])

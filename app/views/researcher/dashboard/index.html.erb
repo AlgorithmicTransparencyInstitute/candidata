@@ -165,7 +165,7 @@
       <div class="divide-y divide-gray-200">
         <% if @demographic_assignments.any? %>
           <% @demographic_assignments.each do |assignment| %>
-            <% unsettled = assignment.person.unsettled_demographic_fields.size %>
+            <% unsettled = assignment.unsettled_demographic_fields.size %>
             <%= link_to demographics_assignment_path(assignment), class: "block px-6 py-4 hover:bg-gray-50 transition-colors" do %>
               <div class="flex justify-between items-center">
                 <div>

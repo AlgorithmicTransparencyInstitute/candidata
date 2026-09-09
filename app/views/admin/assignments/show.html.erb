@@ -32,8 +32,19 @@
       </div>
       <div>
         <div class="text-sm text-gray-500">Task Type</div>
-        <div class="font-medium"><%= @assignment.task_type.humanize %></div>
+        <div class="font-medium"><%= task_type_label(@assignment) %></div>
       </div>
+      <% if @assignment.demographic_research? %>
+        <div>
+          <div class="text-sm text-gray-500">Fields required</div>
+          <div class="font-medium"><%= @assignment.demographic_scope_summary %></div>
+          <% if @assignment.scoped_demographics? %>
+            <div class="text-xs text-gray-500 mt-0.5">
+              <%= @assignment.unsettled_demographic_fields.size %> still to determine
+            </div>
+          <% end %>
+        </div>
+      <% end %>
       <div>
         <div class="text-sm text-gray-500">Assigned By</div>
         <div class="font-medium"><%= @assignment.assigned_by.name %></div>

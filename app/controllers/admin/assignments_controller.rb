@@ -208,6 +208,7 @@ module Admin
         if assignment.new_record?
           assignment.assigned_by = current_user
           assignment.status = 'pending'
+          assignment.required_demographic_fields = required_demographic_fields if task_type == 'demographic_research'
           if assignment.save
             SocialMediaAccount.prepopulate_for_person!(person) if task_type == 'data_collection'
             created += 1
@@ -263,6 +264,15 @@ module Admin
     end
 
     private
+
+    # Which demographic fields this batch of assignments must settle. Unknown
+    # keys are dropped rather than trusted — the model rejects them too, but a
+    # bad key here would fail the whole batch instead of one row.
+    def required_demographic_fields
+      Array(params[:required_demographic_fields])
+        .map(&:to_s)
+        .select { |key| DemographicField.key?(key) }
+    end
 
     # Demographic filters work two independent axes: whether the columns hold
     # values at all, and how far the sourced review has got. Keeping them

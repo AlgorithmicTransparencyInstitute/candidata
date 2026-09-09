@@ -160,7 +160,11 @@ The evidence trail behind one demographic claim about one person. **A missing ro
 - `previous_url` digs through PaperTrail versions
 
 ### Assignment
-`user_id` (required), `assigned_by_id` (required), `person_id` (required), `task_type` (required: data_collection/data_validation/secondary_verification/**demographic_research**), `status` (default "pending": pending/in_progress/completed), `completed_at`, `notes`
+`user_id` (required), `assigned_by_id` (required), `person_id` (required), `task_type` (required: data_collection/data_validation/secondary_verification/**demographic_research**), `status` (default "pending": pending/in_progress/completed), `completed_at`, `notes`, `required_demographic_fields` (string array, default `[]`)
+
+- `required_demographic_fields` narrows a demographic task to a subset ("just race and gender"). **Blank means every core field** — the historic behaviour, so existing rows needed no backfill. Validated against `DemographicField::KEYS`; an unknown key would silently drop out of the gate and let the task complete without the work being done.
+- Scoped methods: `scoped_demographics?`, `demographic_fields_required`, `demographic_fields_required_for(person)`, `unsettled_demographic_fields(person)` (**the completion gate**), `demographic_scope_summary`
+- ⚠️ A scoped assignment does **not** feed `people.demographics_status`. That rollup means "all core fields settled" and the admin filters depend on it; a two-field task marking a person complete would break the filter admins use to find outstanding work. A narrow task completes while the person stays `in_progress`, and the completion notice says so.
 
 - **Unique on `[user_id, person_id, task_type]`**
 - `belongs_to :user, :assigned_by (User), :person`
