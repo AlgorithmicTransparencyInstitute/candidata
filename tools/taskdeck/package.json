@@ -1,0 +1,13 @@
+{
+  "name": "taskdeck",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Central board for Claude Code agents across machines, plus email/Slack/chat tasks, ranked by heat.",
+  "type": "module",
+  "engines": { "node": ">=18.17" },
+  "scripts": {
+    "start": "node server.js",
+    "test": "node --test test/*.test.js",
+    "install-hooks": "node bin/install-hooks.js"
+  }
+}

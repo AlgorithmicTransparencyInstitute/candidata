@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Taskdeck</title>
+  <meta name="theme-color" content="#14161a">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="icon" href="/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/icon.svg">
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="brand">
+        <img src="/icon.svg" alt="" width="22" height="22">
+        <span>Taskdeck</span>
+      </div>
+      <nav id="tabs" class="tabs" aria-label="Views"></nav>
+      <div class="sidebar-foot">
+        <div id="conn" class="conn"><span class="dot"></span><span class="label">Connecting…</span></div>
+        <button id="alerts" class="link-btn" type="button" hidden>Enable alerts</button>
+        <div class="shortcuts">n new · j/k move · e done · w waiting · s snooze · 1-5 priority</div>
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="main-head">
+        <div>
+          <h1 id="view-title">Up next</h1>
+          <p id="view-sub" class="sub"></p>
+        </div>
+        <div id="heatbar" class="heatbar" aria-label="Heat distribution"></div>
+      </header>
+
+      <form id="quickadd" class="quickadd" autocomplete="off">
+        <input id="qa-title" name="title" placeholder="Add a task…  (press n)" aria-label="New task title">
+        <select id="qa-source" name="source" aria-label="Source">
+          <option value="manual">Other</option>
+          <option value="email">Email</option>
+          <option value="slack">Slack</option>
+          <option value="chat">Claude chat</option>
+          <option value="report">Report</option>
+        </select>
+        <select id="qa-priority" name="priority" aria-label="Priority">
+          <option value="5">P5 urgent</option>
+          <option value="4">P4 today</option>
+          <option value="3" selected>P3 this week</option>
+          <option value="2">P2 later</option>
+          <option value="1">P1 someday</option>
+        </select>
+        <button type="submit">Add</button>
+      </form>
+
+      <ul id="list" class="list" role="listbox" aria-label="Items"></ul>
+      <div id="empty" class="empty" hidden></div>
+    </main>
+
+    <section id="detail" class="detail" aria-label="Details"></section>
+  </div>
+
+  <dialog id="token-dialog">
+    <form method="dialog" id="token-form">
+      <h2>Connect to hub</h2>
+      <p>This hub requires an access token (TASKDECK_TOKEN).</p>
+      <input id="token-input" type="password" placeholder="Token" required>
+      <button type="submit">Connect</button>
+    </form>
+  </dialog>
+
+  <script type="module" src="/app.js"></script>
+</body>
+</html>
