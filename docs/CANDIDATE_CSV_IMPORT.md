@@ -137,3 +137,23 @@ General-election imports differ from the primary batches: there is no cleaning s
 - **Social accounts:** each sheet URL is checked against *all* of the person's accounts on that platform (any channel type, any stored handle form, or exact URL for handle-less Facebook `profile.php?id=` links). A channel already on file is reused, not duplicated. See GitHub issue #2 for why exact handle matching isn't enough.
 - **Party labels:** a trailing " Party" is dropped ("Libertarian Party" → "Libertarian"). "No Party Affiliation" (FL) and "No Political Party" (NV) are kept whole. New people get a primary `PersonParty` when the label matches a `Party` row.
 - **Result:** 43 candidates matched to existing people (all 17 incumbents matched their state's sitting governor), 90 new people, 387 social accounts created and 85 reused.
+
+### U.S. House + Senate (2026-10-14)
+
+- **Source:** the 2026 **primary** data already in the database. There is no CSV.
+- **Task:** `bin/rails import:congress_general_2026`. It is a dry run by default (`APPLY=1` writes) and writes a review file, `tmp/congress_general_2026_review.csv`.
+- **Code:** `lib/importers/general_congress_2026_builder.rb`.
+- **Creates:**
+  - a general `Election` and `Ballot` for every state (find-or-create; the 36 governor states already had them)
+  - one general `Contest` per seat: 435 House and 35 Senate (33 class II seats plus the FL and OH specials)
+- **Nominees carried:** each primary candidate with outcome `won` or `advanced` becomes a `pending` general candidate. Party comes from the primary contest, and the incumbent flag carries over. A fusion candidate (one person on several NY lines) becomes one candidacy under the major party.
+- **Held for review, never guessed:**
+  - `pending`/`unknown` primary results
+  - two or more nominees from the same party. This is allowed only for CA/WA top-two, Alaska's top-four and independent-type labels.
+
+  Each review seat is listed in the CSV. Researched answers go in `SEAT_RESOLUTIONS` (seat label → person ids), then re-run. The run is idempotent.
+- **Primary data repairs** (made by the same run):
+  - Senate offices are per sitting senator. The WY Republican primary was attached to Barrasso's seat, and the MA Independent/PSL entries to Warren's. Both now point at the seat that's up: Lummis's and Markey's.
+  - The ND and SD at-large primaries used district-less duplicate offices (108563/108564). They now point at the real at-large offices.
+  - IL office 108558 (no district) has one empty Democratic primary contest. It's ignored.
+- **First run result:** 470 contests, 1,003 nominees carried, and 62 seats needing review (11 with no nominee, 15 held, 45 with an unresolved result).
