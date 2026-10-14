@@ -7,7 +7,7 @@ namespace :govproj do
     puts "GOVPROJ CSV ANALYSIS"
     puts "=" * 70
 
-    csv_dir = Rails.root.join('data', 'govproj')
+    csv_dir = ENV['CSV_DIR'] ? Rails.root.join(ENV['CSV_DIR']) : Rails.root.join('data', 'govproj')
     all_rows = []
     
     # Read all CSV files
@@ -123,7 +123,7 @@ namespace :govproj do
 
   desc "Count total records across all govproj files"
   task count: :environment do
-    csv_dir = Rails.root.join('data', 'govproj')
+    csv_dir = ENV['CSV_DIR'] ? Rails.root.join(ENV['CSV_DIR']) : Rails.root.join('data', 'govproj')
     total = 0
     
     Dir.glob(csv_dir.join('*.csv')).sort.each do |file|
@@ -140,7 +140,7 @@ namespace :govproj do
     puts "LOADING GOVPROJ DATA INTO TEMP TABLE"
     puts "=" * 70
     
-    csv_dir = Rails.root.join('data', 'govproj')
+    csv_dir = ENV['CSV_DIR'] ? Rails.root.join(ENV['CSV_DIR']) : Rails.root.join('data', 'govproj')
     
     # Clear existing temp data
     TempGovproj.delete_all
@@ -240,7 +240,7 @@ namespace :govproj do
     puts "=" * 70
     puts "Note: This adds state/local offices. Federal offices come from db:seed."
     
-    csv_dir = Rails.root.join('data', 'govproj')
+    csv_dir = ENV['CSV_DIR'] ? Rails.root.join(ENV['CSV_DIR']) : Rails.root.join('data', 'govproj')
     stats = { created: 0, skipped: 0, errors: [] }
     
     map_level = ->(level) {
@@ -318,7 +318,7 @@ namespace :govproj do
     puts "Prereq: Run 'rake db:seed' and 'rake govproj:import_offices' first."
     puts "This task does NOT touch parties or offices - only people/officeholders."
 
-    csv_dir = Rails.root.join('data', 'govproj')
+    csv_dir = ENV['CSV_DIR'] ? Rails.root.join(ENV['CSV_DIR']) : Rails.root.join('data', 'govproj')
     
     stats = {
       people_created: 0,
