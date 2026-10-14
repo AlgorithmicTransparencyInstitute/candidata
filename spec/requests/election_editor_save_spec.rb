@@ -100,6 +100,58 @@ RSpec.describe "Admin election editor save", type: :request do
     expect(account.verified).to be(true)
   end
 
+  # Prod 500 (Jim Himes, CT): a blank-handle Campaign account shares its URL
+  # with an Official Office twin that already holds the handle. Re-sending the
+  # untouched cell triggered the handle repair, which hit
+  # idx_social_accounts_unique — so changing the outcome 500'd the row.
+  it "skips the handle repair when a sibling account already holds that handle, and still saves the row" do
+    person = Person.create!(first_name: "Jim", last_name: "Himes", state_of_residence: "NY")
+    contest # materialize before the candidate references it
+    candidate = Candidate.create!(person: person, contest: contest, outcome: "pending", party_at_time: "Democratic")
+    person.social_media_accounts.create!(
+      platform: "Twitter", handle: "jahimes", url: "https://x.com/jahimes",
+      channel_type: "Official Office", verified: true
+    )
+    campaign = person.social_media_accounts.create!(
+      platform: "Twitter", handle: nil, url: "https://x.com/jahimes",
+      channel_type: "Campaign", verified: true
+    )
+
+    rows = [row(key: "r1", first: "Jim", last: "Himes", personId: person.id,
+                candidateId: candidate.id, outcome: "won",
+                socials: { Twitter: { accountId: campaign.id, value: campaign.url } })]
+    post admin_election_editor_save_path(election), params: { rows: rows, deletedCandidateIds: [] }, as: :json
+
+    expect(response).to have_http_status(:ok)
+    result = JSON.parse(response.body)["results"].first
+    expect(result["ok"]).to be(true)
+    expect(candidate.reload.outcome).to eq("won")
+    expect(campaign.reload.handle).to be_nil
+    expect(campaign.verified).to be(true)
+  end
+
+  it "rejects a handle change that collides with a sibling account as a row error, not a 500" do
+    person = Person.create!(first_name: "Rosa", last_name: "DeLauro", state_of_residence: "NY")
+    person.social_media_accounts.create!(
+      platform: "Twitter", handle: "rosadelauro", url: "https://x.com/rosadelauro",
+      channel_type: "Official Office", verified: true
+    )
+    campaign = person.social_media_accounts.create!(
+      platform: "Twitter", handle: "rosacampaign", url: "https://x.com/rosacampaign",
+      channel_type: "Campaign", verified: false
+    )
+
+    rows = [row(key: "r1", first: "Rosa", last: "DeLauro", personId: person.id,
+                socials: { Twitter: { accountId: campaign.id, value: "https://x.com/rosadelauro" } })]
+    post admin_election_editor_save_path(election), params: { rows: rows, deletedCandidateIds: [] }, as: :json
+
+    expect(response).to have_http_status(:ok)
+    result = JSON.parse(response.body)["results"].first
+    expect(result["ok"]).to be(false)
+    expect(result["errors"].join).to match(/already been taken/)
+    expect(campaign.reload.handle).to eq("rosacampaign")
+  end
+
   it "persists website_campaign and fills name_source only when blank" do
     rows = [row(key: "r1", first: "Abigail", last: "Spanberger",
                 website: "https://abigailspanberger.com", nameSource: "Abigail A. Spanberger")]

@@ -69,6 +69,10 @@ class ElectionEditorSave
     { key: key, ok: false, errors: e.record.errors.full_messages }
   rescue ActiveRecord::RecordNotFound => e
     { key: key, ok: false, errors: [e.message] }
+  rescue ActiveRecord::RecordNotUnique
+    # Backstop for a race or a constraint the validations don't mirror: fail
+    # this row with a readable error rather than 500ing the whole sheet.
+    { key: key, ok: false, errors: ['This person already has an account with that handle on that platform'] }
   end
 
   def upsert_person(row)
@@ -135,10 +139,16 @@ class ElectionEditorSave
     # unverified accounts. An identical URL whose stored handle disagrees
     # with extraction means the stored handle is derived-data garbage (old
     # extractor bugs like "videos") — repair it without touching verification.
+    # The repair is housekeeping, so skip it when a sibling account already
+    # holds that handle (e.g. an Official + Campaign pair for one channel):
+    # writing it would violate idx_social_accounts_unique and fail the user's
+    # actual edit on the row.
     same_url = normalized[:url].present? && account.url == normalized[:url]
     if same_url || SocialHandles.same?(platform, account.handle, normalized[:handle])
       repairs = {}
-      if same_url && normalized[:handle].present? && !SocialHandles.same?(platform, account.handle, normalized[:handle])
+      if same_url && normalized[:handle].present? &&
+         !SocialHandles.same?(platform, account.handle, normalized[:handle]) &&
+         !handle_taken?(account, normalized[:handle])
         repairs[:handle] = normalized[:handle]
       end
       if !same_url && normalized[:url].present? && (account.url.blank? || !account.verified)
@@ -205,6 +215,13 @@ class ElectionEditorSave
       socials[account.platform] = account_cell(account)
     end
     socials
+  end
+
+  # Mirrors idx_social_accounts_unique (person_id, platform, handle).
+  def handle_taken?(account, handle)
+    SocialMediaAccount.where(person_id: account.person_id, platform: account.platform, handle: handle)
+                      .where.not(id: account.id)
+                      .exists?
   end
 
   def account_cell(account)

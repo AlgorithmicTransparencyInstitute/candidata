@@ -111,7 +111,10 @@ One transaction **per row** — a bad row reports errors without losing the shee
      unverify. A blank URL gets filled in; a real URL change applies only to
      unverified accounts. Re-sending an account's own exact URL when the stored
      handle is derived-data garbage (old extractor bugs like `"videos"`) repairs
-     the handle without touching verification.
+     the handle without touching verification — unless a sibling account
+     (e.g. an Official/Campaign pair for one channel) already holds that handle,
+     in which case the repair is skipped so it can't trip
+     `idx_social_accounts_unique` and fail the row's real edit.
    - account + **different handle** → update; verified accounts get `verified: false` +
      `research_status: revised` + a warning (re-verification flow)
    - account + cleared → destroy **only if unverified**; verified accounts are never

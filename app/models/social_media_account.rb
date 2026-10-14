@@ -15,7 +15,10 @@ class SocialMediaAccount < ApplicationRecord
 
   validates :platform, presence: true, inclusion: { in: PLATFORMS, message: "%{value} is not a valid platform" }
   validates :channel_type, inclusion: { in: CHANNEL_TYPES, allow_blank: true }
-  validates :handle, uniqueness: { scope: [:person_id, :platform, :channel_type], allow_blank: true }
+  # Must match idx_social_accounts_unique (person_id, platform, handle) — the
+  # index has no channel_type, so scoping by it here let an Official/Campaign
+  # pair pass validation and then 500 on the DB constraint.
+  validates :handle, uniqueness: { scope: [:person_id, :platform], allow_blank: true }
   validates :research_status, inclusion: { in: RESEARCH_STATUSES }, allow_nil: true
 
   scope :active, -> { where(account_inactive: false) }
