@@ -110,3 +110,30 @@ To add a new party, **create a `Party` record** (its short label — the name mi
 7. **Capture a production DB backup** (`heroku pg:backups:capture --app candidata`), commit cleaned CSVs + scripts + rake task, push to Heroku, run on production.
 
 After the production import completes, the `SocialMediaAccount` after_commit hook auto-enqueues any **verified** handles to Junkipedia. (Imports typically create accounts as unverified pending researcher work, so the auto-sync fires later when the verification controller flips `verified` to true — not at import time.) See `docs/JUNKIPEDIA_INTEGRATION.md`.
+
+## 2026 General Elections
+
+General-election imports differ from the primary batches: there is no cleaning step, and the importer builds the whole record chain itself, because general elections didn't exist in the database before them.
+
+### Governors (2026-10-14)
+
+- **Source:** Google Sheet `2026_Gubernatorial_General_Election_Candidates_V3` (owner myra@ncoc.org), 133 candidates in 36 states. Committed as `data/2026_general/governors/governors_general_2026_v3.csv`.
+- **Task:** `bin/rails import:governors_general_2026`. It is a **dry run by default** and prints one match decision per candidate. Use `APPLY=1 USER_EMAIL=<admin email>` to write.
+- **Code:** `lib/importers/general_governor_2026_importer.rb`.
+- **Creates per state:** an `Election` (general, 2026-11-03), a `Ballot` (general, no party), a `Contest` (general, `Governor of <State>`) and a `Candidate` per row. Everything is find-or-create.
+- **Writes go through `ElectionEditorSave`**, so imported rows follow the election editor's rules exactly:
+  - new social accounts are Campaign / `entered` / **unverified**, so nothing is sent to Junkipedia at import
+  - verified accounts are never changed, except that a blank URL gets filled in
+  - blank placeholder accounts are created for the six core platforms
+  - every row can be edited at `/admin/elections/:id/editor`
+- **Person matching**, in order:
+  1. A row already imported (same source name on this contest) matches its existing person, so re-runs change nothing.
+  2. Hand-reviewed `MATCH_OVERRIDES` (e.g. "Doug Jones" is **not** #192490, a Chambers County commissioner).
+  3. `Incumbent` rows must match the state's current governor, otherwise the row is flagged.
+  4. Otherwise, the same last name plus a compatible first name (with a nickname table) **in the same state**.
+  5. Same-name records in other states are noted but never linked. A same-name record with **no** state is flagged ambiguous.
+
+  The task refuses to write while any row is ambiguous.
+- **Social accounts:** each sheet URL is checked against *all* of the person's accounts on that platform (any channel type, any stored handle form, or exact URL for handle-less Facebook `profile.php?id=` links). A channel already on file is reused, not duplicated. See GitHub issue #2 for why exact handle matching isn't enough.
+- **Party labels:** a trailing " Party" is dropped ("Libertarian Party" → "Libertarian"). "No Party Affiliation" (FL) and "No Political Party" (NV) are kept whole. New people get a primary `PersonParty` when the label matches a `Party` row.
+- **Result:** 43 candidates matched to existing people (all 17 incumbents matched their state's sitting governor), 90 new people, 387 social accounts created and 85 reused.
