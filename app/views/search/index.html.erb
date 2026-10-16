@@ -1,0 +1,92 @@
+<% page_meta title: (@q.present? ? "Search: #{@q}" : "Search") %>
+
+<div class="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
+  <h1 class="text-3xl font-bold tracking-tight">Search</h1>
+
+  <%= form_with url: search_path, method: :get, local: true, role: "search", class: "mt-4" do %>
+    <label for="search-q" class="sr-only">Search people, states, races and offices</label>
+    <div class="flex gap-2">
+      <input id="search-q" type="search" name="q" value="<%= @q %>" autofocus
+             placeholder="A name, a state, or a seat like TX-8 or CA Senate"
+             class="w-full rounded-lg border-line bg-surface-raised px-4 py-3 focus:border-brand-600 focus:ring-brand-600">
+      <button type="submit" class="rounded-lg bg-brand-700 px-5 font-medium text-white hover:bg-brand-800">Search</button>
+    </div>
+  <% end %>
+
+  <% if @q.blank? %>
+    <p class="mt-6 text-ink-muted">Search for a politician by name, a state, or a 2026 race such as "TX-8", "GA Senate" or "OH governor".</p>
+  <% else %>
+    <% nothing = @people.empty? && @states.empty? && @races.empty? && @offices.empty? %>
+    <% if nothing %>
+      <p class="mt-8 rounded-xl border border-dashed border-line p-6 text-ink-muted">
+        No results for “<%= @q %>”. Try a last name, a state, or a seat like “TX-8”.
+      </p>
+    <% end %>
+
+    <% if @races.any? %>
+      <section aria-labelledby="races-heading" class="mt-8">
+        <h2 id="races-heading" class="text-xl font-semibold">2026 races</h2>
+        <ul class="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <% @races.each do |contest| %>
+            <li><%= render "public/race_card", contest: contest %></li>
+          <% end %>
+        </ul>
+      </section>
+    <% end %>
+
+    <% if @states.any? %>
+      <section aria-labelledby="states-heading" class="mt-8">
+        <h2 id="states-heading" class="text-xl font-semibold">States</h2>
+        <ul class="mt-4 flex flex-wrap gap-2">
+          <% @states.each do |s| %>
+            <li>
+              <%= link_to state_path(s.abbreviation), class: "inline-flex items-center gap-2 rounded-full bg-surface-raised px-4 py-2 ring-1 ring-line hover:ring-brand-600" do %>
+                <span class="font-medium"><%= s.name %></span>
+                <span class="text-sm text-ink-faint"><%= s.abbreviation %></span>
+              <% end %>
+            </li>
+          <% end %>
+        </ul>
+      </section>
+    <% end %>
+
+    <% if @people.any? %>
+      <section aria-labelledby="people-heading" class="mt-8">
+        <h2 id="people-heading" class="text-xl font-semibold">People</h2>
+        <ul class="mt-4 divide-y divide-line rounded-xl border border-line bg-surface-raised">
+          <% @people.each do |person| %>
+            <% office = person.officeholders.select(&:current?).first&.office %>
+            <li>
+              <%= link_to person_path(person), class: "flex items-center gap-3 p-4 hover:bg-surface" do %>
+                <%= person_avatar(person, size: "size-10", text: "text-sm") %>
+                <span class="min-w-0 flex-1">
+                  <span class="block font-medium"><%= person.full_name %></span>
+                  <span class="block truncate text-sm text-ink-muted">
+                    <%= office ? seat_label(office) : [person.state_of_residence, "No current office on file"].compact_blank.join(" · ") %>
+                  </span>
+                </span>
+                <%= party_badge(person.primary_party&.name, short: true) %>
+              <% end %>
+            </li>
+          <% end %>
+        </ul>
+        <% if @people.size == 30 %>
+          <p class="mt-3 text-sm text-ink-muted">
+            Showing the 30 closest matches. <%= link_to "Filter all politicians", people_path(q: @q), class: "font-medium text-brand-700 hover:text-brand-800" %>
+          </p>
+        <% end %>
+      </section>
+    <% end %>
+
+    <% if @offices.any? %>
+      <section aria-labelledby="offices-heading" class="mt-8">
+        <h2 id="offices-heading" class="text-xl font-semibold">Offices</h2>
+        <ul class="mt-4 divide-y divide-line rounded-xl border border-line bg-surface-raised">
+          <% @offices.each do |office| %>
+            <li><%= link_to seat_label(office), office_path(office), class: "block p-4 hover:bg-surface hover:text-brand-700" %></li>
+          <% end %>
+        </ul>
+      </section>
+    <% end %>
+  <% end %>
+</div>

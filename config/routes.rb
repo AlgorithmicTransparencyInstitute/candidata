@@ -212,6 +212,9 @@ Rails.application.routes.draw do
   get "help/coverage", to: "help#coverage", as: :help_coverage
   get "help/researcher-guide", to: "help#researcher_guide", as: :help_researcher_guide
 
+  # Site search (people, states, races, offices)
+  get "search", to: "search#index", as: :search
+
   # About page
   get "about", to: "about#index", as: :about
 

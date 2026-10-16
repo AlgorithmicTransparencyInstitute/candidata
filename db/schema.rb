@@ -10,10 +10,11 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_09_09_170000) do
+ActiveRecord::Schema[8.0].define(version: 2026_10_16_120000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pg_stat_statements"
+  enable_extension "pg_trgm"
 
   create_table "active_storage_attachments", force: :cascade do |t|
     t.string "name", null: false
@@ -338,6 +339,7 @@ ActiveRecord::Schema[8.0].define(version: 2026_09_09_170000) do
     t.string "demographics_status", default: "not_started", null: false
     t.datetime "demographics_reviewed_at"
     t.bigint "demographics_reviewed_by_id"
+    t.index "lower((((COALESCE(first_name, ''::character varying))::text || ' '::text) || (COALESCE(last_name, ''::character varying))::text)) gin_trgm_ops", name: "index_people_on_search_name_trgm", using: :gin
     t.index ["airtable_id"], name: "index_people_on_airtable_id", unique: true
     t.index ["demographics_reviewed_by_id"], name: "index_people_on_demographics_reviewed_by_id"
     t.index ["demographics_status"], name: "index_people_on_demographics_status"

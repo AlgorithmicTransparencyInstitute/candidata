@@ -38,6 +38,8 @@ These controllers handle public browsing (no authentication required). They all 
 - **`PublicUiHelper`** — the shared building blocks: `page_meta(title:, description:, image:)` (call from a view), `person_avatar` (photo over an initials fallback; a failed hot-linked image removes itself), `party_badge` (party colour only appears here), `outcome_chip`, `platform_name`, `display_handle`, `channel_label`, `seat_label(office)`, `updated_stamp`.
 - **Design tokens** — `app/assets/tailwind/application.css` `@theme`: `surface`/`ink`/`line`, a single `brand` accent, `party-*` (badges only), `status-won`. Admin/researcher pages keep stock Tailwind colours.
 - **Person URLs** are `/people/<id>-<name-slug>` (`Person#to_param`); `PeopleController#show` 301-redirects numeric or stale-slug URLs to the canonical one.
+- **Search** — `SearchController#index` (`/search?q=`): people via `Person.name_matching` (pg_trgm GIN index `index_people_on_search_name_trgm`: substring or close-spelling match, ranked by similarity), states, offices (`Office.search_text`), and seat shorthand ("TX-8", "GA Senate", "OH governor") resolved to the 2026 races. The header search box posts here; `/people?q=` uses the same matcher.
+- **Elections** — `/elections` is a filterable 2026 race grid (type general/primary, office senate/governor/house, state) of `public/_race_card`s; election pages group races by office. `Candidate.in_public_order` is the one published candidate ordering (winners, major parties, incumbents, alphabetical), used by race pages and cards.
 - **Public visibility rule** — social accounts are shown only when `SocialMediaAccount#publicly_listed?` (verified, active, has a URL), the same rule `/api/v1` uses.
 
 #### HomeController (`app/controllers/home_controller.rb`)

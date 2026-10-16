@@ -111,6 +111,19 @@ class Person < ApplicationRecord
     where(id: DemographicVerification.disputed.select(:person_id))
   }
 
+  # Fuzzy name search backed by index_people_on_search_name_trgm (pg_trgm):
+  # substring match ("hime" -> Himes) or close spelling ("jim hymes").
+  SEARCH_NAME_SQL = "lower(coalesce(people.first_name, '') || ' ' || coalesce(people.last_name, ''))".freeze
+
+  scope :name_matching, lambda { |query|
+    term = query.to_s.downcase.squish
+    next none if term.blank?
+
+    where("#{SEARCH_NAME_SQL} LIKE :like OR #{SEARCH_NAME_SQL} % :term",
+          like: "%#{sanitize_sql_like(term)}%", term: term)
+      .order(Arel.sql(sanitize_sql_array(["similarity(#{SEARCH_NAME_SQL}, ?) DESC", term])))
+  }
+
   def full_name
     parts = [first_name, middle_name, last_name, suffix].compact_blank
     parts.join(' ')

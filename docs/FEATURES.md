@@ -7,22 +7,19 @@ Complete documentation of features available to different user roles.
 ## Public Features (No Login Required)
 
 ### 1. Browse Elections
-**Path:** `/elections`
+**Path:** `/elections`, `/elections/:id`, `/contests/:id`
 
-Discover elections by year and state.
-
-**Capabilities:**
-- List all elections (primary, general, special)
-- Filter by year and state
-- View election details with ballot information
-- See all contests in each election
-
-**Use Case:** Researchers discovering which elections are available in the system.
+- Every 2026 U.S. Senate, governor and House race as cards (seat, date, candidates with party and outcome), filterable by general/primary, office and state
+- Elections by state, linking to each state's primary and general
+- Election page: races grouped by office, registration and early-voting dates
+- Race page: candidate cards with photo, party, incumbent flag, outcome and verified accounts; links between a seat's primaries and general; the ordering rule stated on the page; vote counts only once results are loaded
 
 ---
 
 ### 2. Search People
-**Path:** `/people`
+**Path:** `/search` (site-wide box in the header) and `/people` (filterable list)
+
+Site search covers people (fuzzy: "jim hymes" finds Jim Himes), states, offices, and 2026 seats typed as "TX-8", "GA Senate" or "OH governor".
 
 Search for candidates and officeholders.
 

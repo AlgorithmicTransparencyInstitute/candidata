@@ -14,11 +14,7 @@ class PeopleController < PublicController
     
     # Search by name
     if params[:q].present?
-      search_term = "%#{params[:q].downcase}%"
-      @people = @people.where(
-        "LOWER(first_name) LIKE :term OR LOWER(last_name) LIKE :term OR LOWER(CONCAT(first_name, ' ', last_name)) LIKE :term",
-        term: search_term
-      )
+      @people = @people.name_matching(params[:q])
     end
     
     # Filter by state
@@ -26,32 +22,31 @@ class PeopleController < PublicController
       @people = @people.where(state_of_residence: params[:state])
     end
     
-    # Filter by party
+    # Filters are id subqueries rather than joins, so no DISTINCT is needed
+    # (DISTINCT can't be combined with the search's relevance ordering).
+    current_offices = Officeholder.current.joins(:office)
+
     if params[:party_id].present?
-      @people = @people.joins(:parties).where(parties: { id: params[:party_id] })
-    end
-    
-    # Filter by level (via current office)
-    if params[:level].present?
-      @people = @people.joins(:offices).where(offices: { level: params[:level] }).distinct
-    end
-    
-    # Filter by branch (via current office)
-    if params[:branch].present?
-      @people = @people.joins(:offices).where(offices: { branch: params[:branch] }).distinct
-    end
-    
-    # Filter by office (category or title)
-    if params[:office_title].present?
-      # For statewide offices, filter by office_category; for others, use title
-      @people = @people.joins(:offices).where(offices: { office_category: params[:office_title] }).or(
-        @people.joins(:offices).where(offices: { title: params[:office_title] })
-      ).distinct
+      @people = @people.where(id: PersonParty.where(party_id: params[:party_id]).select(:person_id))
     end
 
-    # Filter by current officeholders only
+    # Level / branch / office filter on CURRENT offices
+    if params[:level].present?
+      @people = @people.where(id: current_offices.where(offices: { level: params[:level] }).select(:person_id))
+    end
+
+    if params[:branch].present?
+      @people = @people.where(id: current_offices.where(offices: { branch: params[:branch] }).select(:person_id))
+    end
+
+    # Statewide offices filter by office_category, others by title
+    if params[:office_title].present?
+      @people = @people.where(id: current_offices.where('offices.office_category = :t OR offices.title = :t',
+                                                        t: params[:office_title]).select(:person_id))
+    end
+
     if params[:current] == '1'
-      @people = @people.current_officeholders
+      @people = @people.where(id: Officeholder.current.select(:person_id))
     end
 
     # Sort
@@ -64,7 +59,7 @@ class PeopleController < PublicController
                 @people.order(:last_name, :first_name)
               end
 
-    @people = @people.distinct.page(params[:page]).per(50)
+    @people = @people.page(params[:page]).per(50)
 
     # Data for filters
     @states = Person.where.not(state_of_residence: [nil, '']).distinct.pluck(:state_of_residence).compact.sort
