@@ -57,22 +57,22 @@ RSpec.describe "Public pages", type: :request do
       expect(response.body).not_to include("text-green-500")
     end
 
-    it "hides Total Votes on a contest with no tallies" do
+    it "shows no vote figures on a contest with no tallies" do
       Candidate.create!(person: person, contest: contest, outcome: "pending")
 
       get contest_path(contest)
 
       expect(response).to have_http_status(:ok)
-      expect(response.body).not_to include("Total Votes")
+      expect(response.body).not_to match(/\d votes</)
     end
 
-    it "shows Total Votes once tallies exist" do
+    it "shows vote counts and shares once tallies exist" do
       Candidate.create!(person: person, contest: contest, outcome: "won", tally: 12_345)
 
       get contest_path(contest)
 
-      expect(response.body).to include("Total Votes")
-      expect(response.body).to include("12,345")
+      expect(response.body).to include("12,345 votes")
+      expect(response.body).to include("100.0%")
     end
   end
 
@@ -149,6 +149,48 @@ RSpec.describe "Public pages", type: :request do
       expect(response.body).to include(contest_path(contest))
       expect(response.body).to include("Democratic primary")
       expect(response.body).to include("✓ Won")
+    end
+  end
+
+  describe "race page" do
+    let(:election) { Election.create!(state: "TX", date: Date.new(2026, 11, 3), election_type: "general", year: 2026, name: "2026 TX General Election") }
+    let(:ballot) { Ballot.create!(state: "TX", date: Date.new(2026, 11, 3), election_type: "general", year: 2026, election: election) }
+    let(:office) { Office.create!(title: "U.S. Senator", level: "federal", branch: "legislative", state: "TX") }
+    let(:general) { Contest.create!(ballot: ballot, office: office, date: Date.new(2026, 11, 3), contest_type: "general") }
+
+    def candidate(first, last, party, **attrs)
+      Candidate.create!(person: Person.create!(first_name: first, last_name: last), contest: general,
+                        party_at_time: party, outcome: "pending", **attrs)
+    end
+
+    it "orders major parties first, incumbents next, then alphabetically, and states the rule" do
+      candidate("Ted", "Brown", "Libertarian")
+      candidate("James", "Talarico", "Democratic")
+      candidate("Ken", "Paxton", "Republican")
+
+      get contest_path(general)
+
+      body = response.body
+      expect(body.index("Ken Paxton")).to be < body.index("James Talarico")
+      expect(body.index("James Talarico")).to be < body.index("Ted Brown")
+      expect(body).to include("not a ranking or an endorsement")
+    end
+
+    it "shows only verified accounts and links to the seat's primaries" do
+      c = candidate("James", "Talarico", "Democratic")
+      c.person.social_media_accounts.create!(platform: "TikTok", handle: "jamestalarico",
+                                             url: "https://www.tiktok.com/@jamestalarico", verified: true)
+      c.person.social_media_accounts.create!(platform: "Twitter", handle: "unverifiedtalarico",
+                                             url: "https://x.com/unverifiedtalarico", verified: false)
+      pballot = Ballot.create!(state: "TX", date: Date.new(2026, 3, 3), election_type: "primary", year: 2026, party: "Democratic")
+      primary = Contest.create!(ballot: pballot, office: office, date: Date.new(2026, 3, 3), contest_type: "primary", party: "Democratic")
+
+      get contest_path(general)
+
+      expect(response.body).to include("https://www.tiktok.com/@jamestalarico")
+      expect(response.body).not_to include("unverifiedtalarico")
+      expect(response.body).to include(contest_path(primary))
+      expect(response.body).to include("<title>U.S. Senator · TX — 2026 general election · CandiData</title>")
     end
   end
 

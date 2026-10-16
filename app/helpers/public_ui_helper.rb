@@ -138,4 +138,16 @@ module PublicUiHelper
             end
     [office.title, where.presence].compact.join(' · ')
   end
+
+  # "2026 Democratic primary", "2026 general election".
+  def contest_kind(contest)
+    kind = if contest.contest_type == 'primary' && contest.party.present?
+             "#{contest.party} primary"
+           elsif contest.contest_type == 'general'
+             'general election'
+           else
+             contest.contest_type.to_s.humanize.downcase
+           end
+    [contest.date&.year, kind].compact.join(' ')
+  end
 end
