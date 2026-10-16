@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-class OfficesController < ApplicationController
+class OfficesController < PublicController
   
   def index
     @offices = Office.includes(:district, :officeholders, :body)

@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-class AboutController < ApplicationController
+class AboutController < PublicController
   def index
     @stats = {
       people: Person.count,

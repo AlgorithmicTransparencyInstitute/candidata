@@ -120,8 +120,25 @@ class Person < ApplicationRecord
     "#{first_name} #{last_name}#{suffix.present? ? ", #{suffix}" : ''}"
   end
 
+  # Uses the preloaded association when there is one, so list pages that
+  # include(person_parties: :party) don't run a query per row.
   def primary_party
-    person_parties.find_by(is_primary: true)&.party || party_affiliation
+    primary = if person_parties.loaded?
+                person_parties.find(&:is_primary)
+              else
+                person_parties.find_by(is_primary: true)
+              end
+    primary&.party || party_affiliation
+  end
+
+  # Readable URLs: /people/1234-jim-himes. Lookups still go by the numeric id
+  # (find("1234-jim-himes") casts to 1234), so old /people/1234 links keep
+  # working and PeopleController#show redirects them to the canonical form.
+  def to_param
+    return super unless persisted?
+
+    slug = full_name.parameterize
+    slug.present? ? "#{id}-#{slug}" : id.to_s
   end
 
   def primary_party=(party)

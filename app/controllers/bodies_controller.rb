@@ -1,4 +1,4 @@
-class BodiesController < ApplicationController
+class BodiesController < PublicController
   def index
     @bodies = ::Body.order(:name)
 

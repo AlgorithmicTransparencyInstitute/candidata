@@ -4,3 +4,39 @@
 @source "../../../app/views/**/*.erb";
 @source "../../../app/helpers/**/*.rb";
 @source "../../../app/javascript/**/*.js";
+
+/*
+ * Design tokens for the public site (layouts/public). Admin and researcher
+ * pages keep stock Tailwind colours; nothing here overrides a default.
+ *
+ * - surface/ink/line: page background, text and rules
+ * - brand: the single accent (links, primary buttons, focus rings)
+ * - party-*: used ONLY in small badges, never as card backgrounds
+ *   (nonpartisan presentation rule in the overhaul plan)
+ */
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+
+  --color-surface: oklch(0.985 0.002 250);
+  --color-surface-raised: oklch(1 0 0);
+  --color-ink: oklch(0.22 0.02 260);
+  --color-ink-muted: oklch(0.46 0.02 260);
+  --color-ink-faint: oklch(0.6 0.015 260);
+  --color-line: oklch(0.91 0.006 260);
+
+  --color-brand-50: oklch(0.97 0.02 265);
+  --color-brand-100: oklch(0.93 0.04 265);
+  --color-brand-600: oklch(0.5 0.17 265);
+  --color-brand-700: oklch(0.44 0.16 265);
+  --color-brand-800: oklch(0.37 0.13 265);
+
+  --color-party-dem: oklch(0.48 0.16 258);
+  --color-party-dem-bg: oklch(0.95 0.03 258);
+  --color-party-rep: oklch(0.5 0.18 27);
+  --color-party-rep-bg: oklch(0.95 0.03 27);
+  --color-party-other: oklch(0.45 0.05 300);
+  --color-party-other-bg: oklch(0.95 0.015 300);
+
+  --color-status-won: oklch(0.45 0.12 155);
+  --color-status-won-bg: oklch(0.95 0.04 155);
+}

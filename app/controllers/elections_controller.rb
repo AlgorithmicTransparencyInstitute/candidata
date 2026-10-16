@@ -1,4 +1,4 @@
-class ElectionsController < ApplicationController
+class ElectionsController < PublicController
   def index
     @upcoming_elections = Election.where('date >= ?', Date.current)
                                    .order(:date)

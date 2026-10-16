@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-class StatesController < ApplicationController
+class StatesController < PublicController
   
   def index
     @states = State.all

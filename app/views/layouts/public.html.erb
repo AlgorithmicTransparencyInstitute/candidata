@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title><%= full_page_title %></title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="description" content="<%= page_description %>">
+    <link rel="canonical" href="<%= request.base_url + request.path %>">
+    <meta property="og:site_name" content="<%= PublicUiHelper::SITE_NAME %>">
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="<%= content_for(:page_title).presence || PublicUiHelper::SITE_NAME %>">
+    <meta property="og:description" content="<%= page_description %>">
+    <meta property="og:url" content="<%= request.base_url + request.path %>">
+    <% if content_for?(:page_image) %>
+      <meta property="og:image" content="<%= content_for(:page_image) %>">
+    <% end %>
+    <meta name="twitter:card" content="summary">
+    <%= csrf_meta_tags %>
+    <%= csp_meta_tag %>
+
+    <%= yield :head %>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+    <link rel="manifest" href="/manifest.json">
+    <link rel="icon" href="/icon.png" type="image/png">
+    <link rel="icon" href="/icon.svg" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="/icon.png">
+    <%= stylesheet_link_tag "tailwind", "data-turbo-track": "reload" %>
+    <%= stylesheet_link_tag "application", "data-turbo-track": "reload" %>
+    <%= javascript_importmap_tags %>
+    <%= render 'shared/mixpanel' %>
+  </head>
+
+  <body class="bg-surface text-ink font-sans antialiased min-h-screen flex flex-col">
+    <a href="#main" class="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-md focus:bg-surface-raised focus:px-4 focus:py-2 focus:ring-2 focus:ring-brand-600">
+      Skip to main content
+    </a>
+    <%= render 'shared/impersonation_banner' if current_user_is_impersonating? %>
+    <%= render 'public/header' %>
+
+    <main id="main" class="flex-1">
+      <%= yield %>
+    </main>
+
+    <%= render 'public/footer' %>
+    <%= render 'shared/cookie_consent' %>
+  </body>
+</html>

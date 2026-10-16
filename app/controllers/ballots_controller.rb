@@ -1,4 +1,4 @@
-class BallotsController < ApplicationController
+class BallotsController < PublicController
   def index
     @ballots = Ballot.includes(:contests).order(date: :desc, state: :asc, party: :asc)
 

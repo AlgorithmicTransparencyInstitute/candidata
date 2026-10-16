@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-class PeopleController < ApplicationController
+class PeopleController < PublicController
   
   def index
     # Eager load associations to avoid N+1 queries:
@@ -76,15 +76,23 @@ class PeopleController < ApplicationController
   
   def show
     @person = Person.includes(
-      :parties,
       :social_media_accounts,
-      officeholders: { office: :district },
-      candidates: { contest: [:ballot, :office] }
+      person_parties: :party,
+      officeholders: { office: [:district, :body] },
+      candidates: { contest: [{ ballot: :election }, { office: :district }] }
     ).find(params[:id])
 
-    @current_offices = @person.officeholders.current.includes(office: :district)
-    @past_offices = @person.officeholders.former.includes(office: :district).order(end_date: :desc)
-    @candidacies = @person.candidates.includes(contest: [:ballot, :office]).order('contests.date DESC')
+    # One canonical URL per person (/people/1234-jim-himes); old numeric links
+    # and renamed slugs redirect permanently.
+    return redirect_to(person_path(@person), status: :moved_permanently) if params[:id] != @person.to_param
+
+    @accounts = @person.social_media_accounts.select(&:publicly_listed?)
+                       .sort_by { |a| [SocialMediaAccount::PLATFORMS.index(a.platform) || 99, a.channel_type.to_s] }
+    @current_offices = @person.officeholders.select { |oh| oh.end_date.nil? || oh.end_date >= Date.current }
+                              .sort_by { |oh| oh.start_date || Date.new(1900) }.reverse
+    @past_offices = (@person.officeholders.to_a - @current_offices).sort_by { |oh| oh.end_date || Date.new(1900) }.reverse
+    @candidacies = @person.candidates.sort_by { |c| [c.contest.date || Date.new(1900), c.contest.contest_type == 'general' ? 1 : 0] }.reverse
+    @parties = @person.person_parties.sort_by { |pp| pp.is_primary ? 0 : 1 }
   end
 
   private

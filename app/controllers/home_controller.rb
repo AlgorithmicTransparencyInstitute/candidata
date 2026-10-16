@@ -1,4 +1,4 @@
-class HomeController < ApplicationController
+class HomeController < PublicController
   def index
     @people_count = Person.count
     @offices_count = Office.count

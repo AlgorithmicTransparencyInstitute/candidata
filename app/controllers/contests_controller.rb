@@ -1,4 +1,4 @@
-class ContestsController < ApplicationController
+class ContestsController < PublicController
   def index
     @contests = Contest.includes(:office, :ballot, :candidates).order(date: :desc)
 

@@ -1,0 +1,67 @@
+<header class="bg-surface-raised border-b border-line">
+  <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    <div class="flex h-16 items-center gap-4">
+      <%= link_to root_path, class: "flex items-center gap-2 shrink-0", 'aria-label': "CandiData home" do %>
+        <span class="size-8 rounded-lg bg-brand-700 text-white inline-flex items-center justify-center font-bold text-sm" aria-hidden="true">C</span>
+        <span class="text-lg font-semibold tracking-tight">CandiData</span>
+      <% end %>
+
+      <nav aria-label="Main" class="hidden md:flex items-center gap-1 ml-4">
+        <%= nav_link_to "Politicians", people_path %>
+        <%= nav_link_to "Elections", elections_path %>
+        <%= nav_link_to "States", states_path %>
+        <%= nav_link_to "Offices", offices_path %>
+      </nav>
+
+      <%= form_with url: people_path, method: :get, local: true, role: "search",
+                    class: "ml-auto hidden sm:block w-full max-w-xs" do %>
+        <label for="site-search" class="sr-only">Search politicians</label>
+        <div class="relative">
+          <svg class="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-ink-faint" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+          </svg>
+          <input id="site-search" type="search" name="q" placeholder="Search politicians"
+                 class="w-full rounded-lg border-line bg-surface pl-9 pr-3 py-2 text-sm placeholder:text-ink-faint focus:border-brand-600 focus:ring-brand-600">
+        </div>
+      <% end %>
+
+      <div class="hidden md:flex items-center gap-1">
+        <%= nav_link_to "About", about_path %>
+        <% if user_signed_in? %>
+          <%= link_to "Workspace", (current_user.admin? ? admin_root_path : researcher_root_path),
+                      class: "rounded-md px-3 py-2 text-sm font-medium text-brand-700 hover:bg-brand-50" %>
+        <% else %>
+          <%= link_to "Sign in", new_user_session_path, class: "rounded-md px-3 py-2 text-sm font-medium text-ink-muted hover:text-ink" %>
+        <% end %>
+      </div>
+
+      <details class="md:hidden ml-auto relative">
+        <summary class="list-none cursor-pointer rounded-md p-2 text-ink-muted hover:bg-surface" aria-label="Menu">
+          <svg class="size-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+          </svg>
+        </summary>
+        <div class="absolute right-0 z-40 mt-2 w-64 rounded-lg border border-line bg-surface-raised p-3 shadow-lg">
+          <%= form_with url: people_path, method: :get, local: true, role: "search", class: "mb-2" do %>
+            <label for="site-search-mobile" class="sr-only">Search politicians</label>
+            <input id="site-search-mobile" type="search" name="q" placeholder="Search politicians"
+                   class="w-full rounded-lg border-line bg-surface px-3 py-2 text-sm focus:border-brand-600 focus:ring-brand-600">
+          <% end %>
+          <nav aria-label="Main mobile" class="flex flex-col">
+            <%= nav_link_to "Politicians", people_path %>
+            <%= nav_link_to "Elections", elections_path %>
+            <%= nav_link_to "States", states_path %>
+            <%= nav_link_to "Offices", offices_path %>
+            <%= nav_link_to "About", about_path %>
+            <%= nav_link_to "Help", help_path %>
+            <% if user_signed_in? %>
+              <%= nav_link_to "Workspace", (current_user.admin? ? admin_root_path : researcher_root_path) %>
+            <% else %>
+              <%= nav_link_to "Sign in", new_user_session_path %>
+            <% end %>
+          </nav>
+        </div>
+      </details>
+    </div>
+  </div>
+</header>

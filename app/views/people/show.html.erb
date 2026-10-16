@@ -1,273 +1,198 @@
-<div class="min-h-screen bg-gray-50">
-  <%= render "shared/public_navbar" %>
+<% primary_party = @parties.find(&:is_primary)&.party || @person.party_affiliation %>
+<% headline_office = @current_offices.first&.office %>
+<% page_meta title: @person.full_name,
+             description: [@person.full_name, (seat_label(headline_office) if headline_office), primary_party&.name,
+                           ("#{@accounts.size} verified social media accounts" if @accounts.any?)].compact.join(' · '),
+             image: @person.photo_url.presence %>
 
-  <main class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
-    <!-- Back link -->
-    <div class="mb-4">
-      <%= link_to "← Back to Politicians", people_path(request.query_parameters.except(:id)), class: "text-sm text-indigo-600 hover:text-indigo-900" %>
-    </div>
+<div class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+  <nav aria-label="Breadcrumb" class="mb-6 text-sm text-ink-muted">
+    <ol class="flex flex-wrap items-center gap-1">
+      <li><%= link_to "Politicians", people_path, class: "hover:text-ink" %></li>
+      <% if @person.state_of_residence.present? %>
+        <li aria-hidden="true">/</li>
+        <li><%= link_to @person.state_of_residence, state_path(@person.state_of_residence), class: "hover:text-ink" %></li>
+      <% end %>
+      <li aria-hidden="true">/</li>
+      <li aria-current="page" class="text-ink"><%= @person.full_name %></li>
+    </ol>
+  </nav>
 
-    <!-- Header -->
-    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
-      <div class="flex items-start gap-6">
-        <% if @person.photo_url.present? %>
-          <img src="<%= @person.photo_url %>" alt="<%= @person.full_name %>" class="w-32 h-32 rounded-lg object-cover">
-        <% else %>
-          <div class="w-32 h-32 rounded-lg bg-gray-200 flex items-center justify-center">
-            <span class="text-gray-500 font-medium text-3xl"><%= @person.first_name.first %><%= @person.last_name.first %></span>
-          </div>
-        <% end %>
-        
-        <div class="flex-1">
-          <div class="flex items-center gap-3">
-            <h1 class="text-3xl font-bold text-gray-900"><%= @person.full_name %></h1>
-            <% if @person.current_officeholder? %>
-              <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
-                Current Officeholder
-              </span>
-            <% end %>
-          </div>
-          
-          <div class="mt-3 flex flex-wrap gap-4 text-sm text-gray-600">
-            <% if @person.primary_party %>
-              <div class="flex items-center gap-1">
-                <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
-                </svg>
-                <%= link_to @person.primary_party.name, party_path(@person.primary_party), class: "text-indigo-600 hover:text-indigo-900" %>
-              </div>
-            <% end %>
-            
-            <% if @person.state_of_residence.present? %>
-              <div class="flex items-center gap-1">
-                <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
-                </svg>
-                <%= link_to @person.state_of_residence, state_path(@person.state_of_residence), class: "text-indigo-600 hover:text-indigo-900" %>
-              </div>
-            <% end %>
-            
-            <% if @person.gender.present? %>
-              <div class="flex items-center gap-1">
-                <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
-                </svg>
-                <span><%= @person.gender %></span>
-              </div>
-            <% end %>
-            
-            <% if @person.birth_date.present? %>
-              <div class="flex items-center gap-1">
-                <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                </svg>
-                <span>Born <%= @person.birth_date.strftime('%B %d, %Y') %></span>
-              </div>
-            <% end %>
-          </div>
+  <!-- Profile header -->
+  <header class="flex flex-col gap-6 sm:flex-row sm:items-start">
+    <%= person_avatar(@person, size: "size-28", text: "text-3xl", rounded: "rounded-2xl") %>
+    <div class="min-w-0 flex-1">
+      <h1 class="text-3xl font-bold tracking-tight"><%= @person.full_name %></h1>
 
-          <!-- Social Media -->
-          <% public_accounts = @person.social_media_accounts.select(&:publicly_listed?) %>
-          <% if public_accounts.any? %>
-            <div class="mt-4 flex flex-wrap gap-2">
-              <% public_accounts.each do |account| %>
-                <a href="<%= account.url %>" target="_blank" rel="noopener"
-                   class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700 hover:bg-gray-200">
-                  <%= account.platform %>
-                  <% if account.handle.present? && !account.handle.start_with?('http') %>
-                    : @<%= account.handle.delete('@') %>
-                  <% end %>
-                </a>
-              <% end %>
-            </div>
+      <% if @current_offices.any? %>
+        <ul class="mt-2 space-y-1">
+          <% @current_offices.each do |oh| %>
+            <li class="text-lg text-ink-muted">
+              <%= link_to seat_label(oh.office), office_path(oh.office), class: "hover:text-ink" %>
+            </li>
           <% end %>
-        </div>
-      </div>
-    </div>
+        </ul>
+      <% elsif @candidacies.any? %>
+        <p class="mt-2 text-lg text-ink-muted">Candidate · <%= seat_label(@candidacies.first.contest.office) %></p>
+      <% end %>
 
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-      <!-- Current Offices -->
-      <div class="lg:col-span-2 space-y-6">
+      <div class="mt-3 flex flex-wrap items-center gap-2">
+        <% if primary_party %>
+          <%= link_to party_path(primary_party) do %><%= party_badge(primary_party.name) %><% end %>
+        <% end %>
+        <% if @person.state_of_residence.present? %>
+          <%= link_to @person.state_of_residence, state_path(@person.state_of_residence),
+                      class: "rounded px-1.5 py-0.5 text-xs font-semibold ring-1 ring-line text-ink-muted hover:text-ink" %>
+        <% end %>
         <% if @current_offices.any? %>
-          <div class="bg-white rounded-lg shadow-sm border border-gray-200">
-            <div class="px-6 py-4 border-b border-gray-200">
-              <h2 class="text-lg font-semibold text-gray-900">Current Offices</h2>
-            </div>
-            <div class="divide-y divide-gray-200">
-              <% @current_offices.each do |officeholder| %>
-                <div class="px-6 py-4">
-                  <div class="flex justify-between items-start">
-                    <div>
-                      <%= link_to office_path(officeholder.office), class: "text-base font-medium text-indigo-600 hover:text-indigo-900" do %>
-                        <%= officeholder.office.title %>
-                        <% if officeholder.office.seat.present? %>
-                          <span class="text-gray-500 font-normal">(<%= officeholder.office.seat %>)</span>
-                        <% end %>
-                      <% end %>
-                      <div class="mt-1 text-sm text-gray-500">
-                        <span class="capitalize"><%= officeholder.office.level %></span> · 
-                        <span class="capitalize"><%= officeholder.office.branch %></span>
-                        <% if officeholder.office.state.present? %>
-                          · <%= officeholder.office.state %>
-                        <% end %>
-                      </div>
-                    </div>
-                    <div class="text-right text-sm text-gray-500">
-                      <div>Since <%= officeholder.start_date.strftime('%b %Y') %></div>
-                      <% if officeholder.term_end_date.present? %>
-                        <div class="text-xs">Term ends <%= officeholder.term_end_date.strftime('%b %Y') %></div>
-                      <% end %>
-                    </div>
-                  </div>
-                </div>
-              <% end %>
-            </div>
-          </div>
-        <% end %>
-
-        <!-- Past Offices -->
-        <% if @past_offices.any? %>
-          <div class="bg-white rounded-lg shadow-sm border border-gray-200">
-            <div class="px-6 py-4 border-b border-gray-200">
-              <h2 class="text-lg font-semibold text-gray-900">Past Offices</h2>
-            </div>
-            <div class="divide-y divide-gray-200">
-              <% @past_offices.each do |officeholder| %>
-                <div class="px-6 py-4">
-                  <div class="flex justify-between items-start">
-                    <div>
-                      <%= link_to office_path(officeholder.office), class: "text-base font-medium text-gray-700 hover:text-indigo-600" do %>
-                        <%= officeholder.office.title %>
-                        <% if officeholder.office.seat.present? %>
-                          <span class="text-gray-500 font-normal">(<%= officeholder.office.seat %>)</span>
-                        <% end %>
-                      <% end %>
-                      <div class="mt-1 text-sm text-gray-500">
-                        <span class="capitalize"><%= officeholder.office.level %></span> · 
-                        <span class="capitalize"><%= officeholder.office.branch %></span>
-                      </div>
-                    </div>
-                    <div class="text-right text-sm text-gray-500">
-                      <%= officeholder.start_date.strftime('%b %Y') %> – <%= officeholder.end_date&.strftime('%b %Y') || 'Present' %>
-                    </div>
-                  </div>
-                </div>
-              <% end %>
-            </div>
-          </div>
-        <% end %>
-
-        <!-- Candidacies -->
-        <% if @candidacies.any? %>
-          <div class="bg-white rounded-lg shadow-sm border border-gray-200">
-            <div class="px-6 py-4 border-b border-gray-200">
-              <h2 class="text-lg font-semibold text-gray-900">Election History</h2>
-            </div>
-            <div class="divide-y divide-gray-200">
-              <% @candidacies.each do |candidate| %>
-                <div class="px-6 py-4">
-                  <div class="flex justify-between items-start">
-                    <div>
-                      <div class="text-base font-medium text-gray-900">
-                        <%= candidate.contest.office&.title || 'Unknown Office' %>
-                      </div>
-                      <div class="mt-1 text-sm text-gray-500">
-                        <%= candidate.contest.ballot&.election_type&.titleize %> · 
-                        <%= candidate.contest.date&.strftime('%B %Y') %>
-                      </div>
-                    </div>
-                    <div>
-                      <% case candidate.outcome %>
-                      <% when 'won' %>
-                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">Won</span>
-                      <% when 'advanced' %>
-                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800" title="Advanced to the general unopposed (primary cancelled / no opponent)">Advanced (unopposed)</span>
-                      <% when 'lost' %>
-                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">Lost</span>
-                      <% else %>
-                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800"><%= candidate.outcome&.titleize || 'Pending' %></span>
-                      <% end %>
-                    </div>
-                  </div>
-                </div>
-              <% end %>
-            </div>
-          </div>
+          <span class="rounded-full bg-status-won-bg px-2 py-0.5 text-xs font-medium text-status-won">In office</span>
         <% end %>
       </div>
 
-      <!-- Sidebar -->
-      <div class="space-y-6">
-        <!-- Quick Stats -->
-        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          <h3 class="text-lg font-semibold text-gray-900 mb-4">Quick Stats</h3>
-          <dl class="space-y-3">
-            <div class="flex justify-between">
-              <dt class="text-sm text-gray-500">Total Offices Held</dt>
-              <dd class="text-sm font-medium text-gray-900"><%= @person.officeholders.count %></dd>
-            </div>
-            <div class="flex justify-between">
-              <dt class="text-sm text-gray-500">Current Offices</dt>
-              <dd class="text-sm font-medium text-gray-900"><%= @current_offices.count %></dd>
-            </div>
-            <div class="flex justify-between">
-              <dt class="text-sm text-gray-500">Elections Run</dt>
-              <dd class="text-sm font-medium text-gray-900"><%= @candidacies.count %></dd>
-            </div>
-            <div class="flex justify-between">
-              <dt class="text-sm text-gray-500">Social Accounts</dt>
-              <dd class="text-sm font-medium text-gray-900"><%= @person.social_media_accounts.count %></dd>
-            </div>
-          </dl>
-        </div>
-
-        <!-- Party Affiliations -->
-        <% if @person.parties.any? %>
-          <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <h3 class="text-lg font-semibold text-gray-900 mb-4">Party Affiliations</h3>
-            <ul class="space-y-2">
-              <% @person.person_parties.includes(:party).each do |pp| %>
-                <li class="flex items-center justify-between">
-                  <%= link_to pp.party.name, party_path(pp.party), class: "text-sm text-indigo-600 hover:text-indigo-900" %>
-                  <% if pp.is_primary %>
-                    <span class="text-xs text-gray-500">Primary</span>
-                  <% end %>
-                </li>
+      <% links = [["Official website", @person.website_official], ["Campaign website", @person.website_campaign],
+                  ["Personal website", @person.website_personal],
+                  ["Wikipedia", (@person.wikipedia_id.present? ? "https://en.wikipedia.org/wiki/#{ERB::Util.url_encode(@person.wikipedia_id)}" : nil)]]
+                   .select { |_, url| url.present? } %>
+      <% if links.any? %>
+        <ul class="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-sm">
+          <% links.each do |label, url| %>
+            <li>
+              <%= link_to url, target: "_blank", rel: "noopener", class: "inline-flex items-center gap-1 font-medium text-brand-700 hover:text-brand-800" do %>
+                <%= label %>
+                <svg class="size-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+                <span class="sr-only">(opens in a new tab)</span>
               <% end %>
-            </ul>
-          </div>
-        <% end %>
-
-        <!-- Contact -->
-        <% if @person.website_official.present? || @person.website_campaign.present? %>
-          <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <h3 class="text-lg font-semibold text-gray-900 mb-4">Links</h3>
-            <ul class="space-y-2">
-              <% if @person.website_official.present? %>
-                <li>
-                  <a href="<%= @person.website_official %>" target="_blank" rel="noopener" class="text-sm text-indigo-600 hover:text-indigo-900 flex items-center gap-1">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
-                    </svg>
-                    Official Website
-                  </a>
-                </li>
-              <% end %>
-              <% if @person.website_campaign.present? %>
-                <li>
-                  <a href="<%= @person.website_campaign %>" target="_blank" rel="noopener" class="text-sm text-indigo-600 hover:text-indigo-900 flex items-center gap-1">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
-                    </svg>
-                    Campaign Website
-                  </a>
-                </li>
-              <% end %>
-            </ul>
-          </div>
-        <% end %>
-      </div>
+            </li>
+          <% end %>
+        </ul>
+      <% end %>
     </div>
-  </main>
+  </header>
+
+  <div class="mt-10 grid gap-8 lg:grid-cols-3">
+    <div class="space-y-10 lg:col-span-2">
+      <!-- Social media -->
+      <section aria-labelledby="socials-heading">
+        <div class="flex items-baseline justify-between gap-4">
+          <h2 id="socials-heading" class="text-xl font-semibold">Social media</h2>
+          <span class="text-sm text-ink-muted"><%= pluralize(@accounts.size, "verified account") %></span>
+        </div>
+        <% if @accounts.any? %>
+          <ul class="mt-4 grid gap-3 sm:grid-cols-2">
+            <% @accounts.each do |account| %>
+              <li>
+                <%= link_to account.url, target: "_blank", rel: "noopener",
+                            class: "group flex items-center gap-3 rounded-xl border border-line bg-surface-raised p-4 hover:border-brand-600" do %>
+                  <%= platform_icon(account.platform, size: 28) %>
+                  <span class="min-w-0 flex-1">
+                    <span class="block font-medium group-hover:text-brand-700"><%= platform_name(account.platform) %></span>
+                    <span class="block truncate text-sm text-ink-muted"><%= display_handle(account) || account.url.sub(%r{\Ahttps?://(www\.)?}, '') %></span>
+                    <span class="mt-1 flex flex-wrap items-center gap-x-2 text-xs text-ink-faint">
+                      <% if (label = channel_label(account.channel_type)) %><span><%= label %></span><% end %>
+                      <% if account.verified_at %><span>Verified <%= l(account.verified_at.to_date, format: :long) %></span><% end %>
+                    </span>
+                  </span>
+                  <span class="sr-only">(opens in a new tab)</span>
+                <% end %>
+              </li>
+            <% end %>
+          </ul>
+        <% else %>
+          <p class="mt-4 rounded-xl border border-dashed border-line p-6 text-sm text-ink-muted">
+            No verified social media accounts yet. Our researchers verify each account before it appears here.
+          </p>
+        <% end %>
+      </section>
+
+      <!-- Elections -->
+      <% if @candidacies.any? %>
+        <section aria-labelledby="elections-heading">
+          <h2 id="elections-heading" class="text-xl font-semibold">Elections</h2>
+          <ol class="mt-4 divide-y divide-line rounded-xl border border-line bg-surface-raised">
+            <% @candidacies.each do |candidate| %>
+              <% contest = candidate.contest %>
+              <li>
+                <%= link_to contest_path(contest), class: "flex flex-col gap-2 p-4 hover:bg-surface sm:flex-row sm:items-center sm:justify-between" do %>
+                  <span class="min-w-0">
+                    <span class="block font-medium"><%= seat_label(contest.office) %></span>
+                    <span class="block text-sm text-ink-muted">
+                      <%= contest.date&.year %>
+                      <%= contest.contest_type == 'primary' && contest.party.present? ? "#{contest.party} primary" : contest.contest_type.to_s.humanize.downcase %>
+                      <% if contest.date %>· <%= l(contest.date, format: :long) %><% end %>
+                    </span>
+                  </span>
+                  <span class="flex shrink-0 items-center gap-2">
+                    <% if candidate.incumbent %><span class="text-xs text-ink-muted">Incumbent</span><% end %>
+                    <%= party_badge(candidate.party_at_time.presence || contest.party, short: true) %>
+                    <%= outcome_chip(candidate.outcome) %>
+                  </span>
+                <% end %>
+              </li>
+            <% end %>
+          </ol>
+        </section>
+      <% end %>
+
+      <!-- Offices -->
+      <% if @current_offices.any? || @past_offices.any? %>
+        <section aria-labelledby="offices-heading">
+          <h2 id="offices-heading" class="text-xl font-semibold">Offices held</h2>
+          <ol class="mt-4 divide-y divide-line rounded-xl border border-line bg-surface-raised">
+            <% (@current_offices + @past_offices).each do |oh| %>
+              <li class="flex flex-col gap-1 p-4 sm:flex-row sm:items-center sm:justify-between">
+                <span class="min-w-0">
+                  <%= link_to seat_label(oh.office), office_path(oh.office), class: "block font-medium hover:text-brand-700" %>
+                  <% if oh.office.body %>
+                    <span class="block text-sm text-ink-muted"><%= oh.office.body.name %></span>
+                  <% end %>
+                </span>
+                <span class="shrink-0 text-sm text-ink-muted">
+                  <%= oh.start_date&.year || "?" %> – <%= @current_offices.include?(oh) ? "present" : (oh.end_date&.year || "?") %>
+                </span>
+              </li>
+            <% end %>
+          </ol>
+        </section>
+      <% end %>
+    </div>
+
+    <aside class="space-y-6">
+      <% if @parties.any? %>
+        <section aria-labelledby="parties-heading" class="rounded-xl border border-line bg-surface-raised p-5">
+          <h2 id="parties-heading" class="text-sm font-semibold">Party affiliation</h2>
+          <ul class="mt-3 space-y-2">
+            <% @parties.each do |pp| %>
+              <li class="flex items-center justify-between gap-2 text-sm">
+                <%= link_to pp.party.name, party_path(pp.party), class: "hover:text-brand-700" %>
+                <% if pp.is_primary %><span class="text-xs text-ink-faint">Primary</span><% end %>
+              </li>
+            <% end %>
+          </ul>
+        </section>
+      <% end %>
+
+      <% if @person.gender.present? || @person.birth_date.present? %>
+        <section aria-labelledby="details-heading" class="rounded-xl border border-line bg-surface-raised p-5">
+          <h2 id="details-heading" class="text-sm font-semibold">Details</h2>
+          <dl class="mt-3 space-y-2 text-sm">
+            <% if @person.gender.present? %>
+              <div class="flex justify-between gap-2"><dt class="text-ink-muted">Gender</dt><dd><%= @person.gender %></dd></div>
+            <% end %>
+            <% if @person.birth_date.present? %>
+              <div class="flex justify-between gap-2"><dt class="text-ink-muted">Born</dt><dd><%= l(@person.birth_date, format: :long) %></dd></div>
+            <% end %>
+          </dl>
+        </section>
+      <% end %>
+
+      <section class="rounded-xl bg-brand-50 p-5 text-sm text-ink-muted">
+        <h2 class="font-semibold text-ink">About this record</h2>
+        <p class="mt-2">
+          Social media accounts appear only after a CandiData researcher has verified them.
+          <%= link_to "How we verify", help_data_sources_path, class: "font-medium text-brand-700 hover:text-brand-800" %>
+        </p>
+        <p class="mt-3"><%= updated_stamp(@person.updated_at) %></p>
+      </section>
+    </aside>
+  </div>
 </div>

@@ -34,13 +34,13 @@ Search for candidates and officeholders.
 - Filter by election year
 - Sort by relevance, name, or recent activity
 
-**Shows for Each Person:**
-- Current offices held
-- Past offices held (with years)
-- Races they've run in
-- Party affiliations
-- Social media accounts
-- Contact information (if available)
+**Person page** (`/people/<id>-<name>`):
+- Photo (initials when there is none or it fails to load), current office(s), party, state, "In office"
+- Official/campaign/personal websites and Wikipedia
+- **Verified social media accounts only**, as cards: platform, handle, Campaign/Official/Personal, verification date
+- Elections: every candidacy with office, primary/general, date, party, incumbent flag and outcome (Won / Advanced / On ballot / Lost / Withdrew), linking to the contest
+- Offices held, current and past, with years
+- Party affiliations, basic details, "Updated <date>"
 
 **Use Case:** Finding a specific person and viewing their public record.
 

@@ -103,6 +103,55 @@ RSpec.describe "Public pages", type: :request do
     end
   end
 
+  describe "public layout" do
+    it "renders one main landmark, lang, skip link, per-page title and footer" do
+      get person_path(person)
+
+      expect(response.body).to include('<html lang="en">')
+      expect(response.body.scan("<main").size).to eq(1)
+      expect(response.body).to include('href="#main"')
+      expect(response.body).to include("<title>Jim Himes · CandiData</title>")
+      expect(response.body).to include('rel="canonical"')
+      expect(response.body).to include("Data sources &amp; methodology")
+    end
+
+    it "uses the default title on pages that don't set one" do
+      get help_path
+      expect(response.body).to include("<title>CandiData — U.S. officials and candidates</title>")
+    end
+  end
+
+  describe "person URLs" do
+    it "uses an id-name slug" do
+      expect(person_path(person)).to eq("/people/#{person.id}-jim-himes")
+    end
+
+    it "redirects numeric and stale-slug URLs to the canonical one" do
+      get "/people/#{person.id}"
+      expect(response).to redirect_to(person_path(person))
+      expect(response).to have_http_status(:moved_permanently)
+
+      get "/people/#{person.id}-old-name"
+      expect(response).to redirect_to(person_path(person))
+    end
+
+    it "lists elections with outcome and links to the contest" do
+      election = Election.create!(state: "CT", date: Date.new(2026, 8, 11), election_type: "primary", year: 2026)
+      ballot = Ballot.create!(state: "CT", date: Date.new(2026, 8, 11), election_type: "primary", year: 2026,
+                              party: "Democratic", election: election)
+      office = Office.create!(title: "U.S. Representative", level: "federal", branch: "legislative", state: "CT")
+      contest = Contest.create!(ballot: ballot, office: office, date: Date.new(2026, 8, 11),
+                                contest_type: "primary", party: "Democratic")
+      Candidate.create!(person: person, contest: contest, outcome: "won", incumbent: true)
+
+      get person_path(person)
+
+      expect(response.body).to include(contest_path(contest))
+      expect(response.body).to include("Democratic primary")
+      expect(response.body).to include("✓ Won")
+    end
+  end
+
   it "no longer serves the debug charts page" do
     get "/test/charts"
     expect(response).to have_http_status(:not_found)

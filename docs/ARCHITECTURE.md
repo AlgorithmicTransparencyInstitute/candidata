@@ -32,7 +32,13 @@ lib/
 
 ### Public Controllers
 
-These controllers handle public browsing (no authentication required, or authenticated users only).
+These controllers handle public browsing (no authentication required). They all inherit from **`PublicController`**, which sets `layout 'public'`:
+
+- **`layouts/public.html.erb`** — `lang="en"`, skip link, one `<main id="main">`, per-page `<title>`/meta description/canonical/Open Graph tags, Inter font, the shared header (`public/_header`: main nav, politician search, mobile `<details>` menu) and footer (`public/_footer`). Views don't render their own navbar.
+- **`PublicUiHelper`** — the shared building blocks: `page_meta(title:, description:, image:)` (call from a view), `person_avatar` (photo over an initials fallback; a failed hot-linked image removes itself), `party_badge` (party colour only appears here), `outcome_chip`, `platform_name`, `display_handle`, `channel_label`, `seat_label(office)`, `updated_stamp`.
+- **Design tokens** — `app/assets/tailwind/application.css` `@theme`: `surface`/`ink`/`line`, a single `brand` accent, `party-*` (badges only), `status-won`. Admin/researcher pages keep stock Tailwind colours.
+- **Person URLs** are `/people/<id>-<name-slug>` (`Person#to_param`); `PeopleController#show` 301-redirects numeric or stale-slug URLs to the canonical one.
+- **Public visibility rule** — social accounts are shown only when `SocialMediaAccount#publicly_listed?` (verified, active, has a URL), the same rule `/api/v1` uses.
 
 #### HomeController (`app/controllers/home_controller.rb`)
 Entry point for the application.

@@ -1,0 +1,33 @@
+<footer class="mt-16 border-t border-line bg-surface-raised">
+  <div class="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+    <div class="grid gap-8 sm:grid-cols-3">
+      <div>
+        <p class="text-sm font-semibold">CandiData</p>
+        <p class="mt-2 text-sm text-ink-muted">
+          Verified social media accounts, offices and races for U.S. officials and candidates.
+          A nonpartisan research project of the Algorithmic Transparency Institute.
+        </p>
+      </div>
+      <nav aria-label="Explore">
+        <p class="text-sm font-semibold">Explore</p>
+        <ul class="mt-2 space-y-1 text-sm">
+          <li><%= link_to "Politicians", people_path, class: "text-ink-muted hover:text-ink" %></li>
+          <li><%= link_to "2026 elections", elections_path, class: "text-ink-muted hover:text-ink" %></li>
+          <li><%= link_to "States", states_path, class: "text-ink-muted hover:text-ink" %></li>
+          <li><%= link_to "Parties", parties_path, class: "text-ink-muted hover:text-ink" %></li>
+          <li><%= link_to "Legislative bodies", bodies_path, class: "text-ink-muted hover:text-ink" %></li>
+        </ul>
+      </nav>
+      <nav aria-label="About the data">
+        <p class="text-sm font-semibold">About the data</p>
+        <ul class="mt-2 space-y-1 text-sm">
+          <li><%= link_to "About", about_path, class: "text-ink-muted hover:text-ink" %></li>
+          <li><%= link_to "Data sources & methodology", help_data_sources_path, class: "text-ink-muted hover:text-ink" %></li>
+          <li><%= link_to "Coverage", help_coverage_path, class: "text-ink-muted hover:text-ink" %></li>
+          <li><%= link_to "Public API (OpenAPI)", "/api/v1/openapi.json", class: "text-ink-muted hover:text-ink" %></li>
+          <li><%= link_to "Privacy", help_path(anchor: "privacy"), class: "text-ink-muted hover:text-ink" %></li>
+        </ul>
+      </nav>
+    </div>
+  </div>
+</footer>

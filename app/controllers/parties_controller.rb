@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-class PartiesController < ApplicationController
+class PartiesController < PublicController
   
   def index
     @parties = Party.left_joins(:people)

@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-class DistrictsController < ApplicationController
+class DistrictsController < PublicController
   
   def index
     @districts = District.includes(:offices)
