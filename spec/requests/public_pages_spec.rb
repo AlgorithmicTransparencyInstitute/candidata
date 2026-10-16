@@ -46,7 +46,7 @@ RSpec.describe "Public pages", type: :request do
       get election_path(election)
 
       expect(response).to have_http_status(:ok)
-      expect(response.body).to include("text-green-500")
+      expect(response.body).to include("✓ Advanced")
     end
 
     it "shows no winner mark for pending candidates" do
@@ -54,7 +54,7 @@ RSpec.describe "Public pages", type: :request do
 
       get election_path(election)
 
-      expect(response.body).not_to include("text-green-500")
+      expect(response.body).not_to include("✓")
     end
 
     it "shows no vote figures on a contest with no tallies" do
@@ -191,6 +191,25 @@ RSpec.describe "Public pages", type: :request do
       expect(response.body).not_to include("unverifiedtalarico")
       expect(response.body).to include(contest_path(primary))
       expect(response.body).to include("<title>U.S. Senator · TX — 2026 general election · CandiData</title>")
+    end
+  end
+
+  describe "elections index" do
+    it "filters 2026 races by type, office and state, ignoring bad params" do
+      State.create!(name: "Texas", abbreviation: "TX")
+      ballot = Ballot.create!(state: "TX", date: Date.new(2026, 11, 3), election_type: "general", year: 2026)
+      senate = Office.create!(title: "U.S. Senator", office_category: "U.S. Senator", level: "federal", branch: "legislative", state: "TX")
+      house = Office.create!(title: "U.S. Representative", office_category: "U.S. Representative", level: "federal", branch: "legislative", state: "TX")
+      Contest.create!(ballot: ballot, office: senate, date: Date.new(2026, 11, 3), contest_type: "general")
+      Contest.create!(ballot: ballot, office: house, date: Date.new(2026, 11, 3), contest_type: "general")
+
+      get elections_path(office: "senate", state: "tx")
+      expect(response.body).to include("1 race")
+      expect(response.body).to include("2026 elections in Texas")
+
+      get elections_path(office: "bogus", type: "nope", state: "ZZ")
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("2 races")
     end
   end
 

@@ -31,7 +31,7 @@ class ContestsController < PublicController
     @contest = Contest.includes({ office: [:district, :body] }, { ballot: :election },
                                 candidates: { person: [:social_media_accounts, { person_parties: :party }] })
                       .find(params[:id])
-    @candidates = order_candidates(@contest.candidates.to_a)
+    @candidates = Candidate.in_public_order(@contest.candidates.to_a)
     @total_votes = @candidates.sum { |c| c.tally.to_i }
 
     # The same seat's other contests that year: a general links back to the
@@ -44,22 +44,5 @@ class ContestsController < PublicController
                         else
                           Contest.none
                         end
-  end
-
-  private
-
-  # Published ordering rule (stated on the page): winners first, then
-  # Democrats and Republicans, then everyone else; incumbents before
-  # challengers; then alphabetical by last name. Never by vote share alone
-  # until tallies exist, never by engagement.
-  def order_candidates(candidates)
-    candidates.sort_by do |c|
-      party = c.party_at_time.presence || @contest.party.to_s
-      [Candidate::WINNING_OUTCOMES.include?(c.outcome) ? 0 : 1,
-       -c.tally.to_i,
-       party.start_with?('Democrat', 'Republican') ? 0 : 1,
-       c.incumbent ? 0 : 1,
-       c.person.last_name.to_s.downcase, c.person.first_name.to_s.downcase]
-    end
   end
 end

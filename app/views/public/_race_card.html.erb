@@ -1,0 +1,28 @@
+<%# A race (contest) summary card. Expects contest with office/district, ballot and candidates.person loaded. %>
+<% candidates = Candidate.in_public_order(contest.candidates.to_a) %>
+<% shown = candidates.first(5) %>
+<%= link_to contest_path(contest), class: "group flex h-full flex-col rounded-xl border border-line bg-surface-raised p-5 hover:border-brand-600" do %>
+  <span class="text-xs font-medium uppercase tracking-wide text-brand-700"><%= contest_kind(contest) %></span>
+  <span class="mt-1 font-semibold leading-snug group-hover:text-brand-700"><%= seat_label(contest.office) %></span>
+  <% if contest.date %>
+    <span class="text-sm text-ink-muted"><%= l(contest.date, format: :long) %></span>
+  <% end %>
+
+  <% if shown.any? %>
+    <span class="mt-4 flex flex-col gap-2">
+      <% shown.each do |candidate| %>
+        <span class="flex items-center gap-2 text-sm">
+          <%= person_avatar(candidate.person, size: "size-7", text: "text-[10px]") %>
+          <span class="min-w-0 flex-1 truncate"><%= candidate.person.full_name %></span>
+          <%= party_badge(candidate.party_at_time.presence || contest.party, short: true) %>
+          <% if Candidate::WINNING_OUTCOMES.include?(candidate.outcome) %><%= outcome_chip(candidate.outcome) %><% end %>
+        </span>
+      <% end %>
+    </span>
+    <% if candidates.size > shown.size %>
+      <span class="mt-2 text-xs text-ink-muted">+ <%= candidates.size - shown.size %> more</span>
+    <% end %>
+  <% else %>
+    <span class="mt-4 text-sm text-ink-faint">No candidates on file yet</span>
+  <% end %>
+<% end %>

@@ -1,146 +1,70 @@
-<div>
+<% state_name = @state&.name || @election.state %>
+<% title = "#{@election.year} #{state_name} #{@election.election_type} election" %>
+<% race_count = @sections.values.sum(&:size) %>
+<% page_meta title: title,
+             description: "#{pluralize(race_count, 'race')} in the #{title}, with candidates and their verified social media accounts." %>
 
-  <div class="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
-    <!-- Header -->
-    <div class="mb-8">
-      <%= link_to elections_path, class: "inline-flex items-center text-sm text-indigo-600 hover:text-indigo-700 mb-4" do %>
-        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
-        </svg>
-        Back to Elections
-      <% end %>
+<div class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+  <nav aria-label="Breadcrumb" class="mb-6 text-sm text-ink-muted">
+    <ol class="flex flex-wrap items-center gap-1">
+      <li><%= link_to "Elections", elections_path, class: "hover:text-ink" %></li>
+      <li aria-hidden="true">/</li>
+      <li><%= link_to state_name, elections_path(state: @election.state, type: @election.election_type), class: "hover:text-ink" %></li>
+      <li aria-hidden="true">/</li>
+      <li aria-current="page" class="text-ink"><%= @election.election_type.capitalize %></li>
+    </ol>
+  </nav>
 
-      <div class="flex items-start justify-between">
-        <div>
-          <h1 class="text-4xl font-bold text-gray-900 mb-2"><%= @election.full_name %></h1>
-          <div class="flex items-center space-x-4 text-gray-600">
-            <div class="flex items-center">
-              <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-              </svg>
-              <span class="font-medium"><%= @election.date.strftime('%A, %B %d, %Y') %></span>
-            </div>
-            <% if @election.registration_deadline %>
-              <div class="flex items-center text-sm">
-                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                </svg>
-                <span>Registration: <%= @election.registration_deadline.strftime('%B %d, %Y') %></span>
-              </div>
-            <% end %>
-          </div>
-        </div>
-        <span class="inline-flex items-center px-4 py-2 rounded-lg text-sm font-medium bg-purple-100 text-purple-800">
-          <%= @election.election_type.titleize %>
-        </span>
-      </div>
+  <header class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+    <div>
+      <h1 class="text-3xl font-bold tracking-tight"><%= title %></h1>
+      <p class="mt-2 text-ink-muted">
+        <% if @election.date %><time datetime="<%= @election.date.iso8601 %>"><%= l(@election.date, format: :long) %></time> · <% end %>
+        <%= pluralize(race_count, "race") %>
+      </p>
     </div>
-
-    <!-- Overview Stats -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-      <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-        <div class="text-sm font-medium text-gray-500 mb-1">Party Ballots</div>
-        <div class="text-3xl font-bold text-gray-900"><%= @election.ballots.count %></div>
-      </div>
-      <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-        <div class="text-sm font-medium text-gray-500 mb-1">Total Contests</div>
-        <div class="text-3xl font-bold text-gray-900"><%= @ballots_with_contests.sum { |b| b[:contests].count } %></div>
-      </div>
-      <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-        <div class="text-sm font-medium text-gray-500 mb-1">Total Candidates</div>
-        <div class="text-3xl font-bold text-gray-900">
-          <%= @ballots_with_contests.sum { |b| b[:contests].sum { |c| c.candidates.count } } %>
-        </div>
-      </div>
-    </div>
-
-    <!-- Ballots and Contests -->
-    <% if @ballots_with_contests.any? %>
-      <div class="space-y-8">
-        <% @ballots_with_contests.each do |ballot_data| %>
-          <% ballot = ballot_data[:ballot] %>
-          <% contests = ballot_data[:contests] %>
-
-          <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-            <!-- Ballot Header -->
-            <div class="bg-gray-50 border-b border-gray-200 px-6 py-4">
-              <div class="flex items-center justify-between">
-                <h2 class="text-2xl font-bold text-gray-900"><%= ballot.party %> Primary</h2>
-                <div class="text-sm text-gray-600">
-                  <%= pluralize(contests.count, 'contest') %> · <%= pluralize(contests.sum { |c| c.candidates.count }, 'candidate') %>
-                </div>
-              </div>
-            </div>
-
-            <!-- Contests -->
-            <div class="divide-y divide-gray-200">
-              <% if contests.any? %>
-                <% contests.each do |contest| %>
-                  <div class="p-6">
-                    <div class="flex items-start justify-between mb-4">
-                      <div>
-                        <h3 class="text-lg font-semibold text-gray-900 mb-1">
-                          <%= link_to contest.office.title, office_path(contest.office), class: "hover:text-indigo-600" %>
-                        </h3>
-                        <% if contest.office.district %>
-                          <p class="text-sm text-gray-600"><%= contest.office.district.full_name %></p>
-                        <% end %>
-                      </div>
-                      <span class="text-sm text-gray-500"><%= pluralize(contest.candidates.count, 'candidate') %></span>
-                    </div>
-
-                    <!-- Candidates -->
-                    <% if contest.candidates.any? %>
-                      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                        <% contest.candidates.joins(:person).order('people.last_name', 'people.first_name').each do |candidate| %>
-                          <%= link_to person_path(candidate.person), class: "flex items-center justify-between p-3 rounded-lg border border-gray-200 hover:border-indigo-300 hover:bg-indigo-50 transition-colors duration-150" do %>
-                            <div class="flex items-center min-w-0 flex-1">
-                              <div class="flex-shrink-0 w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center mr-3">
-                                <span class="text-sm font-medium text-gray-600">
-                                  <%= candidate.person.first_name[0] %><%= candidate.person.last_name[0] %>
-                                </span>
-                              </div>
-                              <div class="min-w-0 flex-1">
-                                <div class="text-sm font-medium text-gray-900 truncate">
-                                  <%= candidate.person.full_name %>
-                                </div>
-                                <% if candidate.incumbent %>
-                                  <div class="text-xs text-indigo-600 font-medium">Incumbent</div>
-                                <% end %>
-                              </div>
-                            </div>
-                            <% if Candidate::WINNING_OUTCOMES.include?(candidate.outcome) %>
-                              <div class="ml-2 flex-shrink-0">
-                                <svg class="w-5 h-5 text-green-500" fill="currentColor" viewBox="0 0 20 20">
-                                  <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-                                </svg>
-                              </div>
-                            <% end %>
-                          <% end %>
-                        <% end %>
-                      </div>
-                    <% else %>
-                      <p class="text-sm text-gray-500 italic">No candidates yet</p>
-                    <% end %>
-                  </div>
-                <% end %>
-              <% else %>
-                <div class="p-8 text-center text-gray-500">
-                  No contests on this ballot yet
-                </div>
-              <% end %>
-            </div>
+    <% dates = [["Registration deadline", @election.registration_deadline],
+                ["Early voting", (@election.early_voting_start && [@election.early_voting_start, @election.early_voting_end].compact.map { |d| l(d, format: :long) }.join(" – "))]]
+                 .select { |_, v| v.present? } %>
+    <% if dates.any? || @other_elections.any? %>
+      <dl class="grid gap-x-6 gap-y-1 text-sm sm:grid-cols-2">
+        <% dates.each do |label, value| %>
+          <div><dt class="text-ink-muted"><%= label %></dt><dd><%= value.is_a?(Date) ? l(value, format: :long) : value %></dd></div>
+        <% end %>
+        <% @other_elections.each do |e| %>
+          <div>
+            <dt class="text-ink-muted">Also in <%= state_name %></dt>
+            <dd><%= link_to "#{e.election_type.capitalize} · #{l(e.date, format: :long)}", election_path(e), class: "text-brand-700 hover:text-brand-800" %></dd>
           </div>
         <% end %>
-      </div>
-    <% else %>
-      <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-12 text-center">
-        <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-        </svg>
-        <h3 class="mt-2 text-sm font-medium text-gray-900">No ballots yet</h3>
-        <p class="mt-1 text-sm text-gray-500">Ballot information will be added as it becomes available.</p>
-      </div>
+      </dl>
     <% end %>
-  </div>
+  </header>
+
+  <% if @sections.size > 1 %>
+    <nav aria-label="Sections" class="mt-6 flex flex-wrap gap-2">
+      <% @sections.each do |name, contests| %>
+        <a href="#<%= name.parameterize %>" class="rounded-full px-3 py-1 text-sm ring-1 ring-line hover:ring-brand-600">
+          <%= name %> <span class="text-ink-faint"><%= contests.size %></span>
+        </a>
+      <% end %>
+    </nav>
+  <% end %>
+
+  <% if @sections.empty? %>
+    <p class="mt-8 rounded-xl border border-dashed border-line p-6 text-sm text-ink-muted">No races on file for this election yet.</p>
+  <% end %>
+
+  <% @sections.each do |name, contests| %>
+    <section id="<%= name.parameterize %>" aria-labelledby="<%= name.parameterize %>-heading" class="mt-10 scroll-mt-6">
+      <h2 id="<%= name.parameterize %>-heading" class="text-xl font-semibold"><%= name %></h2>
+      <ul class="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <% contests.each do |contest| %>
+          <li><%= render "public/race_card", contest: contest %></li>
+        <% end %>
+      </ul>
+    </section>
+  <% end %>
+
+  <p class="mt-10"><%= updated_stamp(@election.updated_at) %></p>
 </div>

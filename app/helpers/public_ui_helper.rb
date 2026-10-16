@@ -131,7 +131,7 @@ module PublicUiHelper
 
     where = if office.district
               office.district.full_name
-            elsif office.state.present? && !office.title.to_s.include?(office.state.to_s)
+            elsif office.state.present? && !office.title.to_s.include?(office.state.to_s) && !office.title.to_s.include?(' of ')
               [office.seat, office.state].compact_blank.join(', ')
             else
               office.seat
