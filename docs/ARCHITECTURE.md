@@ -40,6 +40,8 @@ These controllers handle public browsing (no authentication required). They all 
 - **Person URLs** are `/people/<id>-<name-slug>` (`Person#to_param`); `PeopleController#show` 301-redirects numeric or stale-slug URLs to the canonical one.
 - **Search** — `SearchController#index` (`/search?q=`): people via `Person.name_matching` (pg_trgm GIN index `index_people_on_search_name_trgm`: substring or close-spelling match, ranked by similarity), states, offices (`Office.search_text`), and seat shorthand ("TX-8", "GA Senate", "OH governor") resolved to the 2026 races. The header search box posts here; `/people?q=` uses the same matcher.
 - **Elections** — `/elections` is a filterable 2026 race grid (type general/primary, office senate/governor/house, state) of `public/_race_card`s; election pages group races by office. `Candidate.in_public_order` is the one published candidate ordering (winners, major parties, incumbents, alphabetical), used by race pages and cards.
+- **SEO groundwork** — `/sitemap.xml` (`SitemapsController`, cached a day: states, elections, 2026 races, every person page) and schema.org `Person` JSON-LD on person pages (`sameAs` = verified account URLs, websites, Wikipedia). `public/robots.txt` still disallows all crawling until the team decides to open the site to search engines.
+- **Home counts** are cached for 10 minutes (`home/counts/v2`); the accounts figure counts `publicly_listed` accounts only.
 - **Public visibility rule** — social accounts are shown only when `SocialMediaAccount#publicly_listed?` (verified, active, has a URL), the same rule `/api/v1` uses.
 
 #### HomeController (`app/controllers/home_controller.rb`)

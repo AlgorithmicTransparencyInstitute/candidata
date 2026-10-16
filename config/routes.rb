@@ -212,6 +212,8 @@ Rails.application.routes.draw do
   get "help/coverage", to: "help#coverage", as: :help_coverage
   get "help/researcher-guide", to: "help#researcher_guide", as: :help_researcher_guide
 
+  get "sitemap.xml", to: "sitemaps#show", as: :sitemap, defaults: { format: :xml }
+
   # Site search (people, states, races, offices)
   get "search", to: "search#index", as: :search
 

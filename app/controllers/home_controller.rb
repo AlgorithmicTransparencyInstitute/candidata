@@ -1,13 +1,24 @@
 class HomeController < PublicController
   def index
-    @people_count = Person.count
-    @offices_count = Office.count
-    @bodies_count = Office.where.not(body_name: [nil, '']).distinct.count(:body_name)
-    @parties_count = Party.count
-    @states_count = State.count
-    @districts_count = District.count
-    @accounts_count = SocialMediaAccount.where.not(url: [nil, '']).count
-    @current_officeholders_count = Person.current_officeholders.count
+    # Headline counts change slowly; cache them rather than run nine COUNTs
+    # per page view. Accounts = what the public site actually shows.
+    counts = Rails.cache.fetch('home/counts/v2', expires_in: 10.minutes) do
+      {
+        people: Person.count, offices: Office.count,
+        bodies: Office.where.not(body_name: [nil, '']).distinct.count(:body_name),
+        parties: Party.count, states: State.count, districts: District.count,
+        accounts: SocialMediaAccount.publicly_listed.count,
+        current_officeholders: Officeholder.current.distinct.count(:person_id)
+      }
+    end
+    @people_count = counts[:people]
+    @offices_count = counts[:offices]
+    @bodies_count = counts[:bodies]
+    @parties_count = counts[:parties]
+    @states_count = counts[:states]
+    @districts_count = counts[:districts]
+    @accounts_count = counts[:accounts]
+    @current_officeholders_count = counts[:current_officeholders]
 
     # Upcoming elections
     @upcoming_elections = Election.where('date >= ?', Date.current)
@@ -16,7 +27,7 @@ class HomeController < PublicController
                                    .limit(6)
 
     # 2026 Primary data
-    @ballots_2026 = Ballot.where(year: 2026).includes(contests: :candidates).order(:state, :party)
+    @has_2026_ballots = Ballot.where(year: 2026).exists?
     @total_2026_candidates = Candidate.joins(contest: :ballot).where(ballots: { year: 2026 }).count
     @total_2026_contests = Contest.joins(:ballot).where(ballots: { year: 2026 }).count
     @states_2026_count = Ballot.where(year: 2026).distinct.count(:state)

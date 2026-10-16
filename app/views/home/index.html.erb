@@ -46,11 +46,11 @@
 
       <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 text-center">
         <div class="text-3xl font-bold text-orange-600"><%= number_with_delimiter(@accounts_count) %></div>
-        <div class="text-sm text-gray-500 mt-1">Social Media Accounts</div>
+        <div class="text-sm text-gray-500 mt-1">Verified Social Accounts</div>
       </div>
     </div>
 
-    <% if @ballots_2026.any? %>
+    <% if @has_2026_ballots %>
       <!-- 2026 Primaries and Upcoming Elections -->
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-12">
         <!-- 2026 Primaries Map (2/3 width) -->
@@ -86,7 +86,7 @@
                       </div>
                       <% if election.ballots.any? %>
                         <div class="text-xs text-gray-500 mt-1">
-                          <%= pluralize(election.ballots.count, 'ballot') %>
+                          <%= pluralize(election.ballots.size, 'ballot') %>
                         </div>
                       <% end %>
                     </div>

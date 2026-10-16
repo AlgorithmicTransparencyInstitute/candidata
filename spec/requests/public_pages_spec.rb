@@ -213,6 +213,34 @@ RSpec.describe "Public pages", type: :request do
     end
   end
 
+  describe "SEO groundwork" do
+    it "serves a sitemap with person, state and race URLs" do
+      State.create!(name: "Connecticut", abbreviation: "CT")
+      get "/sitemap.xml"
+
+      expect(response).to have_http_status(:ok)
+      expect(response.media_type).to eq("application/xml")
+      expect(response.body).to include("/people/#{person.id}-jim-himes")
+      expect(response.body).to include("/states/CT")
+    end
+
+    it "embeds schema.org Person data with only verified account URLs" do
+      person.social_media_accounts.create!(platform: "Twitter", handle: "jahimes", url: "https://twitter.com/jahimes", verified: true)
+      person.social_media_accounts.create!(platform: "TikTok", handle: "nope", url: "https://www.tiktok.com/@nope", verified: false)
+
+      get person_path(person)
+
+      ld = response.body[%r{<script type="application/ld\+json">(.*?)</script>}m, 1]
+      data = JSON.parse(ld)
+      expect(data).to include("@type" => "Person", "name" => "Jim Himes")
+      expect(data["sameAs"]).to eq(["https://twitter.com/jahimes"])
+    end
+
+    it "keeps search engines blocked until the team decides otherwise" do
+      expect(File.read(Rails.root.join("public/robots.txt"))).to include("Disallow: /")
+    end
+  end
+
   it "no longer serves the debug charts page" do
     get "/test/charts"
     expect(response).to have_http_status(:not_found)

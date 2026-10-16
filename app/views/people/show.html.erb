@@ -5,6 +5,19 @@
                            ("#{@accounts.size} verified social media accounts" if @accounts.any?)].compact.join(' · '),
              image: @person.photo_url.presence %>
 
+<% content_for :head do %>
+  <% same_as = @accounts.map(&:url) + [@person.website_official, @person.website_campaign,
+                                        (@person.wikipedia_id.present? ? "https://en.wikipedia.org/wiki/#{ERB::Util.url_encode(@person.wikipedia_id)}" : nil)] %>
+  <script type="application/ld+json"><%= json_escape({
+    '@context' => 'https://schema.org', '@type' => 'Person',
+    'name' => @person.full_name, 'url' => person_url(@person),
+    'image' => @person.photo_url.presence,
+    'jobTitle' => (seat_label(headline_office) if headline_office),
+    'affiliation' => (primary_party ? { '@type' => 'Organization', 'name' => primary_party.name } : nil),
+    'sameAs' => same_as.compact_blank.presence
+  }.compact.to_json).html_safe %></script>
+<% end %>
+
 <div class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
   <nav aria-label="Breadcrumb" class="mb-6 text-sm text-ink-muted">
     <ol class="flex flex-wrap items-center gap-1">
