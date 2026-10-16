@@ -37,6 +37,16 @@ class SocialMediaAccount < ApplicationRecord
   scope :core_platforms, -> { where(platform: CORE_PLATFORMS) }
   scope :fringe_platforms, -> { where(platform: FRINGE_PLATFORMS) }
 
+  # What the public site and /api/v1 may show: verified, active, and an actual
+  # channel. A verified account with no URL is a confirmed *absence* (a verifier
+  # attesting there is no account on that platform), not something to link to.
+  scope :publicly_listed, -> { verified.active.where.not(url: [nil, '']) }
+
+  # In-memory twin of publicly_listed, for preloaded associations.
+  def publicly_listed?
+    verified && !account_inactive && url.present?
+  end
+
   # The universe Junkipedia auto-sync operates on: validated handles with a
   # syncable platform + URL on an active account. Anything outside this scope
   # is intentionally invisible to the sync dashboard counts.

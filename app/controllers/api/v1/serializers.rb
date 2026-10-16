@@ -68,7 +68,7 @@ module Api
       # attesting the candidate has no account on that platform. It is a real
       # research finding, but it is not a channel, so it never ships to consumers.
       def verified_socials(person)
-        person.social_media_accounts.select { |a| a.verified && !a.account_inactive && a.url.present? }
+        person.social_media_accounts.select(&:publicly_listed?)
       end
 
       def social_json(account)

@@ -68,18 +68,17 @@
           </div>
 
           <!-- Social Media -->
-          <% if @person.social_media_accounts.any? %>
+          <% public_accounts = @person.social_media_accounts.select(&:publicly_listed?) %>
+          <% if public_accounts.any? %>
             <div class="mt-4 flex flex-wrap gap-2">
-              <% @person.social_media_accounts.each do |account| %>
-                <% if account.url.present? || account.handle.present? %>
-                  <a href="<%= account.url || '#' %>" target="_blank" rel="noopener" 
-                     class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700 hover:bg-gray-200">
-                    <%= account.platform %>
-                    <% if account.handle.present? && !account.handle.start_with?('http') %>
-                      : @<%= account.handle.gsub('@', '') %>
-                    <% end %>
-                  </a>
-                <% end %>
+              <% public_accounts.each do |account| %>
+                <a href="<%= account.url %>" target="_blank" rel="noopener"
+                   class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700 hover:bg-gray-200">
+                  <%= account.platform %>
+                  <% if account.handle.present? && !account.handle.start_with?('http') %>
+                    : @<%= account.handle.delete('@') %>
+                  <% end %>
+                </a>
               <% end %>
             </div>
           <% end %>

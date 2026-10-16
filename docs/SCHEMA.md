@@ -156,6 +156,7 @@ The evidence trail behind one demographic claim about one person. **A missing ro
 - `belongs_to :person, :entered_by (User), :verified_by (User), :escalated_by (User)` — **`person` association uses `touch: true`**, so any account change bumps `people.updated_at` (the public API's `/api/v1/people?updated_since=` relies on this for incremental sync)
 - Workflow methods: `mark_entered!(user, url:, handle:)`, `mark_not_found!(user)`, `reset_status!`, `verify!(user, notes:)`, `reject!`, `revise!`, `clear_secondary_verification!`, `toggle_deactivated!` (flips `account_inactive` — URL kept; "account exists but is no longer live", vs not_found which clears data; deactivation is a terminal disposition — deactivated accounts are exempt from the validation/secondary completion gates), `toggle_escalated!(user)` (flips `escalated_for_review` with who/when stamp)
 - Scope `escalated` (flagged for admin review — future admin work-list)
+- Public visibility: `publicly_listed` scope / `publicly_listed?` (verified + active + url present) — the one rule for what the public site and `/api/v1` show. A verified account with no URL is a confirmed absence and is never listed.
 - Junkipedia: `junkipedia_eligible` scope (verified + active + supported platform + url), sync-state scopes, **`after_commit` auto-enqueues to Junkipedia when an eligible account flips to `verified: true`** (no-op without `JUNKIPEDIA_API_TOKEN`)
 - `previous_url` digs through PaperTrail versions
 

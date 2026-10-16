@@ -37,15 +37,4 @@ class HomeController < ApplicationController
   def help
     # Public help page showing researcher guides
   end
-
-  def test_charts
-    # Test page for debugging ECharts
-    @state_elections_data = Election.where(year: 2026, election_type: 'primary')
-                                     .select('elections.*, COUNT(DISTINCT contests.id) as contest_count')
-                                     .joins('LEFT JOIN ballots ON ballots.election_id = elections.id')
-                                     .joins('LEFT JOIN contests ON contests.ballot_id = ballots.id')
-                                     .group('elections.id')
-                                     .order('elections.state')
-                                     .index_by(&:state)
-  end
 end

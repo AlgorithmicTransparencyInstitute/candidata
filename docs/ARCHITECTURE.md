@@ -41,7 +41,6 @@ Entry point for the application.
 |--------|--------|---------|
 | `index` | GET / | Public home page with election map & stats |
 | `help` | GET /help | Help & documentation hub |
-| `test_charts` | GET /test-charts | Dev-only test page for chart rendering |
 
 **Views:**
 - `home/index.html.erb` - Home page with embedded election map

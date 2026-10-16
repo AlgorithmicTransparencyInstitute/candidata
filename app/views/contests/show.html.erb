@@ -47,12 +47,15 @@
             <%= @candidates.count %>
           </div>
         </div>
-        <div>
-          <div class="text-sm text-gray-500">Total Votes</div>
-          <div class="text-lg font-semibold text-gray-900">
-            <%= number_with_delimiter(@contest.total_votes) %>
+        <%# No 2026 tallies are loaded yet; a "0 votes" figure would read as a result. %>
+        <% if (total_votes = @contest.total_votes).positive? %>
+          <div>
+            <div class="text-sm text-gray-500">Total Votes</div>
+            <div class="text-lg font-semibold text-gray-900">
+              <%= number_with_delimiter(total_votes) %>
+            </div>
           </div>
-        </div>
+        <% end %>
       </div>
     </div>
 
