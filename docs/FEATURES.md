@@ -8,7 +8,7 @@ Complete documentation of features available to different user roles.
 
 ### Home page
 
-The home page (`/`) leads with a search box (names, states, seats like "TX-8", offices) and example queries. Below it, the 2026 general election: the date and days remaining, a tile map with one square per state (darker = Senate and governor races, medium = one of them, light = U.S. House only; each tile is labelled SEN/GOV and links to that state's races), and links to all Senate, governor and House races. The page ends with headline counts and links to states, legislatures, districts, parties, the data documentation and the public API.
+The home page (`/`) leads with a search box (names, states, seats like "TX-8", offices) and example queries. Below it, the 2026 general election: the date and days remaining, a tile map with one square per state (darker = Senate and governor races, medium = one of them, light = U.S. House only; each tile is labelled SEN/GOV and links to that state's races; a Grid/Map switch above it shows the same data on a geographic map, and the site remembers the visitor's choice), and links to all Senate, governor and House races. The page ends with headline counts and links to states, legislatures, districts, parties, the data documentation and the public API.
 
 ### 1. Browse Elections
 **Path:** `/elections`, `/elections/:id`, `/contests/:id`

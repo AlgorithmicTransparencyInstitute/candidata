@@ -41,7 +41,7 @@ These controllers handle public browsing (no authentication required). They all 
 - **Search** — `SearchController#index` (`/search?q=`): people via `Person.name_matching` (pg_trgm GIN index `index_people_on_search_name_trgm`: substring or close-spelling match, ranked by similarity), states, offices (`Office.search_text`), and seat shorthand ("TX-8", "GA Senate", "OH governor") resolved to the 2026 races. The header search box posts here; `/people?q=` uses the same matcher.
 - **Elections** — `/elections` is a filterable 2026 race grid (type general/primary, office senate/governor/house, state) of `public/_race_card`s; election pages group races by office. `Candidate.in_public_order` is the one published candidate ordering (winners, major parties, incumbents, alphabetical), used by race pages and cards.
 - **SEO groundwork** — `/sitemap.xml` (`SitemapsController`, cached a day: states, elections, 2026 races, every person page) and schema.org `Person` JSON-LD on person pages (`sameAs` = verified account URLs, websites, Wikipedia). `public/robots.txt` still disallows all crawling until the team decides to open the site to search engines.
-- **Home page** leads with search (hero form → `/search`, with example queries), then the 2026 general election: a server-rendered tile-grid map (`public/_state_tile_map`, positions in `PublicUiHelper::STATE_TILES`; one equal square per state inside an SVG `viewBox`, so it keeps its proportions at any width, and each state links to `/elections?state=XX`), shaded by whether the state has a Senate and/or governor race and labelled SEN/GOV so colour isn't the only cue. Counts (`home/counts/v3`) and the per-state race breakdown (`home/general/2026/v1`) are cached for 10 minutes; the accounts figure counts `publicly_listed` accounts only. No third-party scripts: the old ECharts/d3 map (CDN scripts plus a GeoJSON fetch from GitHub on every view) is gone.
+- **Home page** leads with search (hero form → `/search`, with example queries), then the 2026 general election: a server-rendered tile-grid map (`public/_state_tile_map`, positions in `PublicUiHelper::STATE_TILES`; one equal square per state inside an SVG `viewBox`, so it keeps its proportions at any width, and each state links to `/elections?state=XX`), shaded by whether the state has a Senate and/or governor race and labelled SEN/GOV so colour isn't the only cue (shading/labels come from `PublicUiHelper#state_race_style`, shared by both maps). A small Grid/Map switch (`map_view_controller.js`; hidden without JS, last choice kept in `localStorage`) swaps in a geographic map: `GET /home/state_map` (`HomeController#state_map`, `public/_state_geo_map_frame`) is a lazy `turbo-frame` fetched only the first time it's shown. Its state outlines are committed path data in `lib/data/us_state_paths.json` (us-atlas states-albers-10m, already Albers USA projected, simplified; regenerate with `lib/scripts/generate_us_state_paths.mjs`), so the SVG `viewBox` alone fixes its proportions. Counts (`home/counts/v3`) and the per-state race breakdown (`home/general/2026/v1`) are cached for 10 minutes; the accounts figure counts `publicly_listed` accounts only. No third-party scripts: the old ECharts/d3 map (CDN scripts plus a GeoJSON fetch from GitHub on every view) is gone.
 - **Flash messages** (e.g. "Signed out") render in the public layout, above the page content.
 - **Public visibility rule** — social accounts are shown only when `SocialMediaAccount#publicly_listed?` (verified, active, has a URL), the same rule `/api/v1` uses.
 
@@ -51,12 +51,14 @@ Entry point for the application.
 | Action | Method | Purpose |
 |--------|--------|---------|
 | `index` | GET / | Public home page: search hero, 2026 general election tile map, data counts |
+| `state_map` | GET /home/state_map | Geographic 2026 map as a turbo-frame (lazy-loaded by the home page's Grid/Map switch) |
 | `help` | GET /help | Help & documentation hub |
 
 **Views:**
 - `home/index.html.erb` - Home page (search hero, 2026 general map + office tiles, browse links)
 - `home/help.html.erb` - Help hub
-- `public/_state_tile_map.html.erb` - Tile-grid US map of 2026 general races
+- `public/_state_tile_map.html.erb` - Tile-grid US map of 2026 general races (default)
+- `public/_state_geo_map_frame.html.erb` - Geographic US map, served by `state_map` into a lazy turbo-frame
 
 ---
 

@@ -217,6 +217,9 @@ Rails.application.routes.draw do
   # Site search (people, states, races, offices)
   get "search", to: "search#index", as: :search
 
+  # Home page's geographic map, loaded lazily into a turbo-frame when a visitor switches to it
+  get "home/state_map", to: "home#state_map", as: :home_state_map
+
   # About page
   get "about", to: "about#index", as: :about
 

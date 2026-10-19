@@ -48,8 +48,23 @@
       </div>
 
       <div class="mt-6 grid gap-6 lg:grid-cols-3">
-        <div class="rounded-xl border border-line bg-surface-raised p-4 sm:p-6 lg:col-span-2">
-          <%= render "public/state_tile_map", by_state: @general_by_state, state_names: @state_names %>
+        <div class="rounded-xl border border-line bg-surface-raised p-4 sm:p-6 lg:col-span-2" data-controller="map-view">
+          <div class="mb-3 flex justify-end" data-map-view-target="switch" hidden>
+            <div class="inline-flex rounded-lg bg-surface p-0.5 text-xs font-medium ring-1 ring-line" role="group" aria-label="Map style">
+              <% [["grid", "Grid"], ["geo", "Map"]].each do |view, label| %>
+                <button type="button" data-view="<%= view %>" data-map-view-target="button" data-action="map-view#select"
+                        class="rounded-md px-2.5 py-1 text-ink-muted hover:text-ink aria-pressed:bg-surface-raised aria-pressed:text-ink aria-pressed:shadow-sm"><%= label %></button>
+              <% end %>
+            </div>
+          </div>
+          <div data-map-view-target="view" data-view="grid">
+            <%= render "public/state_tile_map", by_state: @general_by_state, state_names: @state_names %>
+          </div>
+          <div data-map-view-target="view" data-view="geo" hidden>
+            <turbo-frame id="state-geo-map" src="<%= home_state_map_path %>" loading="lazy" class="block aspect-[975/610]">
+              <span class="sr-only">Loading map…</span>
+            </turbo-frame>
+          </div>
           <ul class="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-sm text-ink-muted" aria-label="Map key">
             <li class="flex items-center gap-2"><span class="size-3.5 rounded bg-brand-800"></span>Senate and governor</li>
             <li class="flex items-center gap-2"><span class="size-3.5 rounded bg-brand-600"></span>Senate or governor</li>

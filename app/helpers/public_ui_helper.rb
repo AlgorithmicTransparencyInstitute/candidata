@@ -23,6 +23,24 @@ module PublicUiHelper
     'HI' => [0, 7], 'TX' => [4, 7], 'FL' => [9, 7]
   }.freeze
 
+  # How a state is drawn on the home page maps (tile grid and geographic),
+  # from its 2026 general races ({ "U.S. Senator" => 1, "Governor" => 1, ... }):
+  # shade by statewide races, SEN/GOV marks so colour isn't the only cue.
+  def state_race_style(races)
+    races ||= {}
+    marks = []
+    marks << 'SEN' if races.key?('U.S. Senator')
+    marks << 'GOV' if races.key?('Governor')
+    summary = if races.empty?
+                'no 2026 general races on file'
+              else
+                [*marks.map { |m| m == 'SEN' ? 'U.S. Senate' : 'Governor' }, 'U.S. House'].join(', ')
+              end
+    { fill: races.empty? ? 'fill-line' : %w[fill-brand-100 fill-brand-600 fill-brand-800][marks.size],
+      ink: marks.empty? ? 'fill-ink' : 'fill-white',
+      marks: marks, summary: summary, linked: races.any? }
+  end
+
   # Page <title> and meta description. Call from a view:
   #   <% page_meta title: @person.full_name, description: "..." %>
   def page_meta(title: nil, description: nil, image: nil)

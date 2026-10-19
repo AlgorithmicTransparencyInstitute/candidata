@@ -4,29 +4,23 @@
 <% tile = 56; gap = 4 %>
 <% cols = 12; rows = 8 %>
 <svg viewBox="0 0 <%= cols * tile %> <%= rows * tile %>" class="block h-auto w-full" role="group"
-     aria-label="Map of 2026 general election races by state">
+     aria-label="Grid map of 2026 general election races by state">
   <% PublicUiHelper::STATE_TILES.each do |abbr, (col, row)| %>
-    <% races = by_state[abbr] || {} %>
-    <% senate = races.key?('U.S. Senator'); governor = races.key?('Governor') %>
-    <% statewide = [senate, governor].count(true) %>
-    <% fill = races.empty? ? 'fill-line' : %w[fill-brand-100 fill-brand-600 fill-brand-800][statewide] %>
-    <% ink = statewide.zero? ? 'fill-ink' : 'fill-white' %>
+    <% style = state_race_style(by_state[abbr]) %>
     <% name = state_names[abbr] || abbr %>
-    <% marks = [('SEN' if senate), ('GOV' if governor)].compact %>
-    <% summary = races.empty? ? "no 2026 general races on file" : [*marks.map { |m| m == 'SEN' ? 'U.S. Senate' : 'Governor' }, 'U.S. House'].join(', ') %>
     <% x = col * tile + gap / 2; y = row * tile + gap / 2; size = tile - gap %>
     <% body = capture do %>
-      <title><%= name %>: <%= summary %></title>
-      <rect x="<%= x %>" y="<%= y %>" width="<%= size %>" height="<%= size %>" rx="6" class="<%= fill %> transition-opacity group-hover:opacity-80" />
-      <text x="<%= x + size / 2 %>" y="<%= y + (marks.any? ? 23 : 31) %>" text-anchor="middle" class="<%= ink %> text-[15px] font-semibold"><%= abbr %></text>
-      <% if marks.any? %>
-        <text x="<%= x + size / 2 %>" y="<%= y + 39 %>" text-anchor="middle" class="<%= ink %> text-[8.5px] font-medium tracking-wide max-sm:hidden" opacity="0.9"><%= marks.join(' · ') %></text>
+      <title><%= name %>: <%= style[:summary] %></title>
+      <rect x="<%= x %>" y="<%= y %>" width="<%= size %>" height="<%= size %>" rx="6" class="<%= style[:fill] %> transition-opacity group-hover:opacity-80" />
+      <text x="<%= x + size / 2 %>" y="<%= y + (style[:marks].any? ? 23 : 31) %>" text-anchor="middle" class="<%= style[:ink] %> text-[15px] font-semibold"><%= abbr %></text>
+      <% if style[:marks].any? %>
+        <text x="<%= x + size / 2 %>" y="<%= y + 39 %>" text-anchor="middle" class="<%= style[:ink] %> text-[8.5px] font-medium tracking-wide max-sm:hidden" opacity="0.9"><%= style[:marks].join(' · ') %></text>
       <% end %>
     <% end %>
-    <% if races.any? %>
-      <a href="<%= elections_path(state: abbr) %>" class="group focus:outline-none [&:focus-visible>rect]:stroke-ink [&:focus-visible>rect]:stroke-2" aria-label="<%= name %>: <%= summary %>"><%= body %></a>
+    <% if style[:linked] %>
+      <a href="<%= elections_path(state: abbr) %>" class="group focus:outline-none [&:focus-visible>rect]:stroke-ink [&:focus-visible>rect]:stroke-2" aria-label="<%= name %>: <%= style[:summary] %>"><%= body %></a>
     <% else %>
-      <g aria-label="<%= name %>: <%= summary %>" role="img"><%= body %></g>
+      <g aria-label="<%= name %>: <%= style[:summary] %>" role="img"><%= body %></g>
     <% end %>
   <% end %>
 </svg>

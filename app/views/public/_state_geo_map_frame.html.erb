@@ -1,0 +1,22 @@
+<%# Geographic 2026 general map (HomeController#state_map), served into the
+    home page's lazy turbo-frame. Paths: lib/data/us_state_paths.json, already
+    projected to Albers USA, so the viewBox alone fixes the proportions. %>
+<turbo-frame id="state-geo-map">
+  <svg viewBox="<%= @geo['view_box'] %>" class="block h-auto w-full" role="group"
+       aria-label="Map of 2026 general election races by state">
+    <% @geo['states'].sort_by { |fips, _| fips }.each do |fips, shape| %>
+      <% abbr = @abbr_by_fips[fips] %>
+      <% style = state_race_style(@general_by_state[abbr]) %>
+      <% label = "#{shape['name']}: #{style[:summary]}" %>
+      <% body = capture do %>
+        <title><%= label %></title>
+        <path d="<%= shape['d'] %>" class="<%= style[:fill] %> stroke-surface-raised transition-opacity group-hover:opacity-80" stroke-width="0.75" stroke-linejoin="round" />
+      <% end %>
+      <% if style[:linked] && abbr %>
+        <a href="<%= elections_path(state: abbr) %>" data-turbo-frame="_top" class="group focus:outline-none [&:focus-visible>path]:stroke-ink [&:focus-visible>path]:stroke-2" aria-label="<%= label %>"><%= body %></a>
+      <% else %>
+        <g aria-label="<%= label %>" role="img"><%= body %></g>
+      <% end %>
+    <% end %>
+  </svg>
+</turbo-frame>

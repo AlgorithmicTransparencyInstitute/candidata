@@ -232,6 +232,27 @@ RSpec.describe "Public pages", type: :request do
       expect(response.body).not_to include("raw.githubusercontent.com")
     end
 
+    it "offers the geographic map as a lazily loaded alternative to the grid" do
+      ballot = Ballot.create!(state: "GA", date: Date.new(2026, 11, 3), election_type: "general", year: 2026)
+      governor = Office.create!(title: "Governor", level: "state", branch: "executive", state: "GA", office_category: "Governor")
+      Contest.create!(ballot: ballot, office: governor, date: Date.new(2026, 11, 3), contest_type: "general")
+      State.find_or_create_by!(abbreviation: "GA") { |s| s.name = "Georgia"; s.fips_code = "13" }
+      Rails.cache.clear
+
+      get root_path
+      expect(response.body).to include('data-controller="map-view"')
+      expect(response.body).to include(%(src="#{home_state_map_path}" loading="lazy"))
+      expect(response.body).not_to include("<path d=\"M") # path data isn't inlined in the home page
+
+      get home_state_map_path
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include('<turbo-frame id="state-geo-map">')
+      expect(response.body).to include('viewBox="0 0 975 610"')
+      expect(response.body.scan("<path ").size).to eq(51)
+      expect(response.body).to include(%(href="#{elections_path(state: "GA")}" data-turbo-frame="_top"))
+      expect(response.body).to include("Georgia: Governor, U.S. House")
+    end
+
     it "shows flash messages in the public layout" do
       sign_in create(:user)
       delete destroy_user_session_path
