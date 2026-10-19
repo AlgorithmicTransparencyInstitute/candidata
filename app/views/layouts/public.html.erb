@@ -40,6 +40,13 @@
     <%= render 'public/header' %>
 
     <main id="main" class="flex-1">
+      <% { notice: "border-status-won/30 bg-status-won-bg text-status-won", alert: "border-party-rep/30 bg-party-rep-bg text-party-rep" }.each do |key, classes| %>
+        <% if flash[key].present? %>
+          <div class="mx-auto mt-4 max-w-7xl px-4 sm:px-6 lg:px-8">
+            <p role="<%= key == :alert ? 'alert' : 'status' %>" class="rounded-lg border px-4 py-3 text-sm <%= classes %>"><%= flash[key] %></p>
+          </div>
+        <% end %>
+      <% end %>
       <%= yield %>
     </main>
 

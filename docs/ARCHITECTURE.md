@@ -41,7 +41,8 @@ These controllers handle public browsing (no authentication required). They all 
 - **Search** — `SearchController#index` (`/search?q=`): people via `Person.name_matching` (pg_trgm GIN index `index_people_on_search_name_trgm`: substring or close-spelling match, ranked by similarity), states, offices (`Office.search_text`), and seat shorthand ("TX-8", "GA Senate", "OH governor") resolved to the 2026 races. The header search box posts here; `/people?q=` uses the same matcher.
 - **Elections** — `/elections` is a filterable 2026 race grid (type general/primary, office senate/governor/house, state) of `public/_race_card`s; election pages group races by office. `Candidate.in_public_order` is the one published candidate ordering (winners, major parties, incumbents, alphabetical), used by race pages and cards.
 - **SEO groundwork** — `/sitemap.xml` (`SitemapsController`, cached a day: states, elections, 2026 races, every person page) and schema.org `Person` JSON-LD on person pages (`sameAs` = verified account URLs, websites, Wikipedia). `public/robots.txt` still disallows all crawling until the team decides to open the site to search engines.
-- **Home counts** are cached for 10 minutes (`home/counts/v2`); the accounts figure counts `publicly_listed` accounts only.
+- **Home page** leads with search (hero form → `/search`, with example queries), then the 2026 general election: a server-rendered tile-grid map (`public/_state_tile_map`, positions in `PublicUiHelper::STATE_TILES`; one equal square per state inside an SVG `viewBox`, so it keeps its proportions at any width, and each state links to `/elections?state=XX`), shaded by whether the state has a Senate and/or governor race and labelled SEN/GOV so colour isn't the only cue. Counts (`home/counts/v3`) and the per-state race breakdown (`home/general/2026/v1`) are cached for 10 minutes; the accounts figure counts `publicly_listed` accounts only. No third-party scripts: the old ECharts/d3 map (CDN scripts plus a GeoJSON fetch from GitHub on every view) is gone.
+- **Flash messages** (e.g. "Signed out") render in the public layout, above the page content.
 - **Public visibility rule** — social accounts are shown only when `SocialMediaAccount#publicly_listed?` (verified, active, has a URL), the same rule `/api/v1` uses.
 
 #### HomeController (`app/controllers/home_controller.rb`)
@@ -49,13 +50,13 @@ Entry point for the application.
 
 | Action | Method | Purpose |
 |--------|--------|---------|
-| `index` | GET / | Public home page with election map & stats |
+| `index` | GET / | Public home page: search hero, 2026 general election tile map, data counts |
 | `help` | GET /help | Help & documentation hub |
 
 **Views:**
-- `home/index.html.erb` - Home page with embedded election map
+- `home/index.html.erb` - Home page (search hero, 2026 general map + office tiles, browse links)
 - `home/help.html.erb` - Help hub
-- `shared/_elections_map.html.erb` - Interactive US elections map
+- `public/_state_tile_map.html.erb` - Tile-grid US map of 2026 general races
 
 ---
 
@@ -1036,7 +1037,6 @@ app/views/
 ├── shared/                        # Reusable components
 │   ├── _navbar.html.erb          # Navigation
 │   ├── _filter_dropdowns.html.erb # Filter UI
-│   ├── _elections_map.html.erb   # Map widget
 │   └── ...
 ├── admin/                         # Admin workspace
 │   ├── dashboard/

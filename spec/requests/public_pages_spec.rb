@@ -213,6 +213,33 @@ RSpec.describe "Public pages", type: :request do
     end
   end
 
+  describe "home page" do
+    it "leads with search and draws the 2026 general map without third-party scripts" do
+      election = Election.create!(state: "GA", date: Date.new(2026, 11, 3), election_type: "general", year: 2026, name: "2026 GA General")
+      ballot = Ballot.create!(state: "GA", date: Date.new(2026, 11, 3), election_type: "general", year: 2026, election: election)
+      senate = Office.create!(title: "U.S. Senator", level: "federal", branch: "legislative", state: "GA", office_category: "U.S. Senator")
+      Contest.create!(ballot: ballot, office: senate, date: Date.new(2026, 11, 3), contest_type: "general")
+      Rails.cache.clear
+
+      get root_path
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include(%(action="#{search_path}"))
+      expect(response.body).to include("2026 general election")
+      expect(response.body).to include(%(href="#{elections_path(state: "GA")}"))
+      expect(response.body).to include("SEN")
+      expect(response.body).not_to include("echarts")
+      expect(response.body).not_to include("raw.githubusercontent.com")
+    end
+
+    it "shows flash messages in the public layout" do
+      sign_in create(:user)
+      delete destroy_user_session_path
+      follow_redirect!
+      expect(response.body).to match(/role="status"/)
+    end
+  end
+
   describe "SEO groundwork" do
     it "serves a sitemap with person, state and race URLs" do
       State.create!(name: "Connecticut", abbreviation: "CT")
